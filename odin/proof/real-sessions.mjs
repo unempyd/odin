@@ -25,7 +25,7 @@
  * the one this script writes into the throwaway profile under `settings.agentDefaultArgs`, and it
  * prints that record so the proof is auditable.
  */
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { randomUUID } from 'node:crypto'
