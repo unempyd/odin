@@ -87,6 +87,27 @@ Stated plainly, because two independent reviews returned NOT FINISHED against `o
 
 Everything above is either in `odin/OPEN.md` with a plan, or accepted for v0.1.0 as Orca's existing behaviour.
 
+## Upstream pull requests
+
+Every contract above is offered back to Orca as a single-commit pull request with its failing-first test, rebased onto upstream `main` and stripped of Odin-only artefacts. Open as of 2026-09-15:
+
+| Residual | Pull request |
+|---|---|
+| A, A-relay | [stablyai/orca#20666](https://github.com/stablyai/orca/pull/20666) |
+| B | [stablyai/orca#20679](https://github.com/stablyai/orca/pull/20679) |
+| C (exit-wait subset) | [stablyai/orca#20681](https://github.com/stablyai/orca/pull/20681) |
+| O1, O2 | [stablyai/orca#20682](https://github.com/stablyai/orca/pull/20682) |
+| N | [stablyai/orca#20683](https://github.com/stablyai/orca/pull/20683) |
+| M | [stablyai/orca#20684](https://github.com/stablyai/orca/pull/20684) |
+| G | [stablyai/orca#20689](https://github.com/stablyai/orca/pull/20689) |
+| D | [stablyai/orca#20690](https://github.com/stablyai/orca/pull/20690) |
+| E | [stablyai/orca#20691](https://github.com/stablyai/orca/pull/20691) |
+| S | [stablyai/orca#20692](https://github.com/stablyai/orca/pull/20692) |
+| I | [stablyai/orca#20693](https://github.com/stablyai/orca/pull/20693) |
+| K | [stablyai/orca#20697](https://github.com/stablyai/orca/pull/20697) |
+
+Where a PR differs from the Odin commit, the PR body says why: the C PR carries only the exit-wait gate, not the wire `evidence` field; the M PR includes the minimal O1 classification it depends on. The first PR's review surfaced a real defect in the original diff (an exit replayed synchronously during session construction); it is fixed in both the PR and Odin (`adb4b039ae`).
+
 ## How to read the proofs
 
 Each residual is one commit on the `odin` branch. The commit body names the upstream site, the contract, the judgement calls, and two files under `odin/proofs/`: `<id>.before.txt` is the new test failing on the unpatched code, `<id>.after.txt` is the same test and its neighbours passing after the patch. `odin/proof/run-proofs.sh` repeats that check mechanically against the pinned upstream commit. `odin/proofs/real-sessions.*.json` are the recorded runs of real agents through the orchestration surface.
