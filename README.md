@@ -47,7 +47,7 @@ Left open, with the exact plan and cost written down in `odin/OPEN.md`: the rend
 
 Two things these runs show that a unit test cannot. First, the H1 contract acting on a real profile: a run whose grants were written without `agentBypassDefaultsReviewed` had them cleared on load because they equal Orca's former automatic values verbatim, and the Codex worker parked on its approval prompt instead of settling (`real-sessions.2026-09-14T15-05-30-764Z.json`, kept as evidence). Second, the operator's own agent configuration is outside Odin's contract: the Claude worker completes even in the safe-default phase because this operator's Claude config auto-approves; the argv still carries no flag from Odin.
 
-Not covered: Windows and Linux hosts (macOS only), a third agent settling (Grok quota), and Orca's mobile app paired against an Odin host.
+Linux: the same 13 proofs reproduce at upstream and close on Odin inside a `node:24` Linux container, and the process-ownership test files (tombstone inspection, worker liveness, worker observation, recovery, wait results) pass there (`odin/proofs/linux-proofs.txt`). Not covered: Windows hosts, a third agent settling (Grok quota), and Orca's mobile app paired against an Odin host.
 
 ## Independent review
 
@@ -82,7 +82,7 @@ Stated plainly, because two independent reviews returned NOT FINISHED against `o
 4. **Worker observation keeps `unattached`, `missing` and `identity_changed`** beside `live / unverifiable / exited` because clients depend on them as distinct states.
 5. **The launch receipt verifies advertised support, not applied options.** `source: 'probe'` means the installed Claude CLI listed the model and effort; nothing reads back what the launched session applied. Codex and Grok have no live probe.
 6. **Sub-agent rows carry their own identity but are still renderer-derived** and their synthesized entry state falls back to `done` where the status type has no `unverifiable` member.
-7. **Proof coverage is macOS-local.** Windows and Linux process ownership, SSH-hosted worktrees, mixed-version clients, mobile pairing against an Odin host, and a third agent settling (this operator's Grok quota) are not established by the recorded runs.
+7. **Proof coverage is macOS plus a Linux container.** Windows process ownership, SSH-hosted worktrees, mixed-version clients, mobile pairing against an Odin host, and a third agent settling (this operator's Grok quota) are not established by the recorded runs.
 8. **Retained telemetry opt-ins from Orca's automatic enrollment are preserved** for pre-existing profiles; only fresh installs are opted out.
 
 Everything above is either in `odin/OPEN.md` with a plan, or accepted for v0.1.0 as Orca's existing behaviour.
