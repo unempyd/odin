@@ -1,0 +1,75 @@
+---
+title: What is Odin?
+description: Odin is Orca with a small set of patches at the exact sites where Orca synthesised a verdict from absent evidence, or acted without a recorded grant.
+---
+
+import { Callout } from '@/components/docs/prose'
+
+Everything else in these docs — worktrees, terminals, SSH, mobile, the agent
+picker, orchestration — is **Orca's own product surface, unchanged**. Odin is
+a surgical derivative: the same application, with a bounded set of patches at
+sites where the upstream code minted a positive answer (`exited`, `done`,
+`completed`, an installed hook, a granted permission) from the *absence* of
+evidence rather than from evidence itself, or acted on the operator's machine
+without a recorded grant.
+
+<Callout title="Read the pages in this order">
+  This page, then [Residuals](/docs/odin/residuals) for what changed and why,
+  then [Real sessions](/docs/odin/real-sessions) and [Independent
+  review](/docs/odin/independent-review) for the evidence, then
+  [Deviations](/docs/odin/deviations) for what is deliberately still open.
+</Callout>
+
+## Where Odin comes from
+
+Odin is Orca (upstream `stablyai/orca` at `539d4d1f32`, v1.4.197, MIT ©
+Lovecast Inc.) with patches applied on top. Nothing outside the specific
+sites named in [Residuals](/docs/odin/residuals) was touched: the same 36
+supported agent CLIs, the same terminal and worktree model, the same UI.
+If a page elsewhere in these docs describes how Orca's terminal, worktree,
+SSH, or agent-picker behavior works, that description is accurate for Odin
+too — it is the same code.
+
+A handful of pages describe a *default* that Odin changed. Each of those
+pages carries a one-line note naming the commit that changed it; this
+section is the place to read the change in full, with the proof that backs
+it.
+
+## The three ways to verify this
+
+```
+odin/proof/run-proofs.sh        # reruns every proof test at the upstream commit (must fail) and on Odin (must pass)
+odin/proof/real-sessions.mjs    # drives real claude / codex / grok workers through Orca's own orchestration on a headless host
+git log --first-parent odin     # one commit per residual, message = residual (file:line) → contract → proof files
+```
+
+Nothing here asks you to trust a description instead of running it. The
+[full source is on GitHub](https://github.com/unempyd/odin); clone it and
+run `odin/proof/run-proofs.sh` yourself.
+
+## Verified, not re-implemented
+
+Some contracts Odin's `DIRECTION.md` asks for were already closed upstream:
+nesting-depth enforcement
+([#16668](https://github.com/stablyai/orca/pull/16668)), durable mutation
+receipts, capability fencing and journal recovery
+([#16904](https://github.com/stablyai/orca/pull/16904), fixes
+[#15180](https://github.com/stablyai/orca/issues/15180)), and the headless
+recovery sweep that already runs on `orca serve` and `orcad`. Odin did not
+rebuild these — it pinned them with tests, cited in
+[`odin/VERIFIED.md`](https://github.com/unempyd/odin/blob/main/odin/VERIFIED.md),
+so a future change cannot regress them silently.
+
+## What's left open
+
+One residual is left open by decision, with the exact plan and cost written
+down: the renderer is still a second writer of agent status for
+remote-runtime and structured panes whose bytes never transit the host. See
+[Deviations](/docs/odin/deviations) for this and seven other named
+trade-offs at v0.1.0.
+
+## Credits and licence
+
+Orca is by [Stably AI](https://github.com/stablyai) and Lovecast Inc., MIT.
+Odin keeps Orca's licence, copyright notice, and history; the Odin commits
+are additive on top of upstream `539d4d1f32`.

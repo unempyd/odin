@@ -1,0 +1,96 @@
+---
+title: Deviations at v0.1.0
+description: What remains open by decision rather than by oversight, stated plainly because two independent reviews returned NOT FINISHED.
+---
+
+import { Callout } from '@/components/docs/prose'
+
+Two independent reviews returned **NOT FINISHED** against
+`odin/DIRECTION.md`'s definition of done. These are the items that remain
+open by decision, not by oversight — each with the reason.
+
+## 1. Status is not yet single-writer end to end
+
+The main-process store is single-writer. The renderer still writes rows for
+remote-runtime and structured panes whose bytes never transit the host, and
+it still merges client identity fields into host rows. Odin removed the
+cross-machine wall-clock adjudication (contract **S**) and nothing more.
+
+<Callout title="The four remaining renderer writers">
+  Enumerated in full in `odin/OPEN.md`, with the production call site for
+  each:
+
+  - `src/renderer/src/components/terminal-pane/pty-connection/direct-ssh-retry-status.ts:146-211` — writes straight from the client's own OSC parse when `shouldOwnAgentStatusInRenderer` is true.
+  - `src/renderer/src/lib/background-agent-status-consumer.ts:38-63` — the same OSC-derived write for a backgrounded/hidden pane.
+  - `src/renderer/src/lib/automation-session-observer.ts:32-66` — the same write again for an automation-session PTY reuse observer.
+  - `src/renderer/src/components/native-chat/StructuredAgentSessionStatusBridge.tsx:185` — the structured-session chat bridge still calls `store.setAgentStatus` itself.
+  - Found by the round-two Claude review, not in the original four: `src/renderer/src/components/terminal-pane/pty-connection/title-spawn-bell.ts:105-189` computes status from renderer-observed PTY title bytes for the `command-code` pseudo-agent.
+</Callout>
+
+**Why it is left open.** All five write from bytes/events that never
+transit the local main process — a remote-runtime pane's PTY bytes flow
+client-to-host directly, and a structured chat session's turns are
+host-published over `agentStatus:set` but main deliberately withholds them
+so the pane key does not get two writers at once. Deleting the renderer
+writers before removing that withholding would just make those panes go
+blank. Closing this residual for real needs the remote host ingesting its
+own OSC bytes into its hook store, plus a capability gate so an old host
+that cannot do that yet does not silently starve a paired client.
+
+**Cost of closing it.** Every remote-runtime pane's status would gain the
+latency of one host round trip before the client shows a transition, since
+the client could no longer paint directly from its own byte stream.
+
+## 2. Settlement keeps two positive-evidence exceptions
+
+An explicit idle marker or ready prompt the agent itself paints counts as
+observation (a fresh first-party working status now vetoes it), and agents
+whose only rest signal is their name (grok, copilot, aider, mimo, agy,
+opencode) settle after the quiescence window. Removing the second would
+make `tui-idle` unusable for those agents
+([#6011](https://github.com/stablyai/orca/issues/6011)) — it is a named
+trade-off, not the pure "silence is unverifiable" rule.
+
+## 3. The wait result shape is Orca's, not the literal three-valued type
+
+The wait result is `satisfied` plus `evidence`, not the literal
+`accepted | refused | unverifiable` type. The three outcomes are
+representable and every silence path maps to not-satisfied, but the wire
+shape is kept for compatibility.
+
+## 4. Worker observation keeps legacy wire values
+
+`unattached`, `missing`, and `identity_changed` stay beside
+`live / unverifiable / exited` because clients depend on them as distinct
+states.
+
+## 5. The launch receipt verifies advertised support, not applied options
+
+`source: 'probe'` means the installed Claude CLI listed the model and
+effort; nothing reads back what the launched session actually applied.
+Codex and Grok have no live probe.
+
+## 6. Sub-agent rows are still renderer-derived
+
+They carry their own identity now (contract **K**), but their synthesized
+entry state falls back to `done` where the status type has no
+`unverifiable` member.
+
+## 7. Proof coverage is macOS-local
+
+Windows and Linux process ownership, SSH-hosted worktrees, mixed-version
+clients, mobile pairing against an Odin host, and a third agent settling
+(this operator's Grok quota) are not established by the recorded runs. See
+[Real sessions](/docs/odin/real-sessions).
+
+## 8. Retained telemetry opt-ins are preserved for existing profiles
+
+Only fresh installs are opted out (contract **F**); a pre-existing profile
+that was auto-enrolled by Orca's former migration keeps that choice until
+the operator changes it in Settings.
+
+---
+
+Everything above is either tracked with a plan in
+[`odin/OPEN.md`](https://github.com/unempyd/odin/blob/main/odin/OPEN.md), or
+accepted for v0.1.0 as Orca's existing behaviour.
