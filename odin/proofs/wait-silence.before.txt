@@ -1,0 +1,83 @@
+
+ RUN  v4.1.11 /Users/briankeeny/Desktop/odin-wt-secrets-wait
+
+ ❯ src/main/runtime/runtime-terminal-wait-exit-timeout.test.ts (3 tests | 2 failed) 39ms
+     × resolves the silence verdict instead of rejecting when a PTY exit wait times out 27ms
+     × resolves the silence verdict instead of rejecting when a leaf exit wait times out 4ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/main/runtime/runtime-terminal-wait-exit-timeout.test.ts > RuntimeTerminalWait exit-condition timeout > resolves the silence verdict instead of rejecting when a PTY exit wait times out
+AssertionError: expected "vi.fn()" to be called once with arguments: [ { ok: { …(6) } } ]
+
+Received:
+
+  1st vi.fn() call:
+
+  [
+    {
+-     "ok": {
+-       "condition": "exit",
+-       "evidence": "silence",
+-       "exitCode": null,
+-       "handle": "terminal-1",
+-       "satisfied": false,
+-       "status": "running",
+-     },
++     "error": "timeout",
+    },
+  ]
+
+
+Number of calls: 1
+
+ ❯ src/main/runtime/runtime-terminal-wait-exit-timeout.test.ts:73:21
+     71|     await vi.advanceTimersByTimeAsync(1000)
+     72|
+     73|     expect(settled).toHaveBeenCalledExactlyOnceWith({
+       |                     ^
+     74|       ok: {
+     75|         handle: HANDLE,
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  src/main/runtime/runtime-terminal-wait-exit-timeout.test.ts > RuntimeTerminalWait exit-condition timeout > resolves the silence verdict instead of rejecting when a leaf exit wait times out
+AssertionError: expected "vi.fn()" to be called once with arguments: [ { ok: { …(6) } } ]
+
+Received:
+
+  1st vi.fn() call:
+
+  [
+    {
+-     "ok": {
+-       "condition": "exit",
+-       "evidence": "silence",
+-       "exitCode": null,
+-       "handle": "terminal-1",
+-       "satisfied": false,
+-       "status": "running",
+-     },
++     "error": "timeout",
+    },
+  ]
+
+
+Number of calls: 1
+
+ ❯ src/main/runtime/runtime-terminal-wait-exit-timeout.test.ts:92:21
+     90|     await vi.advanceTimersByTimeAsync(1000)
+     91|
+     92|     expect(settled).toHaveBeenCalledExactlyOnceWith({
+       |                     ^
+     93|       ok: {
+     94|         handle: HANDLE,
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 1 passed (3)
+   Start at  08:59:55
+   Duration  24.90s (transform 19.04s, setup 108ms, import 24.33s, tests 39ms, environment 0ms)
+

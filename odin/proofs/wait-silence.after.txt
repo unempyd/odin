@@ -1,0 +1,9 @@
+
+ RUN  v4.1.11 /Users/briankeeny/Desktop/odin-wt-secrets-wait
+
+
+ Test Files  1 passed (1)
+      Tests  3 passed (3)
+   Start at  09:00:37
+   Duration  24.76s (transform 19.05s, setup 113ms, import 24.26s, tests 29ms, environment 0ms)
+

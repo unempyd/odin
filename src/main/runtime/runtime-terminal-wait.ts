@@ -127,6 +127,18 @@ export class RuntimeTerminalWait {
         if (effectiveTimeoutMs > 0) {
           waiter.timeout = setTimeout(() => {
             this.waiters.remove(waiter)
+            // C: an exit wait never settles on silence with an opaque rejection — running out of
+            // budget without a proven exit is exactly the 'silence' verdict, same shape the
+            // disconnected-PTY check above already returns (ssh-execution-boundary.md).
+            if (condition === 'exit') {
+              const timedOut = this.deps.getLivePty(handle)
+              if (timedOut) {
+                resolve(buildPtyTerminalWaitResult(handle, condition, timedOut.pty))
+                return
+              }
+              reject(new Error('terminal_handle_stale'))
+              return
+            }
             reject(new Error('timeout'))
           }, effectiveTimeoutMs)
         }
@@ -223,6 +235,17 @@ export class RuntimeTerminalWait {
       if (effectiveTimeoutMs > 0) {
         waiter.timeout = setTimeout(() => {
           this.waiters.remove(waiter)
+          // C: an exit wait never settles on silence with an opaque rejection — running out of
+          // budget without a proven exit is exactly the 'silence' verdict (ssh-execution-boundary.md).
+          if (condition === 'exit') {
+            try {
+              const timedOut = this.deps.getLiveLeaf(handle)
+              resolve(buildTerminalWaitResult(handle, condition, timedOut.leaf))
+            } catch (error) {
+              reject(error instanceof Error ? error : new Error(String(error)))
+            }
+            return
+          }
           reject(new Error('timeout'))
         }, effectiveTimeoutMs)
       }

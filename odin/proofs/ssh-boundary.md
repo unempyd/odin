@@ -322,21 +322,33 @@ seven phases `ok: true`).
   through total loss of the remote daemon, not just the transport. A subsequent `ssh.connect`
   relaunches the relay and reaches `status: "connected"` again. **Proven.**
 
-**`terminal.wait --for exit` note (a second, narrower finding, distinct from Deviation 3):**
-`RuntimeTerminalWait.wait()` (`src/main/runtime/runtime-terminal-wait.ts`) rejects with a bare
+**`terminal.wait --for exit` note (a second, narrower finding, distinct from Deviation 3) — verdict
+shape now fixed, still unproven end-to-end (later worktree, `wait-silence`):** at the time of this
+run, `RuntimeTerminalWait.wait()` (`src/main/runtime/runtime-terminal-wait.ts`) rejected with a bare
 `Error('timeout')` — not a resolved `{satisfied: false, evidence: 'silence'}` — when its own
-internal timer fires before either a real exit or `pty.connected` flipping false resolves the
+internal timer fired before either a real exit or `pty.connected` flipping false resolved the
 waiter. During phases 4 and 7 the SSH transport's own dead-link detection (`TIMEOUT_MS = 20_000`,
 `src/relay/protocol.ts`) had not always flipped `connected` by the time the driver's chosen wait
 budget (raised to 30s/20s and still not reliably enough) elapsed, so the CLI surfaced a plain RPC
 error the driver cannot read a verdict from, instead of the documented immediate
 `satisfied:false, evidence:'silence'`. This is **not** Deviation 3 — the connect path is unaffected
-and phases 3–7 run to completion regardless — but it means `docs/reference/
-ssh-execution-boundary.md`'s "`terminal wait --for exit`'s immediate `satisfied:false,
-evidence:'silence'`" claim is still not proven end-to-end against a real transport drop the way the
-unit tests prove it in isolation. Left as a documented open item; the driver now records `ok` for
-phases 4/7 from `terminal show`'s `exitCause` absence alone (the boundary's actual load-bearing
-claim) and keeps `terminal.wait`'s outcome as evidence rather than a gate.
+and phases 3–7 run to completion regardless.
+
+The timer path is now fixed: both the PTY-branch and leaf-branch internal timeouts for
+`condition: 'exit'` resolve `{satisfied: false, status, exitCode, evidence: 'silence'}` (the same
+shape `buildPtyTerminalWaitResult`/`buildTerminalWaitResult` already produce for a disconnected PTY
+at wait-start) instead of rejecting; a `tui-idle` timeout is unchanged and still rejects with
+`Error('timeout')`. This closes the gap at the unit level — see
+`odin/proofs/wait-silence.before.txt` / `.after.txt`
+(`src/main/runtime/runtime-terminal-wait-exit-timeout.test.ts`) — but claim no more than that: it
+has **not** been re-run against a real transport drop the way this SSH proof drives one, so
+`docs/reference/ssh-execution-boundary.md`'s "`terminal wait --for exit`'s immediate
+`satisfied:false, evidence:'silence'`" claim is proven at the unit level, not proven end-to-end
+against a real host. The driver still records `ok` for phases 4/7 from `terminal show`'s
+`exitCause` absence alone (the boundary's actual load-bearing claim) and keeps `terminal.wait`'s
+outcome as evidence rather than a gate; re-running `odin/proof/ssh-boundary.mjs` against a real VPS
+transport drop with the fixed binary, and confirming `terminal.wait` itself now resolves instead of
+throwing, remains the open item.
 
 ## Residuals this run exercises (per the design plan, §3)
 
@@ -360,10 +372,11 @@ claim) and keeps `terminal.wait`'s outcome as evidence rather than a gate.
   `unverifiable`/`missing_liveness_verdict`, and `terminal wait --for exit`'s immediate
   `satisfied:false, evidence:'silence'`) remain proven only by the unit tests
   (`odin/proofs/*.after.txt`), not by this run — the wait-path finding above is the reason the third
-  one specifically still isn't.
-- Whether the `terminal.wait` rejection-on-internal-timeout shape (above) is itself worth fixing at
-  the product level, and whether the SSH dead-link `TIMEOUT_MS` window should be shorter, are open
-  follow-ups — not attempted here; they are a distinct question from Deviation 3.
+  one specifically still isn't. The `wait-silence` fix (above) closes the verdict-shape gap the
+  finding names, at the unit level only; this run has not been repeated against the fixed binary,
+  so "proven only by unit tests, not by this run" still holds for that third verdict.
+- Whether the SSH dead-link `TIMEOUT_MS` window should be shorter is a separate open follow-up —
+  not attempted here; it is a distinct question from both Deviation 3 and `wait-silence`.
 
 ## State left on the VPS
 
