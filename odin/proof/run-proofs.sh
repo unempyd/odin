@@ -29,12 +29,12 @@ for (const r of m.residuals) console.log([r.id, r.tests.join(' ')].join('\t'))
   if [ -n "$ONLY" ] && [ "$ONLY" != "$id" ]; then continue; fi
   echo "=== $id"
   for t in $tests; do mkdir -p "$SCRATCH/$(dirname "$t")"; cp "$ROOT/$t" "$SCRATCH/$t"; done
-  if (cd "$SCRATCH" && pnpm exec vitest run --config config/vitest.config.ts $tests >"$SCRATCH/$id.before.log" 2>&1); then
+  if (cd "$SCRATCH" && "$ROOT/node_modules/.bin/vitest" run --config config/vitest.config.ts $tests >"$SCRATCH/$id.before.log" 2>&1); then
     echo "  REPRODUCE: FAILED — proof tests pass on upstream $UPSTREAM_SHA (residual did not reproduce)"; fail=1
   else
     echo "  REPRODUCE: ok — proof tests fail on upstream $UPSTREAM_SHA"
   fi
-  if (cd "$ROOT" && pnpm exec vitest run --config config/vitest.config.ts $tests >"$ROOT/odin/proofs/$id.run.log" 2>&1); then
+  if (cd "$ROOT" && "$ROOT/node_modules/.bin/vitest" run --config config/vitest.config.ts $tests >"$ROOT/odin/proofs/$id.run.log" 2>&1); then
     echo "  CLOSE:     ok — proof tests pass on Odin $(git rev-parse --short HEAD)"
   else
     echo "  CLOSE:     FAILED — see odin/proofs/$id.run.log"; fail=1
