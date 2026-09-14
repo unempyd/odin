@@ -49,12 +49,13 @@ export class LoadedCohortMigrationOperations {
           ...existing,
           existedBeforeTelemetryRelease: resolvedExistedBefore,
           // Why: preserve any explicit opt-in/out; fall back to cohort default only when optedIn is undefined, never when false.
+          // Why false for fresh installs: telemetry needs explicit consent, not an unset default (PrivacyPane is the opt-in action).
           optedIn:
             existing?.optedIn === true || existing?.optedIn === false || existing?.optedIn === null
               ? existing.optedIn
               : resolvedExistedBefore
                 ? null
-                : true,
+                : false,
           installId:
             typeof existing?.installId === 'string' && existing.installId.length > 0
               ? existing.installId
