@@ -252,3 +252,32 @@ describe('blocked-reason rendering against a mixed-version host', () => {
     )
   })
 })
+
+// Residual C: 'satisfied' alone can't tell an operator whether a pane proved idle or merely went
+// quiet — the CLI must surface the wire's new evidence tier.
+describe('tui-idle evidence rendering', () => {
+  function idleWaitResult(evidence?: 'observed-idle' | 'silence'): { wait: RuntimeTerminalWait } {
+    return {
+      wait: {
+        handle: 'term_agy',
+        condition: 'tui-idle',
+        satisfied: evidence !== 'silence',
+        status: 'running',
+        exitCode: null,
+        ...(evidence ? { evidence } : {})
+      }
+    }
+  }
+
+  it('prints evidence when the host reports it', () => {
+    expect(formatTerminalWait(idleWaitResult('observed-idle')).split('\n')).toContain(
+      'evidence: observed-idle'
+    )
+    expect(formatTerminalWait(idleWaitResult('silence')).split('\n')).toContain('evidence: silence')
+  })
+
+  it('omits the evidence line against an older host that never sent it', () => {
+    const lines = formatTerminalWait(idleWaitResult(undefined)).split('\n')
+    expect(lines.some((line) => line.startsWith('evidence:'))).toBe(false)
+  })
+})

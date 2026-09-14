@@ -284,5 +284,8 @@ export function formatTerminalWait(result: { wait: RuntimeTerminalWait }): strin
   if (result.wait.blockedReason) {
     lines.push(`blockedReason: ${describeTerminalWaitBlockedReason(result.wait.blockedReason)}`)
   }
+  if (result.wait.evidence) {
+    lines.push(`evidence: ${result.wait.evidence}`)
+  }
   return lines.join('\n')
 }

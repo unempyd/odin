@@ -12,8 +12,9 @@ import {
 } from './terminal-wait-results'
 import { buildTerminalWaitText } from './terminal-wait-tail-state'
 import {
-  isTuiIdleSatisfied,
   quietForegroundProcessProvesTuiIdle,
+  resolveTuiIdleVerdict,
+  tuiIdleVerdictToEvidence,
   type FirstPartyAgentStatus
 } from './tui-idle-evidence'
 import type { TuiAgent } from '../../shared/tui-agent'
@@ -110,18 +111,25 @@ export class RuntimeTerminalIdlePolls {
         )
         return
       }
-      if (
-        isTuiIdleSatisfied({
-          record: leaf,
-          rendererTitle: leaf.paneTitle ?? this.deps.getTabTitle(leaf.tabId),
-          readPositiveBodyEvidence: () => isKnownReadyPromptPreview(waitText),
-          agent,
-          firstPartyStatus: this.deps.getFirstPartyAgentStatus(leaf.ptyId),
-          quiescenceMs: this.deps.quiescenceMs
-        })
-      ) {
+      const verdict = resolveTuiIdleVerdict({
+        record: leaf,
+        rendererTitle: leaf.paneTitle ?? this.deps.getTabTitle(leaf.tabId),
+        readPositiveBodyEvidence: () => isKnownReadyPromptPreview(waitText),
+        agent,
+        firstPartyStatus: this.deps.getFirstPartyAgentStatus(leaf.ptyId),
+        quiescenceMs: this.deps.quiescenceMs
+      })
+      if (verdict !== 'not-idle') {
         this.stop(entry)
-        this.deps.resolve(waiter, buildTerminalWaitResult(waiter.handle, 'tui-idle', leaf))
+        this.deps.resolve(
+          waiter,
+          buildTerminalWaitResult(
+            waiter.handle,
+            'tui-idle',
+            leaf,
+            tuiIdleVerdictToEvidence(verdict)
+          )
+        )
         return
       }
       if (
@@ -144,7 +152,13 @@ export class RuntimeTerminalIdlePolls {
           (live.lastOutputAt ? Date.now() - live.lastOutputAt : 0) >= this.deps.quiescenceMs
         ) {
           this.stop(entry)
-          this.deps.resolve(waiter, buildTerminalWaitResult(waiter.handle, 'tui-idle', live))
+          // Why 'silence' explicitly: a quiet non-shell foreground process with no title
+          // evidence at all is the weakest tier — corroborated only by the process table, never
+          // by the agent's own account.
+          this.deps.resolve(
+            waiter,
+            buildTerminalWaitResult(waiter.handle, 'tui-idle', live, 'silence')
+          )
         }
       }
     } catch {
@@ -176,19 +190,25 @@ export class RuntimeTerminalIdlePolls {
         )
         return
       }
-      if (
-        isTuiIdleSatisfied({
-          record: pty,
-          readPositiveBodyEvidence: () =>
-            this.deps.getAdoptedPtyIdleStatus(pty) === 'idle' ||
-            isKnownReadyPromptPreview(waitText),
-          agent,
-          firstPartyStatus: this.deps.getFirstPartyAgentStatus(pty.ptyId),
-          quiescenceMs: this.deps.quiescenceMs
-        })
-      ) {
+      const verdict = resolveTuiIdleVerdict({
+        record: pty,
+        readPositiveBodyEvidence: () =>
+          this.deps.getAdoptedPtyIdleStatus(pty) === 'idle' || isKnownReadyPromptPreview(waitText),
+        agent,
+        firstPartyStatus: this.deps.getFirstPartyAgentStatus(pty.ptyId),
+        quiescenceMs: this.deps.quiescenceMs
+      })
+      if (verdict !== 'not-idle') {
         this.stop(entry)
-        this.deps.resolve(waiter, buildPtyTerminalWaitResult(waiter.handle, 'tui-idle', pty))
+        this.deps.resolve(
+          waiter,
+          buildPtyTerminalWaitResult(
+            waiter.handle,
+            'tui-idle',
+            pty,
+            tuiIdleVerdictToEvidence(verdict)
+          )
+        )
         return
       }
       if (
@@ -209,7 +229,11 @@ export class RuntimeTerminalIdlePolls {
           (pty.lastOutputAt ? Date.now() - pty.lastOutputAt : 0) >= this.deps.quiescenceMs
         ) {
           this.stop(entry)
-          this.deps.resolve(waiter, buildPtyTerminalWaitResult(waiter.handle, 'tui-idle', pty))
+          // Why 'silence' explicitly: see the leaf-side lane above.
+          this.deps.resolve(
+            waiter,
+            buildPtyTerminalWaitResult(waiter.handle, 'tui-idle', pty, 'silence')
+          )
         }
       }
     } catch {

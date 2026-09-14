@@ -9,7 +9,11 @@ import {
   isKnownReadyPromptPreview
 } from './terminal-wait-detection'
 import { buildTerminalWaitText } from './terminal-wait-tail-state'
-import { isTuiIdleSatisfied } from './tui-idle-evidence'
+import {
+  resolveTuiIdleVerdict,
+  tuiIdleVerdictToEvidence,
+  type TuiIdleVerdict
+} from './tui-idle-evidence'
 import { TUI_IDLE_QUIESCENCE_MS } from './orca-runtime-postlude'
 
 export class OrcaRuntimeWithResolveExitWaiters extends OrcaRuntimeWithBindPtyIncarnationHandle {
@@ -52,12 +56,16 @@ export class OrcaRuntimeWithResolveExitWaiters extends OrcaRuntimeWithBindPtyInc
     // Why re-rank rather than resolve outright: the transition that brought us here is
     // only a title sample, and a name-only title arriving mid-turn is the weakest tier
     // there is (#6011). Leave such a waiter on its poll to be corroborated instead.
-    if (!this.isTuiIdleSatisfiedForLeaf(leaf)) {
+    const verdict = this.resolveTuiIdleVerdictForLeaf(leaf)
+    if (verdict === 'not-idle') {
       return
     }
     for (const waiter of [...waiters]) {
       if (waiter.condition === 'tui-idle') {
-        this.resolveWaiter(waiter, buildTerminalWaitResult(handle, 'tui-idle', leaf))
+        this.resolveWaiter(
+          waiter,
+          buildTerminalWaitResult(handle, 'tui-idle', leaf, tuiIdleVerdictToEvidence(verdict))
+        )
       }
     }
   }
@@ -91,19 +99,23 @@ export class OrcaRuntimeWithResolveExitWaiters extends OrcaRuntimeWithBindPtyInc
       return
     }
     // Why: same re-ranking as resolveTuiIdleWaiters above.
-    if (!this.isTuiIdleSatisfiedForPty(pty)) {
+    const verdict = this.resolveTuiIdleVerdictForPty(pty)
+    if (verdict === 'not-idle') {
       return
     }
     for (const waiter of [...waiters]) {
       if (waiter.condition === 'tui-idle') {
-        this.resolveWaiter(waiter, buildPtyTerminalWaitResult(handle, 'tui-idle', pty))
+        this.resolveWaiter(
+          waiter,
+          buildPtyTerminalWaitResult(handle, 'tui-idle', pty, tuiIdleVerdictToEvidence(verdict))
+        )
       }
     }
   }
 
   // Why: the primary OSC-title signal can't fire for daemon-hosted terminals (no PTY data through the runtime), so this fallback polls the renderer-synced tab title + foreground-process quiescence; self-cancels when the OSC path fires.
-  protected isTuiIdleSatisfiedForLeaf(leaf: RuntimeLeafRecord): boolean {
-    return isTuiIdleSatisfied({
+  protected resolveTuiIdleVerdictForLeaf(leaf: RuntimeLeafRecord): TuiIdleVerdict {
+    return resolveTuiIdleVerdict({
       record: leaf,
       rendererTitle: leaf.paneTitle ?? this.tabs.get(leaf.tabId)?.title ?? null,
       readPositiveBodyEvidence: () =>
@@ -117,8 +129,8 @@ export class OrcaRuntimeWithResolveExitWaiters extends OrcaRuntimeWithBindPtyInc
     })
   }
 
-  protected isTuiIdleSatisfiedForPty(pty: RuntimePtyWorktreeRecord): boolean {
-    return isTuiIdleSatisfied({
+  protected resolveTuiIdleVerdictForPty(pty: RuntimePtyWorktreeRecord): TuiIdleVerdict {
+    return resolveTuiIdleVerdict({
       record: pty,
       readPositiveBodyEvidence: () =>
         this.getAdoptedPtyExplicitIdleStatus(pty) === 'idle' ||

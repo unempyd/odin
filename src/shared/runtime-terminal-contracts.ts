@@ -356,4 +356,10 @@ export type RuntimeTerminalWait = {
   exitCode: number | null
   exitCause?: TerminalExitCause
   blockedReason?: RuntimeTerminalWaitBlockedReason
+  /** Present only for `condition: 'tui-idle'`. `'observed-idle'` is a positive read (the agent
+   *  said so, or it is one of the agents with no other rest signal); `'silence'` is a pane that
+   *  merely stopped repainting, corroborated by quiescence but never confirmed by the agent
+   *  itself — `satisfied` is false whenever evidence is `'silence'`. Absent from a host older
+   *  than this field. */
+  evidence?: 'observed-idle' | 'silence'
 }

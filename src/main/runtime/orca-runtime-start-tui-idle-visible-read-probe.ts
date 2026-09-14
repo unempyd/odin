@@ -84,16 +84,19 @@ export class OrcaRuntimeWithStartTuiIdleVisibleReadProbe extends OrcaRuntimeWith
     handle: string,
     blockedReason: RuntimeTerminalWaitBlockedReason | null
   ): RuntimeTerminalWait {
+    // Why 'observed-idle' unconditionally here: this probe only ever resolves on a known ready
+    // prompt read directly off the live screen (the caller already returned early otherwise) —
+    // a positive tier-1 read, never a silence corroboration.
     const pty = this.getLivePtyForHandle(handle)
     if (pty) {
       return blockedReason
         ? buildPtyTerminalWaitBlockedResult(handle, 'tui-idle', pty.pty, blockedReason)
-        : buildPtyTerminalWaitResult(handle, 'tui-idle', pty.pty)
+        : buildPtyTerminalWaitResult(handle, 'tui-idle', pty.pty, 'observed-idle')
     }
     const { leaf } = this.getLiveLeafForHandle(handle)
     return blockedReason
       ? buildTerminalWaitBlockedResult(handle, 'tui-idle', leaf, blockedReason)
-      : buildTerminalWaitResult(handle, 'tui-idle', leaf)
+      : buildTerminalWaitResult(handle, 'tui-idle', leaf, 'observed-idle')
   }
 
   async waitForSetupTerminalCompletion(handle: string): Promise<{ exitCode: number | null }> {
