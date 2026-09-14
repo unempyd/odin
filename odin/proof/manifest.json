@@ -5,7 +5,8 @@
       "id": "S",
       "title": "Agent status: host rows are never outranked by a client wall clock",
       "commit": "f6ce5d565f",
-      "tests": ["src/renderer/src/runtime/web-session-tabs-sync-host-authority.test.ts"]
+      "tests": ["src/renderer/src/runtime/web-session-tabs-sync-host-authority.test.ts"],
+      "reproduce": "expected 'working' to be '(blocked|done)'"
     },
     {
       "id": "N",
@@ -13,7 +14,8 @@
       "commit": "07184d77d6",
       "tests": [
         "src/main/runtime/orchestration/db/worker-dispatch/worker-dispatch-accounting.test.ts"
-      ]
+      ],
+      "reproduce": "expected '[0-9 :-]+' to be null|expected undefined to be [17]"
     },
     {
       "id": "M",
@@ -21,13 +23,15 @@
       "commit": "a2c27936ee",
       "tests": [
         "src/main/runtime/orchestration/orchestration-unsupervised-dispatch-recovery.test.ts"
-      ]
+      ],
+      "reproduce": "listUnsupervisedActiveDispatches is not a function|was not found"
     },
     {
       "id": "K",
       "title": "Sub-agent identity is first-class, never a fabricated dispatch",
       "commit": "d7e67780a8",
-      "tests": ["src/renderer/src/components/sidebar/worktree-subagent-child-rows.test.ts"]
+      "tests": ["src/renderer/src/components/sidebar/worktree-subagent-child-rows.test.ts"],
+      "reproduce": "expected undefined to deeply equal \\{ id: 'child-1'"
     },
     {
       "id": "I",
@@ -35,25 +39,22 @@
       "commit": "cc23f1c460",
       "tests": [
         "src/main/runtime/rpc/methods/orchestration/worker/worker-launch-preferences.test.ts"
-      ]
+      ],
+      "reproduce": "to deeply equal \\{ requested"
     },
     {
       "id": "B",
       "title": "Worker liveness: an empty or non-enumerating host answer is unverifiable, never exited",
       "commit": "cfc277f2b1",
-      "tests": ["src/main/runtime/orchestration/worker-terminal-process-liveness.test.ts"]
+      "tests": ["src/main/runtime/orchestration/worker-terminal-process-liveness.test.ts"],
+      "reproduce": "expected 'exited' to be 'unverifiable'"
     },
     {
       "id": "A",
       "title": "Retired-incarnation tombstone never mints a proven exit from an absent status",
       "commit": "731c49c558",
-      "tests": ["src/main/daemon/terminal-host-process-inspection.test.ts"]
-    },
-    {
-      "id": "A-relay",
-      "title": "Relay tombstone applies the same proof gate (record-torn-down is not a death)",
-      "commit": "013965c537",
-      "tests": ["src/shared/retired-pty-incarnations.test.ts"]
+      "tests": ["src/main/daemon/terminal-host-process-inspection.test.ts"],
+      "reproduce": "to match object \\{ verdict: 'unverifiable'"
     },
     {
       "id": "C",
@@ -62,7 +63,8 @@
       "tests": [
         "src/main/runtime/tui-idle-evidence.test.ts",
         "src/main/runtime/terminal-wait-name-only-idle.test.ts"
-      ]
+      ],
+      "reproduce": "expected undefined to be 'silence'"
     },
     {
       "id": "H",
@@ -71,31 +73,45 @@
       "tests": [
         "src/shared/constants.test.ts",
         "src/main/persistence/applying-settings/terminal-settings-migrations.test.ts"
-      ]
+      ],
+      "reproduce": "not to match /dangerously|to be ''"
     },
     {
       "id": "E",
       "title": "Managed hooks into other tools' configs require explicit opt-in (fail-closed)",
       "commit": "29624f65b9",
-      "tests": ["src/main/agent-hooks/managed-agent-hook-controls.test.ts"]
+      "tests": ["src/main/agent-hooks/managed-agent-hook-controls.test.ts"],
+      "reproduce": "expected 'install' to be 'skip'"
     },
     {
       "id": "F",
       "title": "Fresh installs are opted out of telemetry by default",
       "commit": "aacecbdaf4",
-      "tests": ["src/main/persistence-cohort-and-identity-migration.test.ts"]
+      "tests": ["src/main/persistence-cohort-and-identity-migration.test.ts"],
+      "reproduce": "expected true to be false"
     },
     {
       "id": "G",
       "title": "Mirroring ~/.codex/auth.json into a runtime home requires consent; revocation clears it",
       "commit": "f14f8249f9",
-      "tests": ["src/main/codex-accounts/runtime-home-system-default-mirror-readback.test.ts"]
+      "tests": ["src/main/codex-accounts/runtime-home-system-default-mirror-readback.test.ts"],
+      "reproduce": "expected true to be false"
     },
     {
       "id": "D",
       "title": "Runtime WS listener stays on loopback unless a live consent record exists; revocation re-closes",
       "commit": "6d10576a71",
-      "tests": ["src/main/runtime/runtime-rpc-websocket-bind-host.test.ts"]
+      "tests": ["src/main/runtime/runtime-rpc-websocket-bind-host.test.ts"],
+      "reproduce": "expected '0.0.0.0' to be '127.0.0.1'"
+    }
+  ],
+  "closedByConstruction": [
+    {
+      "id": "A-relay",
+      "title": "Relay tombstone applies the same proof gate (record-torn-down is not a death)",
+      "commit": "013965c537",
+      "tests": ["src/shared/retired-pty-incarnations.test.ts"],
+      "note": "Closed by construction, not mechanically reproduced: upstream src/relay/pty-handler.ts:2412 hard-codes code: 0 in reapExitedPty even for evidence 'record-torn-down' (its own docblock at :2395-2402 says that is not a death), and :2632-2656 publishes verdict 'exited' from it. Odin routes the code through resolveRetiredPtyIncarnationCode (UNVERIFIED_PROCESS_EXIT_CODE unless the evidence is a proven exit) and the consumer applies the same isProvenProcessExit gate as the daemon (A). The race has no deterministic harness in the relay test surface, so its test pins the extracted mapping rather than reproducing the upstream path."
     }
   ]
 }

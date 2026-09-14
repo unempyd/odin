@@ -3,7 +3,8 @@
 #
 # For every entry in odin/proof/manifest.json:
 #   1. REPRODUCE: copy the proof test files from this checkout into a scratch worktree at the upstream Orca commit
-#      and run them there. They must FAIL (or fail to compile because the contract's symbols do not exist yet).
+#      and run them there. The manifest's `reproduce` regex (the behavioural assertion) must appear in the
+#      failure output; a missing symbol or an import error does not count.
 #   2. CLOSE: run the same test files on this checkout. They must PASS.
 # Exit code is non-zero if any residual does not reproduce upstream or is not closed here.
 #
@@ -29,10 +30,15 @@ for (const r of m.residuals) console.log([r.id, r.tests.join(' ')].join('\t'))
   if [ -n "$ONLY" ] && [ "$ONLY" != "$id" ]; then continue; fi
   echo "=== $id"
   for t in $tests; do mkdir -p "$SCRATCH/$(dirname "$t")"; cp "$ROOT/$t" "$SCRATCH/$t"; done
+  # REPRODUCE means the named behavioural assertion fails at upstream — a missing symbol, an import
+  # error or an infrastructure failure is NOT a reproduction, so the manifest's `reproduce` regex must match.
+  reproduce_rx="$(node -e "const m=require('$MANIFEST');console.log(m.residuals.find(r=>r.id==='$id').reproduce||'')")"
   if (cd "$SCRATCH" && "$ROOT/node_modules/.bin/vitest" run --config config/vitest.config.ts $tests >"$SCRATCH/$id.before.log" 2>&1); then
     echo "  REPRODUCE: FAILED — proof tests pass on upstream $UPSTREAM_SHA (residual did not reproduce)"; fail=1
+  elif [ -n "$reproduce_rx" ] && ! grep -Eq "$reproduce_rx" "$SCRATCH/$id.before.log"; then
+    echo "  REPRODUCE: FAILED — tests failed on upstream but not with the expected assertion /$reproduce_rx/"; fail=1
   else
-    echo "  REPRODUCE: ok — proof tests fail on upstream $UPSTREAM_SHA"
+    echo "  REPRODUCE: ok — /$reproduce_rx/ fails on upstream $UPSTREAM_SHA"
   fi
   if (cd "$ROOT" && "$ROOT/node_modules/.bin/vitest" run --config config/vitest.config.ts $tests >"$ROOT/odin/proofs/$id.run.log" 2>&1); then
     echo "  CLOSE:     ok — proof tests pass on Odin $(git rev-parse --short HEAD)"
