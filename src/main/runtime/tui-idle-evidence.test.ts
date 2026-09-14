@@ -1,13 +1,12 @@
 import { describe, expect, it } from 'vitest'
-import {
-  isTuiIdleSatisfied,
-  resolveTuiIdleVerdict,
-  type TuiIdleSatisfactionInput
-} from './tui-idle-evidence'
+import * as tuiIdleEvidenceModule from './tui-idle-evidence'
+import { resolveTuiIdleVerdict, type TuiIdleSatisfactionInput } from './tui-idle-evidence'
 
 // Residual C: tui-idle settled on silence — a name-only title going quiet was published as the
 // same `satisfied: true` as an agent's own explicit idle report. These pin the three-way verdict
-// resolveTuiIdleVerdict now returns, and that isTuiIdleSatisfied stays a `!== 'not-idle'` guard.
+// resolveTuiIdleVerdict now returns. C3: the old boolean adapter (`isTuiIdleSatisfied`) collapsed
+// that verdict back into `true` for 'silence', so it is gone — every guard-only caller now checks
+// `resolveTuiIdleVerdict(input) !== 'not-idle'` directly.
 
 const QUIESCENCE_MS = 3000
 
@@ -69,7 +68,7 @@ describe('resolveTuiIdleVerdict', () => {
       agent: 'codex'
     })
     expect(resolveTuiIdleVerdict(input)).toBe('silence')
-    expect(isTuiIdleSatisfied(input)).toBe(true)
+    expect(resolveTuiIdleVerdict(input) !== 'not-idle').toBe(true)
   })
 
   // Carve-out: grok/copilot/aider/mimo/agy/opencode emit only their name at rest and never
@@ -88,11 +87,13 @@ describe('resolveTuiIdleVerdict', () => {
   })
 })
 
-describe('isTuiIdleSatisfied', () => {
-  it('stays a guard: true for observed-idle and silence, false for not-idle', () => {
-    expect(isTuiIdleSatisfied(baseInput({ readPositiveBodyEvidence: () => true }))).toBe(true)
+describe('resolveTuiIdleVerdict as a satisfaction guard', () => {
+  it('is !== not-idle for observed-idle and silence, === not-idle otherwise', () => {
     expect(
-      isTuiIdleSatisfied(
+      resolveTuiIdleVerdict(baseInput({ readPositiveBodyEvidence: () => true })) !== 'not-idle'
+    ).toBe(true)
+    expect(
+      resolveTuiIdleVerdict(
         baseInput({
           record: {
             lastAgentStatus: 'idle',
@@ -101,8 +102,14 @@ describe('isTuiIdleSatisfied', () => {
           },
           agent: 'codex'
         })
-      )
+      ) !== 'not-idle'
     ).toBe(true)
-    expect(isTuiIdleSatisfied(baseInput())).toBe(false)
+    expect(resolveTuiIdleVerdict(baseInput()) !== 'not-idle').toBe(false)
+  })
+})
+
+describe('C3: isTuiIdleSatisfied removal', () => {
+  it('no longer exports the boolean adapter that read satisfied on silence', () => {
+    expect(Object.hasOwn(tuiIdleEvidenceModule, 'isTuiIdleSatisfied')).toBe(false)
   })
 })

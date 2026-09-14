@@ -1,0 +1,33 @@
+
+ RUN  v4.1.11 /Users/briankeeny/Desktop/odin-wt-fix-settlement
+
+ ❯ src/main/runtime/tui-idle-evidence.test.ts (8 tests | 1 failed) 96ms
+     × no longer exports the boolean adapter that read satisfied on silence 26ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/main/runtime/tui-idle-evidence.test.ts > C3: isTuiIdleSatisfied removal > no longer exports the boolean adapter that read satisfied on silence
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ src/main/runtime/tui-idle-evidence.test.ts:113:95
+    111| describe('C3: isTuiIdleSatisfied removal', () => {
+    112|   it('no longer exports the boolean adapter that read satisfied on sil…
+    113|     expect(Object.prototype.hasOwnProperty.call(tuiIdleEvidenceModule,…
+       |                                                                                               ^
+    114|       false
+    115|     )
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 7 passed (8)
+   Start at  22:43:05
+   Duration  6.25s (transform 2.85s, setup 979ms, import 2.13s, tests 96ms, environment 0ms)
+

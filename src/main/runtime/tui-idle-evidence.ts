@@ -157,11 +157,6 @@ export function resolveTuiIdleVerdict(input: TuiIdleSatisfactionInput): TuiIdleV
     : 'observed-idle'
 }
 
-/** Guard-only callers that only need "may this waiter settle", not the evidence tier. */
-export function isTuiIdleSatisfied(input: TuiIdleSatisfactionInput): boolean {
-  return resolveTuiIdleVerdict(input) !== 'not-idle'
-}
-
 /** A settlement site has already gated on `verdict !== 'not-idle'` by the time it builds a
  *  result; narrows for the builders, which only accept the two settleable tiers. */
 export function tuiIdleVerdictToEvidence(
