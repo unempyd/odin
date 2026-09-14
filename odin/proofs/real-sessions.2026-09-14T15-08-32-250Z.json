@@ -1,0 +1,217 @@
+{
+  "ok": true,
+  "results": {
+    "settle:claude": true,
+    "settle:codex": true,
+    "concurrent": true
+  },
+  "agents": ["claude", "codex"],
+  "phases": ["settle", "concurrent"],
+  "events": [
+    {
+      "at": "2026-09-14T15:07:34.135Z",
+      "type": "profile",
+      "userDataDir": "/var/folders/08/tsc21p4n41ndkvcxq1kl0htw0000gn/T/odin-orca-dev-grant-lyfIkj",
+      "consentRecord": {
+        "claude": "--dangerously-skip-permissions",
+        "codex": "--dangerously-bypass-approvals-and-sandbox",
+        "grok": "--permission-mode bypassPermissions"
+      }
+    },
+    {
+      "at": "2026-09-14T15:07:34.253Z",
+      "type": "trust.granted",
+      "agent": "claude",
+      "file": "/Users/briankeeny/.claude.json",
+      "paths": [
+        "/var/folders/08/tsc21p4n41ndkvcxq1kl0htw0000gn/T/odin-orca-dev-grant-lyfIkj/home/orca/workspaces/odin-real-repo-nGBe5Y/odin-8d320a",
+        "/private/var/folders/08/tsc21p4n41ndkvcxq1kl0htw0000gn/T/odin-orca-dev-grant-lyfIkj/home/orca/workspaces/odin-real-repo-nGBe5Y/odin-8d320a"
+      ]
+    },
+    {
+      "at": "2026-09-14T15:07:36.269Z",
+      "type": "host.ready",
+      "endpoint": "ws://127.0.0.1:54240",
+      "pid": 67377
+    },
+    {
+      "at": "2026-09-14T15:07:37.793Z",
+      "type": "workspace",
+      "repoPath": "/var/folders/08/tsc21p4n41ndkvcxq1kl0htw0000gn/T/odin-real-repo-nGBe5Y",
+      "worktreeId": "5e655f14-3bc2-4132-bf02-3a7d4fa17017::/private/var/folders/08/tsc21p4n41ndkvcxq1kl0htw0000gn/T/odin-orca-dev-grant-lyfIkj/home/orca/workspaces/odin-real-repo-nGBe5Y/odin-8d320a",
+      "coordinator": "term_3dfdd036-1c28-498d-b083-15bb00abb228",
+      "runId": "run_d1cfae7d88dc"
+    },
+    {
+      "at": "2026-09-14T15:07:44.778Z",
+      "type": "settle.worker-start",
+      "agent": "claude",
+      "exit": 0,
+      "state": "ready",
+      "dispatchId": "ctx_1b134414bc13",
+      "launch": {
+        "requested": {
+          "agent": "claude",
+          "model": null,
+          "effort": null
+        },
+        "effective": {
+          "agent": "claude",
+          "model": null,
+          "effort": null
+        },
+        "source": "catalog"
+      },
+      "argv": ["claude", "claude", "claude", "claude --dangerously-skip-permissions"]
+    },
+    {
+      "at": "2026-09-14T15:07:56.232Z",
+      "type": "settle.result",
+      "agent": "claude",
+      "ok": true,
+      "wallclockMs": 18439,
+      "workerDone": {
+        "outcome": null,
+        "subject": "READY acknowledged"
+      },
+      "dispatch": {
+        "status": "completed",
+        "workerState": "succeeded",
+        "terminationReason": null,
+        "dispatchedAt": "2026-09-14T15:07:44.668Z",
+        "completedAt": "2026-09-14T15:07:53.318Z",
+        "wallclockMs": 8650,
+        "exitCode": null,
+        "launch": null,
+        "observation": {
+          "status": "live",
+          "exactWorker": true,
+          "agentWait": null
+        }
+      }
+    },
+    {
+      "at": "2026-09-14T15:08:02.708Z",
+      "type": "settle.worker-start",
+      "agent": "codex",
+      "exit": 0,
+      "state": "ready",
+      "dispatchId": "ctx_64bf087a28bc",
+      "launch": {
+        "requested": {
+          "agent": "codex",
+          "model": null,
+          "effort": null
+        },
+        "effective": {
+          "agent": "codex",
+          "model": null,
+          "effort": null
+        },
+        "source": "catalog"
+      },
+      "argv": [
+        "codex --profile ollama-launch -c model_provider=\"ollama-launch\" -c model_providers.ollama-launch.name=\"Ollama\" -c model_providers.ollama-launch.base_url=\"http://127.0.0.1:11434/v1/\" -c model_providers",
+        "codex",
+        "codex",
+        "codex",
+        "codex",
+        "codex --dangerously-bypass-approvals-and-sandbox"
+      ]
+    },
+    {
+      "at": "2026-09-14T15:08:08.754Z",
+      "type": "settle.result",
+      "agent": "codex",
+      "ok": true,
+      "wallclockMs": 12063,
+      "workerDone": {
+        "outcome": null,
+        "subject": "Ready"
+      },
+      "dispatch": {
+        "status": "completed",
+        "workerState": "succeeded",
+        "terminationReason": null,
+        "dispatchedAt": "2026-09-14T15:08:02.602Z",
+        "completedAt": "2026-09-14T15:08:07.242Z",
+        "wallclockMs": 4640,
+        "exitCode": null,
+        "launch": null,
+        "observation": {
+          "status": "live",
+          "exactWorker": true,
+          "agentWait": null
+        }
+      }
+    },
+    {
+      "at": "2026-09-14T15:08:18.990Z",
+      "type": "concurrent.started",
+      "agents": ["claude", "codex"],
+      "exits": [0, 0],
+      "dispatchIds": ["ctx_10f7021e4941", "ctx_c1e67adfa24f"]
+    },
+    {
+      "at": "2026-09-14T15:08:30.570Z",
+      "type": "concurrent.reports",
+      "reported": [true, true],
+      "timedOut": [false, false]
+    },
+    {
+      "at": "2026-09-14T15:08:31.063Z",
+      "type": "concurrent.result",
+      "ok": true,
+      "dispatches": [
+        {
+          "id": "ctx_10f7021e4941",
+          "status": "completed",
+          "workerState": "succeeded",
+          "terminationReason": null,
+          "dispatchedAt": "2026-09-14T15:08:18.976Z",
+          "completedAt": "2026-09-14T15:08:27.617Z",
+          "wallclockMs": 8641,
+          "exitCode": null,
+          "launch": null,
+          "observation": {
+            "status": "live",
+            "exactWorker": true,
+            "agentWait": null
+          }
+        },
+        {
+          "id": "ctx_c1e67adfa24f",
+          "status": "completed",
+          "workerState": "succeeded",
+          "terminationReason": null,
+          "dispatchedAt": "2026-09-14T15:08:15.062Z",
+          "completedAt": "2026-09-14T15:08:20.384Z",
+          "wallclockMs": 5322,
+          "exitCode": null,
+          "launch": null,
+          "observation": {
+            "status": "live",
+            "exactWorker": true,
+            "agentWait": null
+          }
+        }
+      ]
+    },
+    {
+      "at": "2026-09-14T15:08:32.222Z",
+      "type": "host.exit",
+      "code": 0,
+      "signal": null
+    },
+    {
+      "at": "2026-09-14T15:08:32.226Z",
+      "type": "trust.revoked",
+      "agent": "claude",
+      "file": "/Users/briankeeny/.claude.json",
+      "paths": [
+        "/var/folders/08/tsc21p4n41ndkvcxq1kl0htw0000gn/T/odin-orca-dev-grant-lyfIkj/home/orca/workspaces/odin-real-repo-nGBe5Y/odin-8d320a",
+        "/private/var/folders/08/tsc21p4n41ndkvcxq1kl0htw0000gn/T/odin-orca-dev-grant-lyfIkj/home/orca/workspaces/odin-real-repo-nGBe5Y/odin-8d320a"
+      ]
+    }
+  ]
+}
