@@ -148,7 +148,8 @@ export class RuntimeClientSettingsController {
       throw new Error('runtime_unavailable')
     }
     const beforeSettings = this.store.getSettings()
-    const before = beforeSettings.agentStatusHooksEnabled !== false
+    // Why: absent (not explicitly false) must read as disabled -- an unset opt-in is not consent (E1).
+    const before = beforeSettings.agentStatusHooksEnabled === true
     const credentialMirrorConsentBefore = beforeSettings.codexCredentialMirrorConsent === true
     const networkExposureConsentBefore = beforeSettings.networkExposureConsent === true
     this.store.updateSettings(updates, { notifyListeners: true })
@@ -234,14 +235,14 @@ export class RuntimeClientSettingsController {
       if (!settings) {
         return
       }
-      await applyAgentStatusHooksEnabled(settings.agentStatusHooksEnabled !== false, settings, {
+      await applyAgentStatusHooksEnabled(settings.agentStatusHooksEnabled === true, settings, {
         shouldHydrateShellPath: getAppEnvironment().isPackaged(),
         onInstallError: recordManagedHookInstallFailure,
         shouldContinue: (agent) => {
           const current = this.store?.getSettings()
           return (
             current !== undefined &&
-            current.agentStatusHooksEnabled !== false &&
+            current.agentStatusHooksEnabled === true &&
             !current.disabledTuiAgents?.includes(agent)
           )
         }

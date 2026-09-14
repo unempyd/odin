@@ -1,0 +1,9 @@
+
+ RUN  v4.1.11 /Users/briankeeny/Desktop/odin-wt-fix-consent
+
+
+ Test Files  4 passed (4)
+      Tests  12 passed (12)
+   Start at  22:51:45
+   Duration  3.78s (transform 5.41s, setup 535ms, import 8.79s, tests 43ms, environment 1ms)
+
