@@ -121,6 +121,14 @@ vi.mock('./remote-runtime-pty-transport', () => ({
   )
 }))
 
+const mockCachedHostOwnsRemoteAgentStatus = vi.fn((_environmentId: string) => false)
+const mockPrimeHostOwnsRemoteAgentStatusCache = vi.fn((_environmentId: string) => {})
+
+vi.mock('@/runtime/agent-status-host-osc-ingest-capability', () => ({
+  cachedHostOwnsRemoteAgentStatus: mockCachedHostOwnsRemoteAgentStatus,
+  primeHostOwnsRemoteAgentStatusCache: mockPrimeHostOwnsRemoteAgentStatusCache
+}))
+
 // Why: stub only getEagerPtyBufferHandle so tests can simulate a live eager buffer (adopt path) without standing up the real IPC dispatcher.
 vi.mock('./pty-dispatcher', async (importOriginal) => {
   const actual = await importOriginal<Record<string, unknown>>()
@@ -148,6 +156,8 @@ describe('connectPanePty', () => {
     storeSubscribers = []
     mockStoreState = createInitialStoreState(() => mockStoreState)
     installTerminalTestGlobals()
+    mockCachedHostOwnsRemoteAgentStatus.mockReturnValue(false)
+    mockPrimeHostOwnsRemoteAgentStatusCache.mockReset()
   })
 
   afterEach(async () => {
@@ -249,6 +259,76 @@ describe('connectPanePty', () => {
         'remote:env-1@@terminal-1'
       )
     )
+  })
+
+  // status-C: the client must probe, never assume
+  // (docs/reference/remote-wire-compatibility.md rule 3).
+  it('stops writing its own OSC-derived status when the paired host advertises the ingest capability', async () => {
+    mockCachedHostOwnsRemoteAgentStatus.mockReturnValue(true)
+    const { connectPanePty } = await import('./pty-connection')
+    const transport = createMockTransport()
+    transport.attach.mockImplementation(({ callbacks }: { callbacks?: ConnectCallbacks }) => {
+      transport.getPtyId.mockReturnValue('remote:env-1@@terminal-1')
+      callbacks?.onReplayData?.('restored remote prompt $ ')
+      callbacks?.onConnect?.()
+    })
+    transportFactoryQueue.push(transport)
+
+    mockStoreState = {
+      ...mockStoreState,
+      tabsByWorktree: {
+        'wt-1': [{ id: 'tab-1', ptyId: 'remote:terminal-1' }]
+      },
+      settings: {
+        ...mockStoreState.settings,
+        activeRuntimeEnvironmentId: 'env-1'
+      }
+    } as StoreState
+
+    const pane = createPane(2)
+    pane.terminal.write.mockImplementation((_data: string, callback?: () => void) => callback?.())
+    const manager = createManager(2)
+    const deps = createDeps()
+
+    connectPanePty(pane as never, manager as never, deps as never)
+    await flushAsyncTicks()
+
+    expect(mockCachedHostOwnsRemoteAgentStatus).toHaveBeenCalledWith('env-1')
+    expect(mockPrimeHostOwnsRemoteAgentStatusCache).toHaveBeenCalledWith('env-1')
+    expect(createdTransportOptions[0]?.onAgentStatus).toBeUndefined()
+  })
+
+  it('keeps writing its own OSC-derived status when the paired host predates the ingest capability', async () => {
+    mockCachedHostOwnsRemoteAgentStatus.mockReturnValue(false)
+    const { connectPanePty } = await import('./pty-connection')
+    const transport = createMockTransport()
+    transport.attach.mockImplementation(({ callbacks }: { callbacks?: ConnectCallbacks }) => {
+      transport.getPtyId.mockReturnValue('remote:env-1@@terminal-1')
+      callbacks?.onReplayData?.('restored remote prompt $ ')
+      callbacks?.onConnect?.()
+    })
+    transportFactoryQueue.push(transport)
+
+    mockStoreState = {
+      ...mockStoreState,
+      tabsByWorktree: {
+        'wt-1': [{ id: 'tab-1', ptyId: 'remote:terminal-1' }]
+      },
+      settings: {
+        ...mockStoreState.settings,
+        activeRuntimeEnvironmentId: 'env-1'
+      }
+    } as StoreState
+
+    const pane = createPane(2)
+    pane.terminal.write.mockImplementation((_data: string, callback?: () => void) => callback?.())
+    const manager = createManager(2)
+    const deps = createDeps()
+
+    connectPanePty(pane as never, manager as never, deps as never)
+    await flushAsyncTicks()
+
+    expect(createdTransportOptions[0]?.onAgentStatus).toEqual(expect.any(Function))
   })
 
   it('reports remote renderer readiness only after delayed restore output is parsed', async () => {

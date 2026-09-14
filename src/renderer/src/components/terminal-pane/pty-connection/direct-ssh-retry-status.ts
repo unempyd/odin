@@ -26,6 +26,10 @@ import {
   resolveCompatibleAgentTypeForOwner
 } from '../../../../../shared/agent-title-owner'
 import { isMainTerminalSideEffectAuthorityForPty } from '../terminal-side-effect-facts-handler'
+import {
+  cachedHostOwnsRemoteAgentStatus,
+  primeHostOwnsRemoteAgentStatusCache
+} from '@/runtime/agent-status-host-osc-ingest-capability'
 import { isRendererHiddenPtyDeliveryGateEnabled } from '../terminal-hidden-delivery-gate'
 import {
   markRendererOwnedAgentStatusWrite,
@@ -143,14 +147,28 @@ export function installDirectSshRetryStatus(session: ConnectPanePtySession): voi
           availableWslDistros: session.localWindowsTerminalCapabilities?.wslDistros ?? null
         })
       : undefined
-  session.shouldOwnAgentStatusInRenderer = session.runtimeEnvironmentId !== null
+  // status-C: the client must probe, never assume
+  // (docs/reference/remote-wire-compatibility.md rule 3) — a capable host
+  // already publishes this pane's row on session.tabs, so the renderer stops
+  // parsing its own OSC bytes for it. The probe is async and this decision is
+  // made once, synchronously, at transport creation and never revisited, so
+  // it reads the last-known cached verdict (defaulting to false — keep
+  // writing — until a probe resolves) and fires a fresh probe for next time.
+  const remoteRuntimeEnvironmentId = session.runtimeEnvironmentId
+  if (remoteRuntimeEnvironmentId !== null) {
+    primeHostOwnsRemoteAgentStatusCache(remoteRuntimeEnvironmentId)
+  }
+  session.shouldOwnAgentStatusInRenderer =
+    remoteRuntimeEnvironmentId !== null &&
+    !cachedHostOwnsRemoteAgentStatus(remoteRuntimeEnvironmentId)
   // Why: the host also mirrors agent status for this pane through tabs.
   // Claiming here (decided once at transport creation, like the side-effect
   // authority below) lets the mirror keep this renderer's byte-derived status
-  // instead of overwriting/deleting it on every republication.
+  // instead of overwriting/deleting it on every republication. A capable
+  // host's pane never claims, so the mirror's host row wins unconditionally.
   session.releaseRendererOwnedAgentStatusPane =
-    session.runtimeEnvironmentId !== null
-      ? registerRendererOwnedAgentStatusPane(session.cacheKey, session.runtimeEnvironmentId)
+    session.shouldOwnAgentStatusInRenderer && remoteRuntimeEnvironmentId !== null
+      ? registerRendererOwnedAgentStatusPane(session.cacheKey, remoteRuntimeEnvironmentId)
       : null
   session.handleRendererOwnedAgentStatus = (payload): void => {
     if (
