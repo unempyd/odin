@@ -180,7 +180,7 @@ test('docs routes stay namespaced and the generated source uses /docs as its bas
   assert.match(sourceConfig, /dark:\s*['"]github-dark-high-contrast['"]+/)
   assert.match(rootPage, /redirect\(['"]\/docs['"]\)/)
   assert.match(nextConfig, /assetPrefix:\s*['"]\/docs-static['"]+/)
-  assert.match(searchDialog, /api:\s*['"]\/docs\/api\/search['"]+/)
+  assert.match(searchDialog, /from:\s*['"]\/docs\/api\/search['"]+/)
   assert.doesNotMatch(appLayout, /forcedTheme|className=['"][^'"]*\bdark\b/)
   assert.match(docsLayout, /<main\b/)
   assert.match(docsLayout, /themeSwitch=\{\{\s*enabled:\s*false\s*\}\}/)

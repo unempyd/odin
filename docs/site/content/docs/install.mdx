@@ -5,7 +5,21 @@ description: Download Orca for macOS, Windows, or Linux, and opt into RC builds.
 
 import { Callout } from '@/components/docs/prose'
 
-## Download
+<Callout title="Odin has no store builds or hosted service">
+  Odin ships no compiled desktop binaries, no Homebrew cask, no AUR package,
+  and no hosted download or update service — it is source-only. Clone
+  [github.com/unempyd/odin](https://github.com/unempyd/odin) and build it
+  yourself (the app is Electron/Vite; see the repository's own
+  `package.json` scripts); check
+  [github.com/unempyd/odin/releases](https://github.com/unempyd/odin/releases)
+  for anything the maintainers have since published. The rest of this page
+  describes **Orca's** own distribution — its download links, package
+  manager formulas, and auto-update behavior — which is accurate for Orca
+  itself but does not apply to an Odin build you compiled from source. See
+  [What is Odin?](/docs/odin).
+</Callout>
+
+## Download (Orca's own builds)
 
 <div className="my-4 rounded-md border border-border bg-card p-4 md:hidden">
   <p className="mb-3 text-sm text-muted-foreground">

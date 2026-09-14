@@ -60,9 +60,17 @@ Worktree cards still inline agent rows with the same glyphs when the experimenta
 
 ## Launch defaults
 
-Orca launches every supported agent with its full-autonomy permission flag pre-applied — Claude with `--dangerously-skip-permissions`, Codex with `--dangerously-bypass-approvals-and-sandbox`, Gemini with `--yolo`, and the equivalent for each other agent in the picker. The intent is that the worktree itself is the sandbox: agents can do their thing without per-tool approval prompts breaking the flow.
+<Callout title="Odin: no bypass flag in the shipped default">
+  Shipped launch defaults on Odin carry no permission-bypass flag. Choosing
+  **Yolo** in **Settings → Agents → Agent Permissions** — globally or per
+  agent — is what applies the flag described below. See [Supported
+  agents](/docs/agents/supported) and [Odin's residual table, contract
+  H](/docs/odin/residuals) (commits `854b5956ba`, `74b234c61e`).
+</Callout>
 
-If you want different defaults for an agent, open **Settings → Agents**, expand the agent's row, and edit its **launch arguments** — Orca remembers the override and applies it on every subsequent launch. A **Reset** button next to the field puts the shipped flag back if you want to revert.
+When an agent is launched in **Yolo** mode, Orca applies that agent's full-autonomy permission flag — Claude with `--dangerously-skip-permissions`, Codex with `--dangerously-bypass-approvals-and-sandbox`, Gemini with `--yolo`, and the equivalent for each other agent in the picker. The intent is that the worktree itself is the sandbox: agents can do their thing without per-tool approval prompts breaking the flow.
+
+If you want different defaults for an agent, open **Settings → Agents**, expand the agent's row, and edit its **launch arguments** — Orca remembers the override and applies it on every subsequent launch. A **Reset** button next to the field puts the shipped default back if you want to revert.
 
 ## Restart chip
 

@@ -8,7 +8,7 @@ export const ogImageSize = { width: 1200, height: 630 }
 export const ogImageContentType = 'image/png'
 
 const fontsDir = join(process.cwd(), 'src/assets/fonts')
-// Satori cannot read the site stylesheet, so mirror Orca's canonical dark tokens here.
+// Satori cannot read the site stylesheet, so mirror Odin's canonical dark tokens here.
 const ogColors = {
   background: '#0a0a0a',
   foreground: '#fafafa',
@@ -27,7 +27,7 @@ function getSectionLabel(url: string): string {
 }
 
 function getFooterTag(title: string, section: string): string {
-  return `${title} - ${section} - Orca`
+  return `${title} - ${section} - Odin`
 }
 
 function getTitleFontSize(title: string): number {
@@ -99,7 +99,7 @@ export async function createDocsOgImage({ title, url }: { title: string; url: st
             background: ogColors.secondary
           }}
         >
-          <img src={logoSrc} width={32} height={20} alt="" />
+          <img src={logoSrc} width={32} height={32} alt="" />
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>

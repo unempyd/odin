@@ -1,0 +1,82 @@
+name: Docs (GitHub Pages)
+
+# Publishes docs/site as a static export to GitHub Pages, served under the
+# operator's own domain via docs/site/public/CNAME. Independent of
+# .github/workflows/docs.yml, which deploys the Vercel same-domain-proxy
+# build and is gated to github.repository == 'stablyai/orca' — that gate
+# never fires on this fork, so this workflow is this repo's only live docs
+# deployment path.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'docs/site/**'
+      - '.github/workflows/docs-pages.yml'
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: docs-pages
+  cancel-in-progress: false
+
+defaults:
+  run:
+    working-directory: docs/site
+
+jobs:
+  build:
+    name: Build static export
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup pnpm
+        # v5 avoids the v6 bootstrap/shim regression when pinning pnpm 10.
+        uses: pnpm/action-setup@v5
+        with:
+          version: 10.24.0
+          package_json_file: docs/site/package.json
+          run_install: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          # The repository root pins pnpm 12 while this isolated app pins 10;
+          # setup-node's cache probe runs at the root and would auto-switch.
+          package-manager-cache: false
+
+      - name: Install site dependencies
+        run: pnpm --ignore-workspace install --frozen-lockfile
+
+      - name: Build static export
+        env:
+          ODIN_DOCS_STATIC_EXPORT: '1'
+        run: pnpm --ignore-workspace build
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs/site/out
+
+  deploy:
+    name: Deploy to GitHub Pages
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@v4

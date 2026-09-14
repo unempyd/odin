@@ -1,0 +1,48 @@
+---
+title: How to read the proofs
+description: Every residual is one commit, two files, and one command that reproduces the check yourself.
+---
+
+Each residual is one commit on the `odin` branch. The commit body names the
+upstream site, the contract, the judgement calls, and two files under
+[`odin/proofs/`](https://github.com/unempyd/odin/tree/main/odin/proofs):
+
+- **`<id>.before.txt`** — the new test, failing on the unpatched (upstream)
+  code.
+- **`<id>.after.txt`** — the same test and its neighbours, passing after the
+  patch.
+
+`<id>` is the residual's letter from the [Residuals](/docs/odin/residuals)
+table — `A`, `B`, `C`, `D`, and so on.
+
+## Reproduce it yourself
+
+```bash
+git clone https://github.com/unempyd/odin
+cd odin
+odin/proof/run-proofs.sh
+```
+
+This script repeats the before/after check mechanically against the pinned
+upstream commit (`539d4d1f32`): it checks out that commit, confirms the
+named test fails, then checks out the patch and confirms it (and its
+neighbours) pass. It is the same check `git log --first-parent odin` lets
+you read commit-by-commit, run as one command.
+
+## Real-session artifacts
+
+`odin/proofs/real-sessions.*.json` are the recorded runs of real agent CLIs
+through the orchestration surface, produced by
+`odin/proof/real-sessions.mjs`. See
+[Real sessions on this build](/docs/odin/real-sessions) for what each file
+shows and how to read it.
+
+## Finding a specific commit
+
+```bash
+git log 539d4d1f32..HEAD --oneline | grep -E "^\S+ odin\([A-Z][0-9]?\):"
+```
+
+lists every residual-tagged commit with its short hash and one-line
+summary — the same commits cited on the pages elsewhere in these docs that
+document a default Odin changed.

@@ -3,15 +3,24 @@ title: Privacy & Telemetry
 description: What anonymous usage data Orca collects, what it never collects, and how to opt out.
 ---
 
-import { ImagePlaceholder } from '@/components/docs/prose'
+import { Callout, ImagePlaceholder } from '@/components/docs/prose'
 
 This page describes the anonymous product-usage telemetry we collect in packaged Orca builds, what we never collect, and how to opt out.
+
+<Callout title="Odin: fresh installs are opted out by default">
+  Orca upstream wrote `optedIn: true` for every new install's telemetry
+  migration without ever showing the consent banner — only pre-existing
+  installs saw the first-launch surface. On Odin a fresh install is opted
+  out by default; a pre-existing profile that Orca had already auto-enrolled
+  keeps that choice until you change it below. See [Odin's residual table,
+  contract F](/docs/odin/residuals) (commit `aacecbdaf4`).
+</Callout>
 
 ## Summary
 
 - **Anonymous.** Events are keyed by a random ID stored locally on your machine. No account, email, IP address, or user name is collected.
 - **No content.** We never transmit file contents, prompts, agent output, terminal output, repo names, branch names, URLs, paths, or commit messages.
-- **Always off when:** `DO_NOT_TRACK=1` or `ORCA_TELEMETRY_DISABLED=1` is set.
+- **Always off when:** `DO_NOT_TRACK=1` or `ORCA_TELEMETRY_DISABLED=1` is set, or (Odin, fresh installs only) the install has never had this setting explicitly turned on.
 
 ## What we collect
 

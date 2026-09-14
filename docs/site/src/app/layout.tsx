@@ -3,13 +3,14 @@ import type { ReactNode } from 'react'
 import { RootProvider } from 'fumadocs-ui/provider/next'
 import './globals.css'
 
-const siteUrl = 'https://www.onorca.dev'
+const siteUrl = 'https://odin.unempyd.com'
 
 export const metadata: Metadata = {
-  title: 'Orca Docs',
-  description: 'Product documentation for Orca — the worktree IDE for AI coding agents.',
+  title: 'Odin Docs',
+  description:
+    'Product documentation for Odin — a surgical derivative of Orca, the worktree IDE for AI coding agents, with residual orchestration and safety contracts closed.',
   metadataBase: new URL(siteUrl),
-  applicationName: 'Orca Docs',
+  applicationName: 'Odin Docs',
   icons: {
     icon: '/docs/favicon.ico',
     shortcut: '/docs/favicon.ico'
@@ -18,14 +19,16 @@ export const metadata: Metadata = {
     type: 'website',
     locale: 'en_US',
     url: `${siteUrl}/docs`,
-    siteName: 'Orca',
-    title: 'Orca Docs',
-    description: 'Product documentation for Orca — the worktree IDE for AI coding agents.'
+    siteName: 'Odin',
+    title: 'Odin Docs',
+    description:
+      'Product documentation for Odin — a surgical derivative of Orca, the worktree IDE for AI coding agents, with residual orchestration and safety contracts closed.'
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Orca Docs',
-    description: 'Product documentation for Orca — the worktree IDE for AI coding agents.'
+    title: 'Odin Docs',
+    description:
+      'Product documentation for Odin — a surgical derivative of Orca, the worktree IDE for AI coding agents, with residual orchestration and safety contracts closed.'
   },
   robots: {
     index: true,
