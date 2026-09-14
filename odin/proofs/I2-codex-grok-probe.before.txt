@@ -1,0 +1,517 @@
+
+ RUN  v4.1.11 /Users/briankeeny/Desktop/odin-wt-probes
+
+ ❯ src/main/runtime/rpc/methods/orchestration/worker/worker-launch-preferences.test.ts (36 tests | 16 failed | 17 skipped) 1408ms
+     × enforces the Codex effort ceiling for 'gpt-5.6-sol' (I2) 12ms
+     × enforces the Codex effort ceiling for 'gpt-5.6-terra' (I2) 2ms
+     × enforces the Codex effort ceiling for 'gpt-5.6-luna' (I2) 1ms
+     × enforces the Codex effort ceiling for 'gpt-5.5' (I2) 1ms
+     × enforces the Codex effort ceiling for 'gpt-5.2-codex' (I2) 1ms
+     × enforces the Codex effort ceiling for 'gpt-5.4' (I2) 2ms
+     × enforces the Codex effort ceiling for 'gpt-5.4-mini' (I2) 1ms
+     × enforces the Codex effort ceiling for 'gpt-5.3-codex-spark' (I2) 1ms
+     × enforces the Codex effort ceiling for 'future-codex-model' (I2) 1ms
+       × verifies the requested Codex model against the installed CLI; effort stays catalog-validated 2ms
+       × omits effortSource when no effort was requested 1ms
+       × rejects a model the installed Codex CLI does not list, with the CLI-sourced reason 1ms
+       × falls back to unverified (not a clone) when the installed Codex CLI cannot be asked 1ms
+       × never probes and reports unverified when the worker placement is remote (I1/I2) 1ms
+       × never probes and reports unverified when the agent has a launch command override (I1/I2) 1ms
+       × resolves a real Codex model through the installed CLI with source: probe (I2) 1ms
+
+⎯⎯⎯⎯⎯⎯ Failed Tests 16 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/main/runtime/rpc/methods/orchestration/worker/worker-launch-preferences.test.ts > orchestration worker launch preferences > enforces the Codex effort ceiling for 'gpt-5.6-sol' (I2)
+AssertionError: expected { preferences: { …(2) }, …(1) } to match object { preferences: { …(2) }, …(1) }
+(8 matching properties omitted from actual)
+
+- Expected
++ Received
+
+@@ -2,9 +2,8 @@
+    "preferences": {
+      "effort": "minimal",
+      "model": "gpt-5.6-sol",
+    },
+    "receipt": {
+-     "effortSource": "catalog",
+-     "source": "probe",
++     "source": "catalog",
+    },
+  }
+
+ ❯ src/main/runtime/rpc/methods/orchestration/worker/worker-launch-preferences.test.ts:283:10
+    281|             discoverAgentModels: codexProbeAccepting([{ id: model }])
+    282|           })
+    283|         ).resolves.toMatchObject({
+       |          ^
+    284|           preferences: { model, effort: effortValue },
+    285|           receipt: { source: 'probe', effortSource: 'catalog' }
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/16]⎯
+
+ FAIL  src/main/runtime/rpc/methods/orchestration/worker/worker-launch-preferences.test.ts > orchestration worker launch preferences > enforces the Codex effort ceiling for 'gpt-5.6-terra' (I2)
+AssertionError: expected { preferences: { …(2) }, …(1) } to match object { preferences: { …(2) }, …(1) }
+(8 matching properties omitted from actual)
+
+- Expected
++ Received
+
+@@ -2,9 +2,8 @@
+    "preferences": {
+      "effort": "minimal",
+      "model": "gpt-5.6-terra",
+    },
+    "receipt": {
+-     "effortSource": "catalog",
+-     "source": "probe",
++     "source": "catalog",
+    },
+  }
+
+ ❯ src/main/runtime/rpc/methods/orchestration/worker/worker-launch-preferences.test.ts:283:10
+    281|             discoverAgentModels: codexProbeAccepting([{ id: model }])
+    282|           })
+    283|         ).resolves.toMatchObject({
+       |          ^
+    284|           preferences: { model, effort: effortValue },
+    285|           receipt: { source: 'probe', effortSource: 'catalog' }
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/16]⎯
+
+ FAIL  src/main/runtime/rpc/methods/orchestration/worker/worker-launch-preferences.test.ts > orchestration worker launch preferences > enforces the Codex effort ceiling for 'gpt-5.6-luna' (I2)
+AssertionError: expected { preferences: { …(2) }, …(1) } to match object { preferences: { …(2) }, …(1) }
+(8 matching properties omitted from actual)
+
+- Expected
++ Received
+
+@@ -2,9 +2,8 @@
+    "preferences": {
+      "effort": "minimal",
+      "model": "gpt-5.6-luna",
+    },
+    "receipt": {
+-     "effortSource": "catalog",
+-     "source": "probe",
++     "source": "catalog",
+    },
+  }
+
+ ❯ src/main/runtime/rpc/methods/orchestration/worker/worker-launch-preferences.test.ts:283:10
+    281|             discoverAgentModels: codexProbeAccepting([{ id: model }])
+    282|           })
+    283|         ).resolves.toMatchObject({
+       |          ^
+    284|           preferences: { model, effort: effortValue },
+    285|           receipt: { source: 'probe', effortSource: 'catalog' }
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/16]⎯
+
+ FAIL  src/main/runtime/rpc/methods/orchestration/worker/worker-launch-preferences.test.ts > orchestration worker launch preferences > enforces the Codex effort ceiling for 'gpt-5.5' (I2)
+AssertionError: expected { preferences: { …(2) }, …(1) } to match object { preferences: { …(2) }, …(1) }
+(8 matching properties omitted from actual)
+
+- Expected
++ Received
+
+@@ -2,9 +2,8 @@
+    "preferences": {
+      "effort": "minimal",
+      "model": "gpt-5.5",
+    },
+    "receipt": {
+-     "effortSource": "catalog",
+-     "source": "probe",
++     "source": "catalog",
+    },
+  }
+
+ ❯ src/main/runtime/rpc/methods/orchestration/worker/worker-launch-preferences.test.ts:283:10
+    281|             discoverAgentModels: codexProbeAccepting([{ id: model }])
+    282|           })
+    283|         ).resolves.toMatchObject({
+       |          ^
+    284|           preferences: { model, effort: effortValue },
+    285|           receipt: { source: 'probe', effortSource: 'catalog' }
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/16]⎯
+
+ FAIL  src/main/runtime/rpc/methods/orchestration/worker/worker-launch-preferences.test.ts > orchestration worker launch preferences > enforces the Codex effort ceiling for 'gpt-5.2-codex' (I2)
+AssertionError: expected { preferences: { …(2) }, …(1) } to match object { preferences: { …(2) }, …(1) }
+(8 matching properties omitted from actual)
+
+- Expected
++ Received
+
+@@ -2,9 +2,8 @@
+    "preferences": {
+      "effort": "minimal",
+      "model": "gpt-5.2-codex",
+    },
+    "receipt": {
+-     "effortSource": "catalog",
+-     "source": "probe",
++     "source": "catalog",
+    },
+  }
+
+ ❯ src/main/runtime/rpc/methods/orchestration/worker/worker-launch-preferences.test.ts:283:10
+    281|             discoverAgentModels: codexProbeAccepting([{ id: model }])
+    282|           })
+    283|         ).resolves.toMatchObject({
+       |          ^
+    284|           preferences: { model, effort: effortValue },
+    285|           receipt: { source: 'probe', effortSource: 'catalog' }
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/16]⎯
+
+ FAIL  src/main/runtime/rpc/methods/orchestration/worker/worker-launch-preferences.test.ts > orchestration worker launch preferences > enforces the Codex effort ceiling for 'gpt-5.4' (I2)
+AssertionError: expected { preferences: { …(2) }, …(1) } to match object { preferences: { …(2) }, …(1) }
+(8 matching properties omitted from actual)
+
+- Expected
++ Received
+
+@@ -2,9 +2,8 @@
+    "preferences": {
+      "effort": "minimal",
+      "model": "gpt-5.4",
+    },
+    "receipt": {
+-     "effortSource": "catalog",
+-     "source": "probe",
++     "source": "catalog",
+    },
+  }
+
+ ❯ src/main/runtime/rpc/methods/orchestration/worker/worker-launch-preferences.test.ts:283:10
+    281|             discoverAgentModels: codexProbeAccepting([{ id: model }])
+    282|           })
+    283|         ).resolves.toMatchObject({
+       |          ^
+    284|           preferences: { model, effort: effortValue },
+    285|           receipt: { source: 'probe', effortSource: 'catalog' }
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/16]⎯
+
+ FAIL  src/main/runtime/rpc/methods/orchestration/worker/worker-launch-preferences.test.ts > orchestration worker launch preferences > enforces the Codex effort ceiling for 'gpt-5.4-mini' (I2)
+AssertionError: expected { preferences: { …(2) }, …(1) } to match object { preferences: { …(2) }, …(1) }
+(8 matching properties omitted from actual)
+
+- Expected
++ Received
+
+@@ -2,9 +2,8 @@
+    "preferences": {
+      "effort": "minimal",
+      "model": "gpt-5.4-mini",
+    },
+    "receipt": {
+-     "effortSource": "catalog",
+-     "source": "probe",
++     "source": "catalog",
+    },
+  }
+
+ ❯ src/main/runtime/rpc/methods/orchestration/worker/worker-launch-preferences.test.ts:283:10
+    281|             discoverAgentModels: codexProbeAccepting([{ id: model }])
+    282|           })
+    283|         ).resolves.toMatchObject({
+       |          ^
+    284|           preferences: { model, effort: effortValue },
+    285|           receipt: { source: 'probe', effortSource: 'catalog' }
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/16]⎯
+
+ FAIL  src/main/runtime/rpc/methods/orchestration/worker/worker-launch-preferences.test.ts > orchestration worker launch preferences > enforces the Codex effort ceiling for 'gpt-5.3-codex-spark' (I2)
+AssertionError: expected { preferences: { …(2) }, …(1) } to match object { preferences: { …(2) }, …(1) }
+(8 matching properties omitted from actual)
+
+- Expected
++ Received
+
+@@ -2,9 +2,8 @@
+    "preferences": {
+      "effort": "minimal",
+      "model": "gpt-5.3-codex-spark",
+    },
+    "receipt": {
+-     "effortSource": "catalog",
+-     "source": "probe",
++     "source": "catalog",
+    },
+  }
+
+ ❯ src/main/runtime/rpc/methods/orchestration/worker/worker-launch-preferences.test.ts:283:10
+    281|             discoverAgentModels: codexProbeAccepting([{ id: model }])
+    282|           })
+    283|         ).resolves.toMatchObject({
+       |          ^
+    284|           preferences: { model, effort: effortValue },
+    285|           receipt: { source: 'probe', effortSource: 'catalog' }
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/16]⎯
+
+ FAIL  src/main/runtime/rpc/methods/orchestration/worker/worker-launch-preferences.test.ts > orchestration worker launch preferences > enforces the Codex effort ceiling for 'future-codex-model' (I2)
+AssertionError: expected { preferences: { …(2) }, …(1) } to match object { preferences: { …(2) }, …(1) }
+(8 matching properties omitted from actual)
+
+- Expected
++ Received
+
+@@ -2,9 +2,8 @@
+    "preferences": {
+      "effort": "minimal",
+      "model": "future-codex-model",
+    },
+    "receipt": {
+-     "effortSource": "catalog",
+-     "source": "probe",
++     "source": "catalog",
+    },
+  }
+
+ ❯ src/main/runtime/rpc/methods/orchestration/worker/worker-launch-preferences.test.ts:283:10
+    281|             discoverAgentModels: codexProbeAccepting([{ id: model }])
+    282|           })
+    283|         ).resolves.toMatchObject({
+       |          ^
+    284|           preferences: { model, effort: effortValue },
+    285|           receipt: { source: 'probe', effortSource: 'catalog' }
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[9/16]⎯
+
+ FAIL  src/main/runtime/rpc/methods/orchestration/worker/worker-launch-preferences.test.ts > orchestration worker launch preferences > Codex worker launch preferences (I2) > verifies the requested Codex model against the installed CLI; effort stays catalog-validated
+AssertionError: expected { preferences: { …(2) }, …(1) } to deeply equal { preferences: { …(2) }, …(1) }
+
+- Expected
++ Received
+
+@@ -7,14 +7,13 @@
+      "effective": {
+        "agent": "codex",
+        "effort": "ultra",
+        "model": "gpt-5.6-sol",
+      },
+-     "effortSource": "catalog",
+      "requested": {
+        "agent": "codex",
+        "effort": "ultra",
+        "model": "gpt-5.6-sol",
+      },
+-     "source": "probe",
++     "source": "catalog",
+    },
+  }
+
+ ❯ src/main/runtime/rpc/methods/orchestration/worker/worker-launch-preferences.test.ts:328:8
+    326|           discoverAgentModels: codexProbeAccepting([{ id: 'gpt-5.6-sol…
+    327|         })
+    328|       ).resolves.toEqual({
+       |        ^
+    329|         preferences: { model: 'gpt-5.6-sol', effort: 'ultra' },
+    330|         receipt: {
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[10/16]⎯
+
+ FAIL  src/main/runtime/rpc/methods/orchestration/worker/worker-launch-preferences.test.ts > orchestration worker launch preferences > Codex worker launch preferences (I2) > omits effortSource when no effort was requested
+AssertionError: expected { …(2) } to deeply equal { …(2) }
+
+- Expected
++ Received
+
+@@ -11,8 +11,8 @@
+      "requested": {
+        "agent": "codex",
+        "effort": null,
+        "model": "gpt-5.6-sol",
+      },
+-     "source": "probe",
++     "source": "catalog",
+    },
+  }
+
+ ❯ src/main/runtime/rpc/methods/orchestration/worker/worker-launch-preferences.test.ts:346:8
+    344|           discoverAgentModels: codexProbeAccepting([{ id: 'gpt-5.6-sol…
+    345|         })
+    346|       ).resolves.toEqual({
+       |        ^
+    347|         preferences: { model: 'gpt-5.6-sol' },
+    348|         receipt: {
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[11/16]⎯
+
+ FAIL  src/main/runtime/rpc/methods/orchestration/worker/worker-launch-preferences.test.ts > orchestration worker launch preferences > Codex worker launch preferences (I2) > rejects a model the installed Codex CLI does not list, with the CLI-sourced reason
+AssertionError: promise resolved "{ …(2) }" instead of rejecting
+
+- Expected
++ Received
+
+- Error {
+-   "message": "rejected promise",
++ {
++   "preferences": {
++     "model": "gpt-5.6-sol",
++   },
++   "receipt": {
++     "effective": {
++       "agent": "codex",
++       "effort": null,
++       "model": "gpt-5.6-sol",
++     },
++     "requested": {
++       "agent": "codex",
++       "effort": null,
++       "model": "gpt-5.6-sol",
++     },
++     "source": "catalog",
++   },
+  }
+
+ ❯ src/main/runtime/rpc/methods/orchestration/worker/worker-launch-preferences.test.ts:363:8
+    361|           discoverAgentModels: codexProbeAccepting([{ id: 'gpt-5.2-cod…
+    362|         })
+    363|       ).rejects.toThrow('does not list model "gpt-5.6-sol"')
+       |        ^
+    364|     })
+    365|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[12/16]⎯
+
+ FAIL  src/main/runtime/rpc/methods/orchestration/worker/worker-launch-preferences.test.ts > orchestration worker launch preferences > Codex worker launch preferences (I2) > falls back to unverified (not a clone) when the installed Codex CLI cannot be asked
+AssertionError: expected { …(2) } to deeply equal { …(2) }
+
+- Expected
++ Received
+
+  {
+    "preferences": {
+      "model": "gpt-5.6-sol",
+    },
+    "receipt": {
+-     "effective": null,
++     "effective": {
++       "agent": "codex",
++       "effort": null,
++       "model": "gpt-5.6-sol",
++     },
+      "requested": {
+        "agent": "codex",
+        "effort": null,
+        "model": "gpt-5.6-sol",
+      },
+-     "source": "unverified",
+-     "unverifiedReason": "codex not found on PATH.",
++     "source": "catalog",
+    },
+  }
+
+ ❯ src/main/runtime/rpc/methods/orchestration/worker/worker-launch-preferences.test.ts:373:8
+    371|           discoverAgentModels: agentProbeUnavailable('codex not found …
+    372|         })
+    373|       ).resolves.toEqual({
+       |        ^
+    374|         preferences: { model: 'gpt-5.6-sol' },
+    375|         receipt: {
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[13/16]⎯
+
+ FAIL  src/main/runtime/rpc/methods/orchestration/worker/worker-launch-preferences.test.ts > orchestration worker launch preferences > Codex worker launch preferences (I2) > never probes and reports unverified when the worker placement is remote (I1/I2)
+AssertionError: expected { …(2) } to deeply equal { …(2) }
+
+- Expected
++ Received
+
+  {
+    "preferences": {
+      "model": "gpt-5.6-sol",
+    },
+    "receipt": {
+-     "effective": null,
++     "effective": {
++       "agent": "codex",
++       "effort": null,
++       "model": "gpt-5.6-sol",
++     },
+      "requested": {
+        "agent": "codex",
+        "effort": null,
+        "model": "gpt-5.6-sol",
+      },
+-     "source": "unverified",
+-     "unverifiedReason": StringContaining "remote",
++     "source": "catalog",
+    },
+  }
+
+ ❯ src/main/runtime/rpc/methods/orchestration/worker/worker-launch-preferences.test.ts:397:8
+    395|           discoverAgentModels: countingProbe
+    396|         })
+    397|       ).resolves.toEqual({
+       |        ^
+    398|         preferences: { model: 'gpt-5.6-sol' },
+    399|         receipt: {
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[14/16]⎯
+
+ FAIL  src/main/runtime/rpc/methods/orchestration/worker/worker-launch-preferences.test.ts > orchestration worker launch preferences > Codex worker launch preferences (I2) > never probes and reports unverified when the agent has a launch command override (I1/I2)
+AssertionError: expected { …(2) } to deeply equal { …(2) }
+
+- Expected
++ Received
+
+  {
+    "preferences": {
+      "model": "gpt-5.6-sol",
+    },
+    "receipt": {
+-     "effective": null,
++     "effective": {
++       "agent": "codex",
++       "effort": null,
++       "model": "gpt-5.6-sol",
++     },
+      "requested": {
+        "agent": "codex",
+        "effort": null,
+        "model": "gpt-5.6-sol",
+      },
+-     "source": "unverified",
+-     "unverifiedReason": StringContaining "custom launch command",
++     "source": "catalog",
+    },
+  }
+
+ ❯ src/main/runtime/rpc/methods/orchestration/worker/worker-launch-preferences.test.ts:424:8
+    422|           discoverAgentModels: countingProbe
+    423|         })
+    424|       ).resolves.toEqual({
+       |        ^
+    425|         preferences: { model: 'gpt-5.6-sol' },
+    426|         receipt: {
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[15/16]⎯
+
+ FAIL  src/main/runtime/rpc/methods/orchestration/worker/worker-launch-preferences.test.ts > orchestration worker launch preferences > Real installed-CLI integration (I2) > resolves a real Codex model through the installed CLI with source: probe (I2)
+AssertionError: expected 'catalog' to be 'probe' // Object.is equality
+
+Expected: "probe"
+Received: "catalog"
+
+ ❯ src/main/runtime/rpc/methods/orchestration/worker/worker-launch-preferences.test.ts:483:39
+    481|           effort: 'high'
+    482|         })
+    483|         expect(result.receipt.source).toBe('probe')
+       |                                       ^
+    484|         expect(result.receipt.effortSource).toBe('catalog')
+    485|         expect(result.receipt.effective).toEqual({
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[16/16]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  16 failed | 3 passed | 17 skipped (36)
+   Start at  03:29:11
+   Duration  3.10s (transform 936ms, setup 87ms, import 1.36s, tests 1.41s, environment 0ms)
+
