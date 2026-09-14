@@ -363,9 +363,10 @@ describe('launchAgentBackgroundSession', () => {
     expect(mockSpawn).toHaveBeenCalled()
   })
 
-  it('stamps hidden SSH status from renderer fallback when the kill switch is off', async () => {
-    // Why: with main side-effect authority disabled, this sidecar is the only
-    // OSC 9999 → store path for hidden SSH sessions.
+  // Why inverted (status-D): main's OSC ingest is unconditional regardless of
+  // this switch, so this sidecar's own write was always a duplicate of what
+  // main already routes through agentStatus:set.
+  it('does not duplicate the OSC store write for hidden SSH sessions when the kill switch is off', async () => {
     state.settings.terminalMainSideEffectAuthority = false
     state.repos = [{ id: 'repo-1', connectionId: 'ssh-a', path: '/repo' }]
     state.sshConnectionStates = new Map([['ssh-a', { status: 'connected' }]])
@@ -381,15 +382,7 @@ describe('launchAgentBackgroundSession', () => {
     const dataSidecar = mockSubscribeToPtyData.mock.calls[0]?.[1] as (data: string) => void
     dataSidecar('\x1b]9999;{"state":"done","prompt":"ok","agentType":"codex"}\x07')
 
-    const paneKey = expectStableAgentBackgroundPaneSpawn(mockSpawn)
-    expect(state.setAgentStatus).toHaveBeenCalledWith(
-      paneKey,
-      expect.objectContaining({ state: 'done', prompt: 'ok', agentType: 'codex' }),
-      undefined,
-      undefined,
-      { connectionId: 'ssh-a' },
-      { launchToken: expect.stringMatching(UUID_RE) }
-    )
+    expect(state.setAgentStatus).not.toHaveBeenCalled()
   })
 
   it('skips the duplicate OSC store write under main side-effect authority', async () => {

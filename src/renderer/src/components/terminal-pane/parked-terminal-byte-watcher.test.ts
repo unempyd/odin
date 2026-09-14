@@ -695,19 +695,31 @@ describe('startParkedTerminalByteWatcher', () => {
       dispose()
     })
 
-    it('routes command lifecycle facts into the parked command policy', async () => {
+    it('routes command-finished facts into the parked command policy', async () => {
+      enableMainAuthority()
+      const { dispose } = await startWatcher()
+
+      await dispatchFacts([{ kind: 'command-finished', exitCode: 0 }])
+
+      expect(commandStatusPolicy.onCommandFinished).toHaveBeenCalledWith(0)
+      dispose()
+    })
+
+    // Why (status-D): under main authority main now ingests command-code
+    // status directly through agentHookServer instead of emitting a fact for
+    // this policy to seed/settle — consuming it here too would double-write
+    // the row. See orca-runtime-create-terminal-side-effect-command-code-detector.
+    it('ignores command-code facts under main authority — main ingests directly', async () => {
       enableMainAuthority()
       const { dispose } = await startWatcher()
 
       await dispatchFacts([
-        { kind: 'command-finished', exitCode: 0 },
         { kind: 'command-code-working', prompt: 'Fix the spinner' },
         { kind: 'command-code-done', prompt: 'Fix the spinner' }
       ])
 
-      expect(commandStatusPolicy.onCommandFinished).toHaveBeenCalledWith(0)
-      expect(commandStatusPolicy.onCommandCodeWorking).toHaveBeenCalledWith('Fix the spinner')
-      expect(commandStatusPolicy.onCommandCodeDone).toHaveBeenCalledWith('Fix the spinner')
+      expect(commandStatusPolicy.onCommandCodeWorking).not.toHaveBeenCalled()
+      expect(commandStatusPolicy.onCommandCodeDone).not.toHaveBeenCalled()
       dispose()
     })
 

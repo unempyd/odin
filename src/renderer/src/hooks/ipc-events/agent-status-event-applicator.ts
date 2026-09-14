@@ -31,6 +31,7 @@ import type {
   PendingAgentStatusEvent
 } from './agent-status-bridge-types'
 import { normalizeAgentStatusEvent } from './normalize-agent-status-event'
+import { dropsCommandCodeAgentStatus } from './agent-status-command-code-ownership-filter'
 
 export function createAgentStatusEventApplicator(args: {
   pendingAgentStatusEvents: PendingAgentStatusEvent[]
@@ -108,6 +109,9 @@ export function createAgentStatusEventApplicator(args: {
         enqueuePendingAgentStatus(data)
       }
       return 'pending'
+    }
+    if (dropsCommandCodeAgentStatus(payload, { store, paneKey, ownerTabId, owningWorktreeId })) {
+      return 'dropped'
     }
     if (options?.replay !== true && options?.retry !== true) {
       for (let index = pendingAgentStatusEvents.length - 1; index >= 0; index -= 1) {

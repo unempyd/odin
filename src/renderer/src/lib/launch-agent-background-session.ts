@@ -32,7 +32,6 @@ import {
   createSshBackgroundStartupDelivery,
   sshBackgroundLaunchWaitsForShellReady
 } from '@/lib/ssh-background-startup-delivery'
-import { isMainTerminalSideEffectAuthorityForPty } from '@/components/terminal-pane/terminal-side-effect-facts-handler'
 import { resolveLocalWindowsAgentStartupShell } from '../../../shared/windows-terminal-shell'
 import { runBestEffortAgentBackgroundCleanups } from '@/lib/agent-background-session-cleanup'
 import type { bindAutomationTerminal } from '@/lib/automation-terminal-ownership'
@@ -149,16 +148,9 @@ export async function launchAgentBackgroundSession(
     useAppStore.getState().clearAgentLaunchConfig(paneKey)
     onExit?.(exitPtyId, code)
   }
-  // Why: local/SSH status facts already pass through main's authoritative
-  // scanner; remote-runtime bytes still need this renderer-side store write.
-  const mainOwnsAgentStatusWrites = isMainTerminalSideEffectAuthorityForPty({
-    settings: store.settings,
-    runtimeEnvironmentId: runtimeTarget.kind === 'environment' ? runtimeTarget.environmentId : null
-  })
   const agentStatusConsumer = createBackgroundAgentStatusConsumer({
     paneKey,
     launchToken,
-    mainOwnsAgentStatusWrites,
     expectedConnectionId: launchHost.expectedConnectionId,
     runtimeEnvironmentId: runtimeTarget.kind === 'environment' ? runtimeTarget.environmentId : null,
     getPtyId: () => ptyId,

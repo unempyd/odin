@@ -74,35 +74,10 @@ describe('renderer-side observation origins', () => {
     expect(titleRowObservation(3_000).revision).toBeGreaterThan(titleRowObservation(2_000).revision)
   })
 
-  it('tags renderer-parsed OSC 9999 rows as osc-origin under the renderer authority', async () => {
-    setAgentStatusMock.mockReset()
-    const { createBackgroundAgentStatusConsumer } =
-      await import('./background-agent-status-consumer')
-    const paneKey = 'tab-osc:99999999-9999-4999-8999-999999999999'
-    const consumer = createBackgroundAgentStatusConsumer({
-      paneKey,
-      launchToken: 'launch-1',
-      // Why: main parses OSC for local/SSH PTYs; only when it does not is the renderer the authority.
-      mainOwnsAgentStatusWrites: false,
-      expectedConnectionId: null,
-      runtimeEnvironmentId: 'env-1',
-      getPtyId: () => 'pty-1'
-    })
-
-    consumer.consume(`\x1b]9999;{"state":"working","prompt":"remote turn"}\x07`)
-    consumer.consume(`\x1b]9999;{"state":"done","prompt":"remote turn"}\x07`)
-
-    expect(setAgentStatusMock).toHaveBeenCalledTimes(2)
-    const observations = setAgentStatusMock.mock.calls.map(
-      (call) => (call[1] as { observation?: AgentStatusObservation }).observation
-    )
-    for (const observation of observations) {
-      expect(observation).toMatchObject({
-        origin: 'osc',
-        kind: 'snapshot',
-        authorityId: expect.stringMatching(/^renderer:/)
-      })
-    }
-    expect(observations[1]!.revision).toBeGreaterThan(observations[0]!.revision)
-  })
+  // Why removed (status-D): createBackgroundAgentStatusConsumer no longer
+  // writes agent status itself — main's OSC ingest is unconditional, so this
+  // consumer only forwards parsed payloads via onAgentStatus now. The
+  // surviving renderer-owned OSC writer for remote-runtime panes is
+  // direct-ssh-retry-status.ts's handleRendererOwnedAgentStatus, out of scope
+  // for this increment (see odin/OPEN.md's renderer-second-writer residual).
 })

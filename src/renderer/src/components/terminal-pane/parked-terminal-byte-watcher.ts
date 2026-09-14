@@ -240,8 +240,16 @@ export function startParkedTerminalByteWatcher(
         callbacks: {
           ...sideEffectCallbacks,
           onCommandFinished: commandStatusPolicy.onCommandFinished,
-          onCommandCodeWorking: commandStatusPolicy.onCommandCodeWorking,
-          onCommandCodeDone: commandStatusPolicy.onCommandCodeDone,
+          // Why conditional: under main authority main now ingests command-code
+          // status itself (agent-status-store.ts), so consuming the fact here
+          // too would double-write it. A remote-runtime parked pane still needs
+          // it — its facts are forwarded from the paired host, not main.
+          ...(mainSideEffectAuthority
+            ? {}
+            : {
+                onCommandCodeWorking: commandStatusPolicy.onCommandCodeWorking,
+                onCommandCodeDone: commandStatusPolicy.onCommandCodeDone
+              }),
           onPrLink: (link) =>
             useAppStore.getState().observeTerminalGitHubPullRequestLink(worktreeId, link)
         },

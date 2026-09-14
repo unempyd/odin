@@ -13,24 +13,36 @@ arm is gone.
 Left open: the renderer still writes authoritative rows itself for some
 panes, rather than only subscribing to the host's one store
 (`docs/reference/agent-status-store.md`'s "the execution host owns agent
-status, in one store" rule). Four call sites:
+status, in one store" rule). Two of the original four call sites (status-D,
+this increment):
+
+- `src/renderer/src/lib/background-agent-status-consumer.ts` and
+  `src/renderer/src/lib/automation-session-observer.ts` no longer write
+  `setAgentStatus` at all — main's OSC 9999 ingest is unconditional
+  (`src/main/runtime/orca-runtime-on-pty-data.ts:37`, no kill-switch check),
+  so the `!mainOwnsAgentStatusWrites`-gated write in each was always a
+  duplicate for local panes and is now deleted outright; each keeps only its
+  `onAgentStatus` callback for automation completion tracking. **Residual
+  risk accepted, not closed**: for a **remote-runtime** pty reaching either
+  path (bytes never transit local main at all), or a **local pty with the
+  kill switch explicitly off**, deleting the write leaves the pane's OSC
+  status unwritten by anyone through these two entry points — a real
+  regression versus before this increment for those two specific cases,
+  scoped narrower than the general residual below. `direct-ssh-retry-status.ts`
+  is unaffected (still fenced, see below).
+
+Remaining two call sites:
 
 - `src/renderer/src/components/terminal-pane/pty-connection/direct-ssh-retry-status.ts:146-211`
   — `handleRendererOwnedAgentStatus` writes `setAgentStatus` straight from the
   client's own OSC parse whenever `shouldOwnAgentStatusInRenderer` is true.
-- `src/renderer/src/lib/background-agent-status-consumer.ts:38-63` — the same
-  OSC-derived write for a backgrounded/hidden pane, gated on
-  `!args.mainOwnsAgentStatusWrites`.
-- `src/renderer/src/lib/automation-session-observer.ts:32-66` — the same
-  write again for an automation-session PTY reuse observer, gated on
-  `!mainOwnsAgentStatusWrites`.
 - `src/renderer/src/components/native-chat/StructuredAgentSessionStatusBridge.tsx:185`
   — the structured-session chat bridge still calls `store.setAgentStatus`
   itself; PR 2 in `docs/reference/agent-status-store.md` retires this once
   the main-process structured feed forwards its rows over `agentStatus:set`
   (it does not yet — see the two filters below).
 
-Why it is left open: all four write from bytes/events that never transit the
+Why these two are left open: both write from bytes/events that never transit the
 local main process — a remote-runtime pane's PTY bytes flow client-to-host
 directly, and a structured chat session's turns are host-published over
 `agentStatus:set` but main deliberately withholds them so the pane key does
@@ -65,3 +77,18 @@ status from renderer-observed PTY title bytes for the `command-code` pseudo-agen
 A full enumeration is `grep -rn "setAgentStatus(" src/renderer --include='*.ts' --include='*.tsx' | grep -v test`;
 only `hooks/ipc-events/agent-status-event-applicator.ts` is store-derived. The closing plan above applies to every
 site in that list.
+
+Partially closed (status-D, this increment): the command-code writer above is now conditional, not deleted. Main's
+`orca-runtime-create-terminal-side-effect-command-code-detector.ts` ports the renderer's done-settle window
+(`src/main/runtime/command-code-done-settle.ts`) and ingests `working`/settled `done` through
+`agentHookServer.ingestTerminalStatus` — the same sink the OSC path uses — whenever the pane is local and the
+`terminalMainSideEffectAuthority` kill switch is on. `title-spawn-bell.ts`'s and
+`parked-terminal-command-status.ts`'s command-code seed/settle functions are **not** deleted: they remain the only
+writer for a kill-switch-off local pane and for a remote-runtime pane (`direct-ssh-retry-status.ts`'s
+`commandCodeOutputStatusDetector`, created only when `!session.mainSideEffectAuthority`), both out of scope here.
+The renderer's `terminal-keydown-fit.ts` and `parked-terminal-byte-watcher.ts` fact-consumer registrations now omit
+`onCommandCodeWorking`/`onCommandCodeDone` exactly when `mainSideEffectAuthority` is true, so main's direct ingest
+and the renderer's byte-parser fallback never both write the same pane. `agent-status-event-applicator.ts` gained a
+`dropsCommandCodeAgentStatus` ownership filter (`agent-status-command-code-ownership-filter.ts`) so a command-code
+row main observed cannot overwrite a pane a different foreground/retained/launch agent owns — main has no visibility
+into that renderer-only state, so filtering stays client-side per §3.2(b) of the renderer-writer plan.

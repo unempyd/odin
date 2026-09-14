@@ -90,7 +90,11 @@ describe('observeExistingAutomationSession', () => {
     )
   })
 
-  it('keeps the legacy OSC store write when the kill switch is off', async () => {
+  // Why inverted (status-D): main's OSC ingest is unconditional regardless of
+  // this switch, so the renderer write here was always a duplicate of what
+  // main already routes through agentStatus:set — only onAgentStatus (used
+  // for automation completion tracking) still fires from this observer.
+  it('does not duplicate the OSC store write when the kill switch is off', async () => {
     state.settings.terminalMainSideEffectAuthority = false
     state.terminalLayoutsByTabId = {
       'tab-1': { ptyIdsByLeafId: { [LEAF_ID]: 'pty-local-1' } }
@@ -111,17 +115,16 @@ describe('observeExistingAutomationSession', () => {
     const handleData = mockSubscribeToPtyData.mock.calls[0]?.[1] as (data: string) => void
     handleData(DONE_STATUS_OSC)
 
-    expect(state.setAgentStatus).toHaveBeenCalledWith(
-      PANE_KEY,
-      expect.objectContaining({ state: 'done', prompt: 'ok', agentType: 'codex' }),
-      undefined,
-      undefined,
-      { connectionId: null }
+    expect(state.setAgentStatus).not.toHaveBeenCalled()
+    expect(onAgentStatus).toHaveBeenCalledWith(
+      expect.objectContaining({ state: 'done', prompt: 'ok', agentType: 'codex' })
     )
-    expect(onAgentStatus).toHaveBeenCalledTimes(1)
   })
 
-  it('keeps the OSC store write for remote-runtime PTYs (bytes never transit local main)', async () => {
+  // Why inverted (status-D): this renderer-side write is a known residual
+  // gap for remote-runtime automation sessions — see odin/OPEN.md and the
+  // status-D commit body's "remaining risk" note. onAgentStatus still fires.
+  it('does not write OSC status for remote-runtime PTYs — onAgentStatus still fires', async () => {
     state.terminalLayoutsByTabId = {
       'tab-1': { ptyIdsByLeafId: { [LEAF_ID]: 'remote:env-1@@terminal-9' } }
     }
@@ -144,14 +147,10 @@ describe('observeExistingAutomationSession', () => {
     }
     callbacks.onData(DONE_STATUS_OSC)
 
-    expect(state.setAgentStatus).toHaveBeenCalledWith(
-      PANE_KEY,
-      expect.objectContaining({ state: 'done', prompt: 'ok', agentType: 'codex' }),
-      undefined,
-      undefined,
-      { connectionId: null }
+    expect(state.setAgentStatus).not.toHaveBeenCalled()
+    expect(onAgentStatus).toHaveBeenCalledWith(
+      expect.objectContaining({ state: 'done', prompt: 'ok', agentType: 'codex' })
     )
-    expect(onAgentStatus).toHaveBeenCalledTimes(1)
   })
 
   it('reports a runtime wait that carried no status as unverified, not as a clean exit', async () => {
@@ -199,7 +198,7 @@ describe('observeExistingAutomationSession', () => {
     await vi.waitFor(() => expect(onExit).toHaveBeenCalledWith(0))
   })
 
-  it('stamps the exact SSH PTY in the legacy renderer fallback', async () => {
+  it('forwards status for the exact SSH PTY without writing the store', async () => {
     state.settings.terminalMainSideEffectAuthority = false
     const ptyId = toAppSshPtyId('ssh-a', 'pty-1')
     state.sshConnectionStates = new Map([['ssh-a', { status: 'connected' }]])
@@ -207,6 +206,7 @@ describe('observeExistingAutomationSession', () => {
       'tab-1': { ptyIdsByLeafId: { [LEAF_ID]: ptyId } }
     }
     state.ptyIdsByTabId = { 'tab-1': [ptyId] }
+    const onAgentStatus = vi.fn()
     const { observeExistingAutomationSession } = await import('./automation-session-observer')
 
     await observeExistingAutomationSession({
@@ -214,19 +214,14 @@ describe('observeExistingAutomationSession', () => {
       paneKey: PANE_KEY,
       runId: 'run-1',
       onData: vi.fn(),
-      onAgentStatus: vi.fn(),
+      onAgentStatus,
       onExit: vi.fn()
     })
     const handleData = mockSubscribeToPtyData.mock.calls[0]?.[1] as (data: string) => void
     handleData(DONE_STATUS_OSC)
 
-    expect(state.setAgentStatus).toHaveBeenCalledWith(
-      PANE_KEY,
-      expect.objectContaining({ state: 'done' }),
-      undefined,
-      undefined,
-      { connectionId: 'ssh-a' }
-    )
+    expect(state.setAgentStatus).not.toHaveBeenCalled()
+    expect(onAgentStatus).toHaveBeenCalledWith(expect.objectContaining({ state: 'done' }))
   })
 
   it('leaves the row unchanged after the pane rebinds to another SSH host', async () => {

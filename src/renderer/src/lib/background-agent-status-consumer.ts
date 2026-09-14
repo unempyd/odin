@@ -11,7 +11,6 @@ import type { AgentStatusObservation } from '../../../shared/agent-status-observ
 export function createBackgroundAgentStatusConsumer(args: {
   paneKey: string
   launchToken: string
-  mainOwnsAgentStatusWrites: boolean
   expectedConnectionId: string | null | undefined
   runtimeEnvironmentId: string | null
   getPtyId: () => string
@@ -36,31 +35,11 @@ export function createBackgroundAgentStatusConsumer(args: {
       runtimeEnvironmentId: args.runtimeEnvironmentId
     })
   }
+  // Why no store write here: main's OSC ingest is unconditional (agent-status-store.ts),
+  // so this consumer only forwards parsed payloads for automation completion tracking.
   const consume = (data: string): void => {
     const processed = processAgentStatus(data)
     for (const payload of processed.payloads) {
-      if (!args.mainOwnsAgentStatusWrites) {
-        const routing = resolveRouting()
-        // Why: hidden callbacks can outlive tab reuse; only the exact current
-        // pane-to-PTY binding may update its status ownership.
-        if (routing) {
-          useAppStore.getState().setAgentStatus(
-            args.paneKey,
-            {
-              ...payload,
-              observation: rendererAgentStatusObservations.observe(args.paneKey, {
-                origin: 'osc',
-                observedAt: Date.now(),
-                kind: 'snapshot'
-              })
-            },
-            undefined,
-            undefined,
-            routing,
-            { launchToken: args.launchToken }
-          )
-        }
-      }
       args.onAgentStatus?.(payload)
     }
   }

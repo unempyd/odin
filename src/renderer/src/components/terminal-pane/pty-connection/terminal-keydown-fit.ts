@@ -135,11 +135,17 @@ export function installTerminalKeydownFit(session: ConnectPanePtySession): void 
           useAppStore
             .getState()
             .observeTerminalGitHubPullRequestLink(session.deps.worktreeId, link),
-        // Why: the Command Code settle policy stays here — the done settle
-        // timer must consult the live store row (which hook events and
-        // renderer seeds also write), so main only emits scrape facts.
-        onCommandCodeWorking: session.seedCommandCodeOutputWorkingStatus,
-        onCommandCodeDone: session.scheduleCommandCodeOutputDoneStatus,
+        // Why conditional: under main authority main now ingests command-code
+        // status itself (agent-status-store.ts), so consuming the fact here too
+        // would double-write it. A kill-switch-off/remote-runtime pane still
+        // reaches this registration only via the remoteOutputPaused edge case
+        // below, where it must keep consuming the forwarded fact.
+        ...(session.mainSideEffectAuthority
+          ? {}
+          : {
+              onCommandCodeWorking: session.seedCommandCodeOutputWorkingStatus,
+              onCommandCodeDone: session.scheduleCommandCodeOutputDoneStatus
+            }),
         ...(session.shouldOwnAgentStatusInRenderer
           ? { onAgentStatus: (payload) => session.handleRendererOwnedAgentStatus(payload) }
           : {}),
