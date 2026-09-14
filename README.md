@@ -1,6 +1,6 @@
-<p align="center"><img src="odin/odin-logo.png" alt="Odin" width="120"></p>
+<p align="center"><img src="odin/odin-logo.svg" alt="Odin" width="160"></p>
 
-# Odin
+<h1 align="center">Odin</h1>
 
 **Surgical derivative of [Orca](https://github.com/stablyai/orca). Same product surface. Residual orchestration and safety contracts closed.**
 
