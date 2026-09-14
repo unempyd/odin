@@ -39,6 +39,9 @@ vi.mock('../../shared/secure-file', () => ({
   writeSecureFile: writeSecureFileMock
 }))
 
+import { setSecretStore } from '../../shared/secret-store'
+import { ElectronSecretStore } from '../host/electron-secret-store'
+
 const storePath = '/home/test/.orca/minimax-session-cookie.enc'
 const envelope = (kind: 'encrypted' | 'plaintext', value: string): string =>
   `orca-minimax-cookie:v1:${kind}:${Buffer.from(value, 'utf8').toString('base64')}`
@@ -49,6 +52,10 @@ async function loadStore(): Promise<typeof MiniMaxCookieStore> {
 
 describe('minimax-cookie-store', () => {
   beforeEach(() => {
+    // Registered after config/scripts/vitest-host-ports-setup.ts's global beforeEach,
+    // so this wins: route the store through the real guard, backed by the mocked
+    // electron safeStorage above, instead of that setup's always-available fake.
+    setSecretStore(new ElectronSecretStore())
     existsSyncMock.mockReset()
     readFileSyncMock.mockReset()
     rmSyncMock.mockReset()
@@ -204,5 +211,56 @@ describe('minimax-cookie-store', () => {
     store.clearMiniMaxSessionCookie()
     expect(rmSyncMock).toHaveBeenCalledWith(storePath, { force: true })
     expect(store.readMiniMaxSessionCookie()).toBeNull()
+  })
+
+  // Why: a windowless launch can never answer the macOS Keychain prompt that
+  // safeStorage.isEncryptionAvailable() blocks on, so this store must never touch it
+  // (odin/proofs/ssh-boundary.md §Deviation 3; commit da89b6b5b8 fixed the shared guard
+  // but left this direct call site unrouted).
+  describe('windowless launch', () => {
+    const originalBackgroundLaunch = process.env.ORCA_BACKGROUND_LAUNCH
+
+    afterEach(() => {
+      if (originalBackgroundLaunch === undefined) {
+        delete process.env.ORCA_BACKGROUND_LAUNCH
+      } else {
+        process.env.ORCA_BACKGROUND_LAUNCH = originalBackgroundLaunch
+      }
+    })
+
+    it('saves plaintext with a warning, without calling safeStorage.isEncryptionAvailable', async () => {
+      process.env.ORCA_BACKGROUND_LAUNCH = '1'
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined)
+      existsSyncMock.mockReturnValue(false)
+      const store = await loadStore()
+      store.saveMiniMaxSessionCookie('_token=abc')
+      expect(writeSecureFileMock).toHaveBeenCalledWith(
+        storePath,
+        envelope('plaintext', '_token=abc')
+      )
+      expect(safeStorageMock.isEncryptionAvailable).not.toHaveBeenCalled()
+      expect(safeStorageMock.encryptString).not.toHaveBeenCalled()
+      warn.mockRestore()
+    })
+
+    it('throws for encrypted envelopes without calling safeStorage.isEncryptionAvailable', async () => {
+      process.env.ORCA_BACKGROUND_LAUNCH = '1'
+      existsSyncMock.mockReturnValue(true)
+      readFileSyncMock.mockReturnValue(Buffer.from(envelope('encrypted', 'encrypted-payload')))
+      const store = await loadStore()
+      expect(() => store.readMiniMaxSessionCookie()).toThrow(/could not be decrypted/)
+      expect(safeStorageMock.isEncryptionAvailable).not.toHaveBeenCalled()
+      expect(safeStorageMock.decryptString).not.toHaveBeenCalled()
+    })
+
+    it('reads legacy plaintext cookies without calling safeStorage.isEncryptionAvailable', async () => {
+      process.env.ORCA_BACKGROUND_LAUNCH = '1'
+      existsSyncMock.mockReturnValue(true)
+      readFileSyncMock.mockReturnValue(Buffer.from('_token=legacy'))
+      const store = await loadStore()
+      expect(store.readMiniMaxSessionCookie()).toBe('_token=legacy')
+      expect(safeStorageMock.isEncryptionAvailable).not.toHaveBeenCalled()
+      expect(safeStorageMock.decryptString).not.toHaveBeenCalled()
+    })
   })
 })

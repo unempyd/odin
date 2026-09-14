@@ -3,6 +3,8 @@ import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'nod
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import type { OrcaCloudSession } from './profile-cloud-session-store'
+import { setSecretStore } from '../../shared/secret-store'
+import { ElectronSecretStore } from '../host/electron-secret-store'
 
 const safeStorageMock = vi.hoisted(() => ({
   decryptString: vi.fn((value: Buffer) => value.toString('utf-8')),
@@ -21,6 +23,9 @@ vi.mock('electron', () => ({
 
 async function loadSessionStore() {
   vi.resetModules()
+  // Route the site through the real guarded store, backed by the mocked electron
+  // safeStorage above, so windowless-launch behaviour is exercised end-to-end.
+  setSecretStore(new ElectronSecretStore())
   return import('./profile-cloud-session-store')
 }
 
@@ -38,6 +43,28 @@ function makeSession(): OrcaCloudSession {
       refreshedAt: 123
     }
   }
+}
+
+function writeSecureEncryptedSessionFile(
+  profileId: string,
+  session: OrcaCloudSession = makeSession()
+): void {
+  const profileDirectory = join(userDataPath, 'profiles', profileId)
+  mkdirSync(profileDirectory, { recursive: true })
+  writeFileSync(
+    join(profileDirectory, 'account-session.json.enc'),
+    JSON.stringify(
+      {
+        version: 1,
+        format: 'electron-safe-storage-v1',
+        savedAt: 1,
+        ciphertext: Buffer.from(JSON.stringify(session), 'utf-8').toString('base64')
+      },
+      null,
+      2
+    ),
+    'utf-8'
+  )
 }
 
 function writePlaintextSessionFile(profileId: string, session: OrcaCloudSession): void {
@@ -167,6 +194,47 @@ describe('Orca cloud session store', () => {
       status: 'decrypt-failed',
       persistence: 'none',
       error: 'Unsafe session format.'
+    })
+  })
+
+  // Why: a windowless launch can never answer the macOS Keychain prompt that
+  // safeStorage.isEncryptionAvailable() blocks on, so this site must never touch it
+  // (odin/proofs/ssh-boundary.md §Deviation 3; commit da89b6b5b8 fixed the shared guard
+  // but left this direct call site unrouted).
+  describe('windowless launch', () => {
+    const originalBackgroundLaunch = process.env.ORCA_BACKGROUND_LAUNCH
+
+    afterEach(() => {
+      if (originalBackgroundLaunch === undefined) {
+        delete process.env.ORCA_BACKGROUND_LAUNCH
+      } else {
+        process.env.ORCA_BACKGROUND_LAUNCH = originalBackgroundLaunch
+      }
+    })
+
+    it('saves memory-only without calling safeStorage.isEncryptionAvailable', async () => {
+      process.env.ORCA_BACKGROUND_LAUNCH = '1'
+      const store = await loadSessionStore()
+      const session = makeSession()
+
+      expect(store.saveOrcaCloudSession('profile-1', userDataPath, session)).toBe('memory-only')
+      expect(safeStorageMock.isEncryptionAvailable).not.toHaveBeenCalled()
+      expect(safeStorageMock.encryptString).not.toHaveBeenCalled()
+    })
+
+    it('reads back as decrypt-failed without calling safeStorage', async () => {
+      process.env.ORCA_BACKGROUND_LAUNCH = '1'
+      // Persisted by a prior, non-windowless launch.
+      writeSecureEncryptedSessionFile('profile-1')
+      const store = await loadSessionStore()
+
+      expect(store.readOrcaCloudSession('profile-1', userDataPath)).toEqual({
+        status: 'decrypt-failed',
+        persistence: 'none',
+        error: 'OS-backed encryption is unavailable.'
+      })
+      expect(safeStorageMock.isEncryptionAvailable).not.toHaveBeenCalled()
+      expect(safeStorageMock.decryptString).not.toHaveBeenCalled()
     })
   })
 })

@@ -270,6 +270,18 @@ is a real, previously-unknown Odin/Orca defect, not a driver workaround — any 
 Orca launch that reaches a first-time secret encryption (not just this proof's SSH PTY-consumer
 lease) was exposed to the same indefinite, silent, untimeoutable hang.
 
+**Follow-on fix, same defect (`secrets-guard`, a later worktree)**: the guard above only closed
+`ElectronSecretStore`'s own `isEncryptionAvailable()`. Four other call sites still touched
+`safeStorage.isEncryptionAvailable()` / `encryptString()` / `decryptString()` directly — Orca cloud
+session persistence (`profile-cloud-session-store.ts`), plugin secrets
+(`plugin-secrets-store.ts`), and the two MiniMax stores (`minimax-api-key-store.ts`,
+`minimax-cookie-store.ts`) — and would reproduce the exact same indefinite hang on their own first
+touch under a windowless launch. All four are now routed through `getSecretStore()` (the same
+guarded instance), each keeping its own existing unavailable-branch behaviour; a new ratchet test
+(`src/main/host/safe-storage-call-site-boundary.test.ts`) fails on any future direct `safeStorage`
+call site in `src/main` outside `electron-secret-store.ts`. Proof:
+`odin/proofs/secrets-guard.before.txt` / `.after.txt`.
+
 **Driver-side fixes carried over from the original investigation** (environment variables the
 driver sets before spawning Electron, no product source involved): `ORCA_RELAY_PATH` and its
 realpath resolution (Deviations 1–2).

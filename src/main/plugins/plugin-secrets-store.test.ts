@@ -3,26 +3,37 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-const storageMocks = vi.hoisted(() => ({
-  available: true,
-  encryptString: vi.fn((value: string) => Buffer.from(`encrypted:${value}`, 'utf8')),
-  decryptString: vi.fn((value: Buffer) => {
-    const text = value.toString('utf8')
-    if (!text.startsWith('encrypted:')) {
-      throw new Error('wrong key or corrupt ciphertext')
-    }
-    return text.slice('encrypted:'.length)
-  })
-}))
+const storageMocks = vi.hoisted(() => {
+  let available = true
+  return {
+    get available(): boolean {
+      return available
+    },
+    set available(value: boolean) {
+      available = value
+    },
+    isEncryptionAvailable: vi.fn(() => available),
+    encryptString: vi.fn((value: string) => Buffer.from(`encrypted:${value}`, 'utf8')),
+    decryptString: vi.fn((value: Buffer) => {
+      const text = value.toString('utf8')
+      if (!text.startsWith('encrypted:')) {
+        throw new Error('wrong key or corrupt ciphertext')
+      }
+      return text.slice('encrypted:'.length)
+    })
+  }
+})
 
 vi.mock('electron', () => ({
   safeStorage: {
-    isEncryptionAvailable: () => storageMocks.available,
+    isEncryptionAvailable: storageMocks.isEncryptionAvailable,
     encryptString: storageMocks.encryptString,
     decryptString: storageMocks.decryptString
   }
 }))
 
+import { setSecretStore } from '../../shared/secret-store'
+import { ElectronSecretStore } from '../host/electron-secret-store'
 import { PluginSecretsStore } from './plugin-secrets-store'
 
 const roots: string[] = []
@@ -34,7 +45,14 @@ async function tempRoot(): Promise<string> {
 }
 
 beforeEach(() => {
+  // Registered after config/scripts/vitest-host-ports-setup.ts's global beforeEach,
+  // so this wins: route the store through the real guard, backed by the mocked
+  // electron safeStorage above, instead of that setup's always-available fake.
+  setSecretStore(new ElectronSecretStore())
   storageMocks.available = true
+  storageMocks.isEncryptionAvailable.mockClear()
+  storageMocks.encryptString.mockClear()
+  storageMocks.decryptString.mockClear()
   storageMocks.encryptString.mockImplementation((value) =>
     Buffer.from(`encrypted:${value}`, 'utf8')
   )
@@ -113,5 +131,57 @@ describe('PluginSecretsStore', () => {
   it('rejects unsafe plugin namespaces', async () => {
     const root = await tempRoot()
     expect(() => new PluginSecretsStore(root, 'constructor.demo')).toThrow('unsafe plugin key')
+  })
+
+  // Why: a windowless launch can never answer the macOS Keychain prompt that
+  // safeStorage.isEncryptionAvailable() blocks on, so this store must never touch it
+  // (odin/proofs/ssh-boundary.md §Deviation 3; commit da89b6b5b8 fixed the shared guard
+  // but left this direct call site unrouted).
+  describe('windowless launch', () => {
+    const originalBackgroundLaunch = process.env.ORCA_BACKGROUND_LAUNCH
+
+    afterEach(() => {
+      if (originalBackgroundLaunch === undefined) {
+        delete process.env.ORCA_BACKGROUND_LAUNCH
+      } else {
+        process.env.ORCA_BACKGROUND_LAUNCH = originalBackgroundLaunch
+      }
+    })
+
+    it('refuses to store without calling safeStorage.isEncryptionAvailable', async () => {
+      process.env.ORCA_BACKGROUND_LAUNCH = '1'
+      const root = await tempRoot()
+      const store = new PluginSecretsStore(root, 'acme.demo')
+
+      expect(store.set('token', 'plaintext')).toEqual({
+        ok: false,
+        error: 'OS-backed encryption is unavailable; secret not stored'
+      })
+      expect(storageMocks.isEncryptionAvailable).not.toHaveBeenCalled()
+      expect(storageMocks.encryptString).not.toHaveBeenCalled()
+    })
+
+    it('reports unavailable on get without calling safeStorage.isEncryptionAvailable', async () => {
+      const root = await tempRoot()
+      const pluginDir = join(root, 'acme.demo')
+      await mkdir(pluginDir, { recursive: true })
+      await writeFile(
+        join(pluginDir, 'secrets.json.enc'),
+        JSON.stringify({
+          version: 1,
+          format: 'electron-safe-storage-v1',
+          ciphertexts: { token: Buffer.from('encrypted:top-secret').toString('base64') }
+        })
+      )
+      process.env.ORCA_BACKGROUND_LAUNCH = '1'
+      const store = new PluginSecretsStore(root, 'acme.demo')
+
+      expect(store.get('token')).toEqual({
+        ok: false,
+        error: 'OS-backed encryption is unavailable'
+      })
+      expect(storageMocks.isEncryptionAvailable).not.toHaveBeenCalled()
+      expect(storageMocks.decryptString).not.toHaveBeenCalled()
+    })
   })
 })
