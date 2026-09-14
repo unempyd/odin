@@ -1,0 +1,9 @@
+
+ RUN  v4.1.11 /Users/briankeeny/Desktop/odin-wt-probes
+
+
+ Test Files  1 passed (1)
+      Tests  36 passed (36)
+   Start at  03:29:37
+   Duration  3.37s (transform 1.07s, setup 106ms, import 1.44s, tests 1.47s, environment 0ms)
+
