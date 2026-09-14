@@ -1,0 +1,47 @@
+
+ RUN  v4.1.11 /Users/briankeeny/Desktop/odin-wt-fix2
+
+ ❯ src/main/runtime/tui-idle-evidence.test.ts (12 tests | 2 failed) 27ms
+     × is not-idle when a fresh first-party working status vetoes an explicit idle title (C5) 10ms
+     × is not-idle when a fresh first-party working status vetoes positive body evidence (C5) 1ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/main/runtime/tui-idle-evidence.test.ts > resolveTuiIdleVerdict > is not-idle when a fresh first-party working status vetoes an explicit idle title (C5)
+AssertionError: expected 'observed-idle' to be 'not-idle' // Object.is equality
+
+Expected: "not-idle"
+Received: "observed-idle"
+
+ ❯ src/main/runtime/tui-idle-evidence.test.ts:61:42
+     59|       firstPartyStatus: { state: 'working', updatedAt: Date.now() }
+     60|     })
+     61|     expect(resolveTuiIdleVerdict(input)).toBe('not-idle')
+       |                                          ^
+     62|   })
+     63|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  src/main/runtime/tui-idle-evidence.test.ts > resolveTuiIdleVerdict > is not-idle when a fresh first-party working status vetoes positive body evidence (C5)
+AssertionError: expected 'observed-idle' to be 'not-idle' // Object.is equality
+
+Expected: "not-idle"
+Received: "observed-idle"
+
+ ❯ src/main/runtime/tui-idle-evidence.test.ts:69:42
+     67|       firstPartyStatus: { state: 'working', updatedAt: Date.now() }
+     68|     })
+     69|     expect(resolveTuiIdleVerdict(input)).toBe('not-idle')
+       |                                          ^
+     70|   })
+     71|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 10 passed (12)
+   Start at  01:27:42
+   Duration  780ms (transform 254ms, setup 102ms, import 232ms, tests 27ms, environment 0ms)
+

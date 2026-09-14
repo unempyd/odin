@@ -195,6 +195,12 @@ export class OrcaRuntimeWithAutomationOperations extends OrcaRuntimeWithPtyForeg
       await reconcileUnsupervisedDispatchesOnRestart(this, this.getOrchestrationDb())
     } catch (error) {
       console.warn('[orchestration] unsupervised dispatch recovery failed', error)
+      // Why: logging alone left callers unable to distinguish "sweep ran and found nothing" from
+      // "sweep failed" (O2).
+      return {
+        ...result,
+        unsupervisedRecoveryError: error instanceof Error ? error.message : String(error)
+      }
     }
     return result
   }
