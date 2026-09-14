@@ -49,11 +49,6 @@ export function installMainWindowAgentStatusListeners(options: MainWindowAgentSt
       if (state.mainWindow?.isDestroyed()) {
         return
       }
-      // Why: the renderer still derives structured rows from its own feed subscription; forwarding
-      // these too would give one pane key two writers until that bridge is retired.
-      if (structuredHost) {
-        return
-      }
       if (providerSessionOnly) {
         // Why: session_start just refreshes durable resume identity while Pi is idle; forward it without titles, telemetry, or status UI.
         state.mainWindow?.webContents.send('agentStatus:set', {
@@ -102,7 +97,8 @@ export function installMainWindowAgentStatusListeners(options: MainWindowAgentSt
         ...(promptInteractionKey ? { promptInteractionKey } : {}),
         ...(restoredUnconfirmed ? { restoredUnconfirmed: true } : {}),
         ...(observation ? { observation } : {}),
-        ...(orchestration ? { orchestration } : {})
+        ...(orchestration ? { orchestration } : {}),
+        ...(structuredHost ? { structuredHost } : {})
       }
       state.mainWindow?.webContents.send('agentStatus:set', statusEvent)
       if (!suppressSyntheticCodexAutoApprovalTitle || isAskUserQuestionTool(payload.toolName)) {

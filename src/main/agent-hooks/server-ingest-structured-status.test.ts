@@ -92,6 +92,50 @@ describe('AgentHookServer ingestStructuredStatus', () => {
     expect(server.getStatusSnapshot()[0]?.state).toBe('done')
   })
 
+  // The renderer bridge no longer computes these itself (see StructuredAgentSessionStatusBridge.tsx);
+  // main now projects them onto the ingested row so the applicator needs no structured-only logic.
+  it('projects agent-kind background tasks as subagents, and stamps sessionBoundary false', () => {
+    const server = new AgentHookServer()
+    server.ingestStructuredStatus(
+      summary({
+        backgroundTasks: [
+          {
+            id: 'child-1',
+            kind: 'agent',
+            name: 'deep_review',
+            description: 'Review the diff',
+            state: 'working',
+            startedAt: 500
+          },
+          // A backgrounded shell is not a subagent; kinds stay distinct.
+          { id: 'shell-1', kind: 'command', description: 'sleep 180', state: 'working' }
+        ]
+      })
+    )
+
+    expect(server.getStatusSnapshot()).toEqual([
+      expect.objectContaining({
+        sessionBoundary: false,
+        subagents: [
+          {
+            id: 'child-1',
+            state: 'working',
+            startedAt: 500,
+            agentType: 'deep_review',
+            description: 'Review the diff'
+          }
+        ]
+      })
+    ])
+  })
+
+  it('omits subagents entirely when no agent-kind background task is reported', () => {
+    const server = new AgentHookServer()
+    server.ingestStructuredStatus(summary())
+    expect(server.getStatusSnapshot()[0]).not.toHaveProperty('subagents')
+    expect(server.getStatusSnapshot()[0]?.sessionBoundary).toBe(false)
+  })
+
   it('marks a session whose provider child is gone as held, not owned', () => {
     const server = new AgentHookServer()
     server.ingestStructuredStatus(summary({ hostExecutionOwned: undefined }))
@@ -148,9 +192,10 @@ describe('AgentHookServer ingestStructuredStatus', () => {
 
   // Structured rows are never serialized, so persisting one could only rewrite the file already
   // on disk — once per debounce window for the whole of every streaming chat.
-  // "Exactly one writer per pane key" has to hold for deletes too: the renderer's feed bridge owns
-  // this pane, so a pane-status-clear would be main reaching into a row it does not write.
-  it('drops the row without sending the renderer a clear for a pane it does not write', () => {
+  // "Exactly one writer per pane key" now holds for deletes too: main is the pane key's only
+  // writer, so the drop must reach the renderer as a real `agentStatus:clear` or the row would
+  // strand — the single most likely way to leave a permanently-working native chat row behind.
+  it('sends the renderer a pane clear when the host stops holding the session', () => {
     const server = new AgentHookServer()
     const cleared: unknown[] = []
     const dropped: string[] = []
@@ -161,8 +206,10 @@ describe('AgentHookServer ingestStructuredStatus', () => {
     server.dropStructuredStatus(SESSION)
 
     expect(server.getStatusSnapshot()).toEqual([])
-    expect(cleared).toEqual([])
-    expect(dropped).toEqual([STRUCTURED_PANE])
+    expect(cleared).toEqual([{ paneKey: STRUCTURED_PANE }])
+    // `subscribeStatusDrop` is a separate tap `clearPaneState` does not feed (its only consumer,
+    // the synthetic-title spinner stop, never applies to a structured pane — no PTY, no spinner).
+    expect(dropped).toEqual([])
   })
 
   it('schedules no persist for a structured row, while a hook row still does', () => {

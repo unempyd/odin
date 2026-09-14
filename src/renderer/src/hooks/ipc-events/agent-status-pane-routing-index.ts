@@ -28,6 +28,9 @@ type IndexedAgentStatusTab = {
 
 export type AgentStatusPaneRoutingIndex = {
   tabsById: Map<string, IndexedAgentStatusTab>
+  /** Structured (native chat) tabs, keyed by tab id. They own no `tabsByWorktree` entry — that
+   *  map is PTY terminals only — so a structured pane key needs its own existence check. */
+  agentSessionTabsById: Map<string, { owningWorktreeId: string }>
   unifiedTabsByWorktree: AppState['unifiedTabsByWorktree']
   unifiedLabelsByWorktreeId: Map<string, Map<string, string | undefined>>
   layoutsByTabId: AppState['terminalLayoutsByTabId']
@@ -57,9 +60,31 @@ export function resetAgentStatusPaneRoutingIndexCounters(): void {
 // correct across commits and never has to be rewalked once seen.
 const leafIdsByRoot = new WeakMap<TerminalPaneLayoutNode, Set<string>>()
 const tabsByIdCache = new WeakMap<AppState['tabsByWorktree'], Map<string, IndexedAgentStatusTab>>()
+const agentSessionTabsByIdCache = new WeakMap<object, Map<string, { owningWorktreeId: string }>>()
 const unifiedLabelIndexCache = new WeakMap<object, Map<string, Map<string, string | undefined>>>()
 const routingIndexCache = new WeakMap<AppState['tabsByWorktree'], AgentStatusPaneRoutingIndex>()
 const NO_UNIFIED_TABS = {}
+
+/** Structured tabs live only in `unifiedTabsByWorktree`; first wins, matching `getIndexedTabs`. */
+function getIndexedAgentSessionTabs(
+  unifiedTabsByWorktree: AppState['unifiedTabsByWorktree']
+): Map<string, { owningWorktreeId: string }> {
+  const cacheKey = unifiedTabsByWorktree ?? NO_UNIFIED_TABS
+  const cached = agentSessionTabsByIdCache.get(cacheKey)
+  if (cached) {
+    return cached
+  }
+  const byId = new Map<string, { owningWorktreeId: string }>()
+  for (const [worktreeId, tabs] of Object.entries(unifiedTabsByWorktree ?? {})) {
+    for (const tab of tabs) {
+      if (tab.contentType === 'agent-session' && !byId.has(tab.id)) {
+        byId.set(tab.id, { owningWorktreeId: worktreeId })
+      }
+    }
+  }
+  agentSessionTabsByIdCache.set(cacheKey, byId)
+  return byId
+}
 
 function createUnifiedTerminalLabelIndex(
   entries: AppState['unifiedTabsByWorktree'][string] | undefined
@@ -147,6 +172,7 @@ export function createAgentStatusPaneRoutingIndex(store: AppState): AgentStatusP
   agentStatusPaneRoutingIndexCounters.indexBuilds += 1
   const index: AgentStatusPaneRoutingIndex = {
     tabsById: getIndexedTabs(store.tabsByWorktree),
+    agentSessionTabsById: getIndexedAgentSessionTabs(store.unifiedTabsByWorktree),
     unifiedTabsByWorktree: store.unifiedTabsByWorktree,
     unifiedLabelsByWorktreeId: getUnifiedLabelIndex(store.unifiedTabsByWorktree),
     layoutsByTabId: store.terminalLayoutsByTabId,
@@ -194,6 +220,27 @@ export function resolvePaneKeyFromRoutingIndex(
   const { tabId, leafId } = parsed
   const tab = index.tabsById.get(tabId)
   if (!tab) {
+    // A structured (native chat) pane key has no `tabsByWorktree` entry — that map is PTY
+    // terminals only — but it does have a real tab in `unifiedTabsByWorktree`. Host-published
+    // structured rows carry no tab label (see StructuredAgentSessionStatusBridge.tsx), so title
+    // resolution stays undefined here; the tab's own label is what the sidebar renders directly.
+    const agentSessionTab = index.agentSessionTabsById.get(tabId)
+    if (agentSessionTab) {
+      const agentSessionConnection = resolveWorktreeConnectionFromRoutingIndex(
+        index,
+        agentSessionTab.owningWorktreeId
+      )
+      return {
+        exists: true,
+        title: undefined,
+        identityTitle: undefined,
+        repoConnectionId: agentSessionConnection.repoConnectionId,
+        repoConnectionResolved: agentSessionConnection.repoConnectionResolved,
+        owningWorktreeId: agentSessionTab.owningWorktreeId,
+        titleUsesTabTitle: false,
+        tabTitle: undefined
+      }
+    }
     return {
       exists: false,
       title: undefined,
