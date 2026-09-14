@@ -1,0 +1,35 @@
+=== G targeted + directory tests ===
+
+ RUN  v4.1.11 /Users/briankeeny/Desktop/odin-wt-consent
+
+
+ Test Files  1 passed (1)
+      Tests  19 passed (19)
+   Start at  20:16:19
+   Duration  2.31s (transform 1.01s, setup 85ms, import 479ms, tests 1.49s, environment 0ms)
+
+-- full src/main/codex-accounts directory --
+
+ RUN  v4.1.11 /Users/briankeeny/Desktop/odin-wt-consent
+
+mkdir: /private/var/folders/08/tsc21p4n41ndkvcxq1kl0htw0000gn/T/orca-runtime-home-jBE4YL/codex-accounts/owner/home/sessions/2026: Not a directory
+
+ Test Files  46 passed (46)
+      Tests  355 passed (355)
+   Start at  20:16:22
+   Duration  60.60s (transform 9.06s, setup 2.35s, import 15.85s, tests 102.74s, environment 12ms)
+
+-- runtime-client-settings revocation reaction --
+
+ RUN  v4.1.11 /Users/briankeeny/Desktop/odin-wt-consent
+
+
+ Test Files  3 passed (3)
+      Tests  9 passed (9)
+   Start at  20:17:23
+   Duration  2.39s (transform 3.23s, setup 229ms, import 4.87s, tests 26ms, environment 1ms)
+
+=== tc:node ===
+$ pnpm run typecheck:node
+$ tsc --noEmit -p config/tsconfig.node.json
+=== oxlint ===

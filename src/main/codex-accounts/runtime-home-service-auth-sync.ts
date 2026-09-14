@@ -7,6 +7,9 @@ import type { CodexSystemDefaultSnapshot } from './runtime-home-service-types'
 
 export abstract class CodexRuntimeHomeAuthSync extends CodexRuntimeHomeLaunch {
   protected captureSystemDefaultSnapshot(options: { force: boolean }): void {
+    if (!this.hasCredentialMirrorConsent()) {
+      return
+    }
     const snapshotPath = this.getSystemDefaultSnapshotPath()
     if (!options.force && existsSync(snapshotPath)) {
       return
@@ -20,6 +23,9 @@ export abstract class CodexRuntimeHomeAuthSync extends CodexRuntimeHomeLaunch {
   }
 
   protected syncRuntimeAuthWithSystemDefault(): void {
+    if (!this.hasCredentialMirrorConsent()) {
+      return
+    }
     const runtimeAuthPath = this.getRuntimeAuthPath()
     const systemDefaultAuthPath = join(getSystemCodexHomePath(), 'auth.json')
     if (!existsSync(runtimeAuthPath)) {

@@ -210,6 +210,8 @@ export function buildDefaultSettings(args: {
     agentYoloDefaultsMigrated: true,
     // Why: installing managed hooks into other tools' configs needs explicit user consent.
     agentStatusHooksEnabled: false,
+    // Why: mirroring ~/.codex/auth.json into Orca's runtime home needs explicit consent.
+    codexCredentialMirrorConsent: false,
     tabAutoGenerateTitle: false,
     confirmClosePinnedTab: true,
     keepComputerAwakeWhileAgentsRun: false,
