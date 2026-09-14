@@ -66,17 +66,24 @@ export async function inspectWorkerTerminal(
   if (!terminal) {
     // O1: every showTerminal exception used to collapse to 'missing', so a transport timeout
     // read the same owner-proven-absence verdict as the owner actually saying "not found".
-    // Only 'terminal_gone' is owner-proven; everything else is contact loss, not death.
-    // The runtime is the handle's owner: a resolved null or its own `terminal_not_found` is the
-    // owner saying "no such terminal", so both are owner-proven absence like a PTY host's
-    // `terminal_gone`. A thrown transport/timeout failure is not.
+    // A resolved null is the owner saying "no such terminal"; a thrown PTY-host `terminal_gone`
+    // is the same claim from further down the stack. Both are owner-proven absence.
+    // O2: `terminal_not_found` and `terminal_handle_stale` describe the client-side handle graph
+    // (a renderer graph-epoch mismatch, or a missing/mismatched local leaf -- see
+    // orca-runtime-build-pty-terminal-summary.ts), not the execution owner's process, so they must
+    // not mint `missing` here even though `classifyTerminalProcessInspectionFailure` buckets them
+    // under the same client-facing 'terminal_gone' reason as a real owner-proven `terminal_gone`.
     const failureReason = classifyTerminalProcessInspectionFailure(showTerminalFailure)
+    const failureCode =
+      showTerminalFailure &&
+      typeof showTerminalFailure === 'object' &&
+      'code' in showTerminalFailure
+        ? String((showTerminalFailure as { code?: unknown }).code)
+        : undefined
     const ownerSaysNotFound =
       showTerminalFailure === undefined ||
-      failureReason === 'terminal_gone' ||
-      (showTerminalFailure instanceof Error &&
-        (showTerminalFailure.message === 'terminal_not_found' ||
-          showTerminalFailure.message === 'terminal_handle_stale'))
+      failureCode === 'terminal_gone' ||
+      (showTerminalFailure instanceof Error && showTerminalFailure.message === 'terminal_gone')
     if (ownerSaysNotFound) {
       return { terminal: null, exact: false, status: 'missing' }
     }

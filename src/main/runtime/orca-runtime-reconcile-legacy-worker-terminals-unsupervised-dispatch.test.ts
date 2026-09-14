@@ -32,10 +32,13 @@ describe('reconcileLegacyWorkerTerminals wires unsupervised dispatch recovery (r
     db = new OrchestrationDb(':memory:')
     runtime.setOrchestrationDb(db)
     const dispatch = createInjectedDispatch(db)
-    // Why stub the owner's answer: `terminal_not_found` is the runtime saying "no such terminal"
-    // (owner-proven absence). A bare runtime with no PTY provider answers `runtime_unavailable`
-    // instead, which is loss of contact and must never fail a dispatch (see the next case).
-    vi.spyOn(runtime, 'showTerminal').mockRejectedValue(new Error('terminal_not_found'))
+    // Why stub the owner's answer: a PTY-host `terminal_gone` is the runtime saying "no such
+    // terminal" (owner-proven absence). A bare runtime with no PTY provider answers
+    // `runtime_unavailable` instead, which is loss of contact and must never fail a dispatch (see
+    // the next case).
+    vi.spyOn(runtime, 'showTerminal').mockRejectedValue(
+      Object.assign(new Error('terminal_gone'), { code: 'terminal_gone' })
+    )
 
     await runtime.reconcileLegacyWorkerTerminals()
 
@@ -54,5 +57,39 @@ describe('reconcileLegacyWorkerTerminals wires unsupervised dispatch recovery (r
     await runtime.reconcileLegacyWorkerTerminals()
 
     expect(db.getDispatchContextById(dispatch.id)?.status).toBe('dispatched')
+  })
+
+  // O2: terminal_handle_stale describes a renderer graph-epoch mismatch or a missing/mismatched
+  // local leaf, not the execution owner's process. Before O2 this was treated as owner-proven
+  // `missing`, so injected recovery settled (failed) a dispatch whose execution may still exist.
+  it('leaves an injected dispatch untouched when its terminal handle is merely stale', async () => {
+    runtime = new OrcaRuntimeService()
+    db = new OrchestrationDb(':memory:')
+    runtime.setOrchestrationDb(db)
+    const dispatch = createInjectedDispatch(db)
+    vi.spyOn(runtime, 'showTerminal').mockRejectedValue(
+      Object.assign(new Error('terminal_handle_stale'), { code: 'terminal_handle_stale' })
+    )
+
+    await runtime.reconcileLegacyWorkerTerminals()
+
+    expect(db.getDispatchContextById(dispatch.id)?.status).toBe('dispatched')
+  })
+
+  // O2: orca-runtime-automation-operations.ts caught the unsupervised sweep's error and only
+  // logged it, so a caller polling the returned result had no way to tell the sweep ran and
+  // failed versus ran and found nothing to do.
+  it('surfaces a failed unsupervised recovery sweep on the returned result instead of dropping it', async () => {
+    runtime = new OrcaRuntimeService()
+    db = new OrchestrationDb(':memory:')
+    runtime.setOrchestrationDb(db)
+    createInjectedDispatch(db)
+    vi.spyOn(db, 'listUnsupervisedActiveDispatches').mockImplementation(() => {
+      throw new Error('unsupervised_sweep_boom')
+    })
+
+    const result = await runtime.reconcileLegacyWorkerTerminals()
+
+    expect(result.unsupervisedRecoveryError).toBe('unsupervised_sweep_boom')
   })
 })

@@ -126,6 +126,35 @@ describe('inspectWorkerTerminal showTerminal failure classification', () => {
       status: 'missing'
     })
   })
+
+  // O2: terminal_handle_stale and terminal_not_found describe a renderer graph-epoch mismatch or a
+  // missing/mismatched local leaf (orca-runtime-build-pty-terminal-summary.ts) -- the client-side
+  // handle graph, not the execution owner's process. Only a resolved null or a PTY-host
+  // terminal_gone is owner-proven missing; these two must not mint missing and let injected
+  // recovery settle a dispatch whose execution may still exist.
+  it('treats terminal_handle_stale as unverifiable, not owner-proven missing', async () => {
+    const { runtime, db } = createFailureHarness(() =>
+      Promise.reject(
+        Object.assign(new Error('terminal_handle_stale'), { code: 'terminal_handle_stale' })
+      )
+    )
+
+    await expect(inspectWorkerTerminal(runtime, db, DISPATCH_ID)).resolves.toMatchObject({
+      exact: false,
+      status: 'unverifiable'
+    })
+  })
+
+  it('treats terminal_not_found as unverifiable, not owner-proven missing', async () => {
+    const { runtime, db } = createFailureHarness(() =>
+      Promise.reject(new Error('terminal_not_found'))
+    )
+
+    await expect(inspectWorkerTerminal(runtime, db, DISPATCH_ID)).resolves.toMatchObject({
+      exact: false,
+      status: 'unverifiable'
+    })
+  })
 })
 
 describe('exposeObservation liveness verdict', () => {

@@ -1,0 +1,109 @@
+
+ RUN  v4.1.11 /Users/briankeeny/Desktop/odin-wt-fix2
+
+ ❯ src/main/runtime/rpc/methods/orchestration/worker/worker-observation.test.ts (12 tests | 2 failed) 36ms
+     × treats terminal_handle_stale as unverifiable, not owner-proven missing 12ms
+     × treats terminal_not_found as unverifiable, not owner-proven missing 2ms
+stderr | src/main/runtime/orca-runtime-reconcile-legacy-worker-terminals-unsupervised-dispatch.test.ts > reconcileLegacyWorkerTerminals wires unsupervised dispatch recovery (residual M) > surfaces a failed unsupervised recovery sweep on the returned result instead of dropping it
+[orchestration] unsupervised dispatch recovery failed Error: unsupervised_sweep_boom
+    at OrchestrationDbCore.<anonymous> (/Users/briankeeny/Desktop/odin-wt-fix2/src/main/runtime/orca-runtime-reconcile-legacy-worker-terminals-unsupervised-dispatch.test.ts:88:13)
+    at OrchestrationDbCore.listUnsupervisedActiveDispatches (file:///Users/briankeeny/Desktop/odin-fork/node_modules/.pnpm/@vitest+spy@4.1.11/node_modules/@vitest/spy/dist/index.js:332:34)
+    at reconcileUnsupervisedDispatchesOnRestart (/Users/briankeeny/Desktop/odin-wt-fix2/src/main/runtime/orchestration/orchestration-unsupervised-dispatch-recovery.ts:20:29)
+    at OrcaRuntimeService.reconcileLegacyWorkerTerminals (/Users/briankeeny/Desktop/odin-wt-fix2/src/main/runtime/orca-runtime-automation-operations.ts:195:13)
+    at processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at /Users/briankeeny/Desktop/odin-wt-fix2/src/main/runtime/orca-runtime-reconcile-legacy-worker-terminals-unsupervised-dispatch.test.ts:91:20
+    at file:///Users/briankeeny/Desktop/odin-fork/node_modules/.pnpm/@vitest+runner@4.1.11/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20
+
+ ❯ src/main/runtime/orca-runtime-reconcile-legacy-worker-terminals-unsupervised-dispatch.test.ts (4 tests | 2 failed) 89ms
+     × leaves an injected dispatch untouched when its terminal handle is merely stale 22ms
+     × surfaces a failed unsupervised recovery sweep on the returned result instead of dropping it 15ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/main/runtime/orca-runtime-reconcile-legacy-worker-terminals-unsupervised-dispatch.test.ts > reconcileLegacyWorkerTerminals wires unsupervised dispatch recovery (residual M) > leaves an injected dispatch untouched when its terminal handle is merely stale
+AssertionError: expected 'failed' to be 'dispatched' // Object.is equality
+
+Expected: "dispatched"
+Received: "failed"
+
+ ❯ src/main/runtime/orca-runtime-reconcile-legacy-worker-terminals-unsupervised-dispatch.test.ts:76:60
+     74|     await runtime.reconcileLegacyWorkerTerminals()
+     75|
+     76|     expect(db.getDispatchContextById(dispatch.id)?.status).toBe('dispa…
+       |                                                            ^
+     77|   })
+     78|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/4]⎯
+
+ FAIL  src/main/runtime/orca-runtime-reconcile-legacy-worker-terminals-unsupervised-dispatch.test.ts > reconcileLegacyWorkerTerminals wires unsupervised dispatch recovery (residual M) > surfaces a failed unsupervised recovery sweep on the returned result instead of dropping it
+AssertionError: expected undefined to be 'unsupervised_sweep_boom' // Object.is equality
+
+- Expected:
+"unsupervised_sweep_boom"
+
++ Received:
+undefined
+
+ ❯ src/main/runtime/orca-runtime-reconcile-legacy-worker-terminals-unsupervised-dispatch.test.ts:93:46
+     91|     const result = await runtime.reconcileLegacyWorkerTerminals()
+     92|
+     93|     expect(result.unsupervisedRecoveryError).toBe('unsupervised_sweep_…
+       |                                              ^
+     94|   })
+     95| })
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/4]⎯
+
+ FAIL  src/main/runtime/rpc/methods/orchestration/worker/worker-observation.test.ts > inspectWorkerTerminal showTerminal failure classification > treats terminal_handle_stale as unverifiable, not owner-proven missing
+AssertionError: expected { terminal: null, exact: false, …(1) } to match object { Object (exact, status) }
+(1 matching property omitted from actual)
+
+- Expected
++ Received
+
+  {
+    "exact": false,
+-   "status": "unverifiable",
++   "status": "missing",
+  }
+
+ ❯ src/main/runtime/rpc/methods/orchestration/worker/worker-observation.test.ts:142:66
+    140|     )
+    141|
+    142|     await expect(inspectWorkerTerminal(runtime, db, DISPATCH_ID)).reso…
+       |                                                                  ^
+    143|       exact: false,
+    144|       status: 'unverifiable'
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/4]⎯
+
+ FAIL  src/main/runtime/rpc/methods/orchestration/worker/worker-observation.test.ts > inspectWorkerTerminal showTerminal failure classification > treats terminal_not_found as unverifiable, not owner-proven missing
+AssertionError: expected { terminal: null, exact: false, …(1) } to match object { Object (exact, status) }
+(1 matching property omitted from actual)
+
+- Expected
++ Received
+
+  {
+    "exact": false,
+-   "status": "unverifiable",
++   "status": "missing",
+  }
+
+ ❯ src/main/runtime/rpc/methods/orchestration/worker/worker-observation.test.ts:151:66
+    149|     const { runtime, db } = createFailureHarness(() => Promise.reject(…
+    150|
+    151|     await expect(inspectWorkerTerminal(runtime, db, DISPATCH_ID)).reso…
+       |                                                                  ^
+    152|       exact: false,
+    153|       status: 'unverifiable'
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/4]⎯
+
+
+ Test Files  2 failed (2)
+      Tests  4 failed | 12 passed (16)
+   Start at  00:59:10
+   Duration  14.20s (transform 11.66s, setup 146ms, import 15.43s, tests 125ms, environment 0ms)
+
