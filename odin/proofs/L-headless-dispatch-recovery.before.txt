@@ -1,0 +1,67 @@
+# Residual L verification note
+#
+# The plan's premise ("headless hosts never sweep") does not reproduce against this
+# worktree's code: src/main/startup/main-process-runtime-launch.ts's launchServeMode
+# (the `orca serve` headless path) and src/main/orcad/orcad-entry.ts (the orcad daemon,
+# plain Node, no Electron/renderer at all) both already call
+# `await runtime.reconcileLegacyWorkerTerminals()` unconditionally, after the PTY
+# provider/runtime is registered, with no renderer involved. git log -S shows this call
+# predates PR #16904 (the durability PR the plan's upstream-closed section cites),
+# introduced by PR #15968 "feat(orcad): boot the Orca runtime on plain Node" -- so this
+# is not new work landing after the plan's research, it was already there.
+#
+# What was genuinely missing: a test proving it. Every existing test/spec that drives
+# reconcileLegacyWorkerTerminals() (terminal-output-and-worker-recovery-part-06/07 under
+# src/main/runtime/orca-runtime-tests/, which turn out to be *.spec.ts files the vitest
+# config's `include` list does not match -- they are not run by `pnpm test` at all)
+# only ever passes materializeRenderer: true. Nothing proved the headless
+# (materializeRenderer omitted) path -- the one orca serve/orcad actually use -- settles
+# a Dispatch whose terminal is gone, or that the two entry points' wiring itself stays
+# unconditional.
+#
+# Below is proof the two new tests I wrote have teeth: with the production files
+# temporarily mutated to simulate exactly the regression the plan describes (recovery
+# skipped in orcad-entry.ts; recovery gated on the renderer-only
+# firstWindowStartupServicesReady barrier in launchServeMode), both wiring-pinning tests
+# fail. The mutation was reverted immediately after (git status confirmed clean); no
+# production file changed for this residual.
+
+
+ RUN  v4.1.11 /Users/briankeeny/Desktop/odin-wt-durable
+
+ ❯ src/main/startup/headless-legacy-worker-recovery-wiring.test.ts (3 tests | 2 failed) 16ms
+     × orcad (plain Node, no renderer) reconciles legacy worker terminals unconditionally after the PTY runtime is registered 8ms
+     × `orca serve` reconciles legacy worker terminals unconditionally, not gated on the renderer startup barrier 3ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/main/startup/headless-legacy-worker-recovery-wiring.test.ts > headless legacy worker recovery wiring (residual L) > orcad (plain Node, no renderer) reconciles legacy worker terminals unconditionally after the PTY runtime is registered
+AssertionError: expected -1 to be greater than 12994
+ ❯ src/main/startup/headless-legacy-worker-recovery-wiring.test.ts:24:25
+     22|     const reconcileAt = source.indexOf('await runtime.reconcileLegacyW…
+     23|     expect(ptyRegisteredAt).toBeGreaterThan(-1)
+     24|     expect(reconcileAt).toBeGreaterThan(ptyRegisteredAt)
+       |                         ^
+     25|   })
+     26|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  src/main/startup/headless-legacy-worker-recovery-wiring.test.ts > headless legacy worker recovery wiring (residual L) > `orca serve` reconciles legacy worker terminals unconditionally, not gated on the renderer startup barrier
+AssertionError: expected -1 to be greater than 979
+ ❯ src/main/startup/headless-legacy-worker-recovery-wiring.test.ts:47:25
+     45|     expect(ptyProviderReadyAt).toBeGreaterThan(-1)
+     46|     expect(ptyRuntimeRegisteredAt).toBeGreaterThan(ptyProviderReadyAt)
+     47|     expect(reconcileAt).toBeGreaterThan(ptyRuntimeRegisteredAt)
+       |                         ^
+     48|     // Why: this is the renderer-only barrier the IPC path
+     49|     // (app:recoverLegacyWorkerTerminalsForRendererStartup) awaits. He…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 1 passed (3)
+   Start at  19:25:27
+   Duration  2.55s (transform 79ms, setup 109ms, import 13ms, tests 16ms, environment 0ms)
+
