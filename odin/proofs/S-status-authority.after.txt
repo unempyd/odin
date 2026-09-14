@@ -1,0 +1,9 @@
+
+ RUN  v4.1.11 /Users/briankeeny/Desktop/odin-wt-status
+
+
+ Test Files  7 passed (7)
+      Tests  43 passed (43)
+   Start at  19:02:11
+   Duration  16.86s (transform 58.34s, setup 1.36s, import 90.21s, tests 1.98s, environment 3ms)
+
