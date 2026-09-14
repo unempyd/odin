@@ -148,8 +148,8 @@ export class RuntimeClientSettingsController {
       throw new Error('runtime_unavailable')
     }
     const beforeSettings = this.store.getSettings()
-    const before = beforeSettings.agentStatusHooksEnabled !== false
-    const credentialMirrorConsentBefore = beforeSettings.codexCredentialMirrorConsent === true
+    // Why: absent (not explicitly false) must read as disabled -- an unset opt-in is not consent (E1).
+    const before = beforeSettings.agentStatusHooksEnabled === true
     const networkExposureConsentBefore = beforeSettings.networkExposureConsent === true
     this.store.updateSettings(updates, { notifyListeners: true })
     const settings = this.store.getSettings()
@@ -164,8 +164,10 @@ export class RuntimeClientSettingsController {
     ) {
       await this.reconcileManagedAgentHooks()
     }
-    // Why: revoking consent must remove the credential copies it already made.
-    if (credentialMirrorConsentBefore && updates.codexCredentialMirrorConsent === false) {
+    // Why not gated on credentialMirrorConsentBefore: clearMirroredCodexCredentials is
+    // idempotent (rmSync with force), and gating on the true->false edge meant an interrupted
+    // clear never retried on a later false->false apply, leaving orphaned copies (G1).
+    if (updates.codexCredentialMirrorConsent === false) {
       clearMirroredCodexCredentials()
     }
     // Why: revoking network exposure consent must re-close a live wide listener, not just refuse future widens.
@@ -234,14 +236,14 @@ export class RuntimeClientSettingsController {
       if (!settings) {
         return
       }
-      await applyAgentStatusHooksEnabled(settings.agentStatusHooksEnabled !== false, settings, {
+      await applyAgentStatusHooksEnabled(settings.agentStatusHooksEnabled === true, settings, {
         shouldHydrateShellPath: getAppEnvironment().isPackaged(),
         onInstallError: recordManagedHookInstallFailure,
         shouldContinue: (agent) => {
           const current = this.store?.getSettings()
           return (
             current !== undefined &&
-            current.agentStatusHooksEnabled !== false &&
+            current.agentStatusHooksEnabled === true &&
             !current.disabledTuiAgents?.includes(agent)
           )
         }

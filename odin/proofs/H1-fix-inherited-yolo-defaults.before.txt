@@ -1,0 +1,52 @@
+
+ RUN  v4.1.11 /Users/briankeeny/Desktop/odin-wt-fix-consent
+
+ ❯ src/main/persistence/applying-settings/agent-bypass-defaults-review-migration.test.ts (3 tests | 3 failed) 10ms
+     × clears an inherited YOLO arg and env value the user never chose 6ms
+     × preserves a value that differs from the YOLO table 1ms
+     × does nothing on a second load once already reviewed 0ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/main/persistence/applying-settings/agent-bypass-defaults-review-migration.test.ts > clearInheritedAgentBypassDefaults (H1) > clears an inherited YOLO arg and env value the user never chose
+TypeError: clearInheritedAgentBypassDefaults is not a function
+ ❯ src/main/persistence/applying-settings/agent-bypass-defaults-review-migration.test.ts:20:20
+     18|     } as GlobalSettings)
+     19|
+     20|     const result = clearInheritedAgentBypassDefaults(undefined, hydrat…
+       |                    ^
+     21|
+     22|     expect(result.agentDefaultArgs?.claude).toBe('')
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  src/main/persistence/applying-settings/agent-bypass-defaults-review-migration.test.ts > clearInheritedAgentBypassDefaults (H1) > preserves a value that differs from the YOLO table
+TypeError: clearInheritedAgentBypassDefaults is not a function
+ ❯ src/main/persistence/applying-settings/agent-bypass-defaults-review-migration.test.ts:32:20
+     30|     } as GlobalSettings)
+     31|
+     32|     const result = clearInheritedAgentBypassDefaults(undefined, hydrat…
+       |                    ^
+     33|
+     34|     expect(result.agentDefaultArgs?.claude).toBe('--some-custom-flag')
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+ FAIL  src/main/persistence/applying-settings/agent-bypass-defaults-review-migration.test.ts > clearInheritedAgentBypassDefaults (H1) > does nothing on a second load once already reviewed
+TypeError: clearInheritedAgentBypassDefaults is not a function
+ ❯ src/main/persistence/applying-settings/agent-bypass-defaults-review-migration.test.ts:44:20
+     42|     // Why: a user who re-enabled the identical bypass value in Settin…
+     43|     // must not have it silently cleared again on every later load.
+     44|     const result = clearInheritedAgentBypassDefaults(
+       |                    ^
+     45|       { agentBypassDefaultsReviewed: true } as GlobalSettings,
+     46|       hydrated
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  3 failed (3)
+   Start at  23:09:32
+   Duration  466ms (transform 125ms, setup 88ms, import 77ms, tests 10ms, environment 0ms)
+

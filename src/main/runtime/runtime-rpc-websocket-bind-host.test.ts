@@ -769,6 +769,61 @@ describe('OrcaRuntimeRpcServer WebSocket bind host (STA-2370)', () => {
     }
   })
 
+  it('closes a widen that completes after consent is revoked mid-flight (D1)', async () => {
+    const userDataPath = mkdtempSync(join(tmpdir(), 'orca-runtime-rpc-'))
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+    let consentGranted = false
+    const server = new OrcaRuntimeRpcServer({
+      runtime: new OrcaRuntimeService(),
+      userDataPath,
+      enableWebSocket: true,
+      wsPort: 0,
+      networkExposureConsent: () => consentGranted
+    })
+
+    await server.start()
+    try {
+      const loopbackPort = wsTransportOf(server)?.resolvedPort
+      const target = server as unknown as {
+        startWebSocketTransport: (opts: {
+          host: string
+        }) => Promise<{ transport: WebSocketTransport; endpoint: string }>
+      }
+      const original = target.startWebSocketTransport.bind(server)
+      let releaseWideStart: () => void = () => {}
+      const wideStartGate = new Promise<void>((resolve) => {
+        releaseWideStart = resolve
+      })
+      vi.spyOn(target, 'startWebSocketTransport').mockImplementation(async (opts) => {
+        if (opts.host === '0.0.0.0') {
+          // Why: hold the wide bind mid-flight -- loopback is already stopped but wsBoundHost and
+          // activeTransports still read as pre-widen, which is exactly the window a revocation can land in.
+          await wideStartGate
+        }
+        return original(opts)
+      })
+
+      consentGranted = true
+      const widen = server.ensureNetworkExposure()
+
+      // Why revoked here, before awaiting widen: this reproduces a revocation racing the still-gated
+      // widen above. Before the fix, narrowWebSocketBindToLoopback reads the stale pre-widen
+      // wsBoundHost, decides there is nothing to narrow, and returns immediately -- the gated widen
+      // then completes wide despite consent having been revoked.
+      consentGranted = false
+      const narrow = server.narrowWebSocketBindToLoopback()
+
+      releaseWideStart()
+      await Promise.all([widen, narrow])
+
+      expect(wsTransportOf(server)?.resolvedHost).toBe('127.0.0.1')
+      expect(wsTransportOf(server)?.resolvedPort).toBe(loopbackPort)
+    } finally {
+      await server.stop()
+      errorSpy.mockRestore()
+    }
+  })
+
   it('does not narrow a bind pinned to all interfaces when consent is revoked', async () => {
     const userDataPath = mkdtempSync(join(tmpdir(), 'orca-runtime-rpc-'))
     const server = new OrcaRuntimeRpcServer({

@@ -15,7 +15,10 @@ import { normalizeDisabledTuiAgents } from '../../../shared/tui-agent-selection'
 import { hasUnsupportedTuiAgentArgs } from '../../../shared/tui-agent-launch-defaults'
 import { normalizeTerminalCursorStyleDefault } from '../../../shared/terminal-cursor-style-settings'
 import { normalizeTerminalLineHeight } from '../../../shared/terminal-line-height-settings'
-import { migrateAgentYoloDefaults } from '../applying-settings/terminal-settings-migrations'
+import {
+  clearInheritedAgentBypassDefaults,
+  migrateAgentYoloDefaults
+} from '../applying-settings/terminal-settings-migrations'
 import {
   normalizeLoadedOnboardingState,
   normalizeNotificationSettings,
@@ -43,6 +46,10 @@ export type PreparedLoadedProfileSettings = {
   migratedAgentYoloDefaults: Pick<
     GlobalSettings,
     'agentDefaultArgs' | 'agentDefaultEnv' | 'agentYoloDefaultsMigrated'
+  >
+  migratedAgentBypassDefaults: Pick<
+    GlobalSettings,
+    'agentDefaultArgs' | 'agentDefaultEnv' | 'agentBypassDefaultsReviewed'
   >
   migratedWindowsRuntimeDefault: GlobalSettings['localWindowsRuntimeDefault']
   migratedLocalAccountRuntime: GlobalSettings['localAccountRuntime']
@@ -139,6 +146,15 @@ export function prepareLoadedProfileSettings(
     hasUnsupportedTuiAgentArgs('opencode', parsed.settings?.agentDefaultArgs?.opencode) ||
     hasUnsupportedTuiAgentArgs('kilo', parsed.settings?.agentDefaultArgs?.kilo)
   ) {
+    markNeedsSave()
+  }
+  // Why a second pass (H1): migrateAgentYoloDefaults only fills gaps, so a bypass Orca's own
+  // earlier migration wrote into an existing slot survives it untouched.
+  const migratedAgentBypassDefaults = clearInheritedAgentBypassDefaults(
+    parsed.settings,
+    migratedAgentYoloDefaults
+  )
+  if (parsed.settings?.agentBypassDefaultsReviewed !== true) {
     markNeedsSave()
   }
   if (
@@ -242,6 +258,7 @@ export function prepareLoadedProfileSettings(
     stampPrimarySelectionTerminalDefaults,
     migratedDisabledTuiAgents,
     migratedAgentYoloDefaults,
+    migratedAgentBypassDefaults,
     migratedWindowsRuntimeDefault,
     migratedLocalAccountRuntime,
     loadedCompactWorktreeCards,

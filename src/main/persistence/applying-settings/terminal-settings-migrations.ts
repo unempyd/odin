@@ -8,7 +8,11 @@ import {
   normalizeTuiAgentArgsRecord,
   normalizeTuiAgentEnvRecord
 } from '../../../shared/tui-agent-launch-defaults'
-import { YOLO_TUI_AGENT_ARGS, YOLO_TUI_AGENT_ENV } from '../../../shared/tui-agent-permissions'
+import {
+  sameEnv,
+  YOLO_TUI_AGENT_ARGS,
+  YOLO_TUI_AGENT_ENV
+} from '../../../shared/tui-agent-permissions'
 
 export function buildWorkspaceDirHistoryForUpdate(
   current: GlobalSettings,
@@ -143,4 +147,41 @@ export function migrateAgentYoloDefaults(
     agentDefaultEnv: existingEnv,
     agentYoloDefaultsMigrated: true
   }
+}
+
+// Why a separate one-shot flag from agentYoloDefaultsMigrated (H1): that migration only fills
+// in *missing* entries with a manual default -- it never touches a value already present, so a
+// profile Orca's own earlier migration filled with a YOLO value (the user never chose it) kept
+// the bypass forever. Reusing agentYoloDefaultsMigrated would skip every profile that already
+// has it set to true, which is most existing installs. A user who had explicitly chosen the
+// identical bypass value re-enables it once in Settings after this runs.
+export function clearInheritedAgentBypassDefaults(
+  settings: GlobalSettings | undefined,
+  hydrated: Pick<GlobalSettings, 'agentDefaultArgs' | 'agentDefaultEnv'>
+): Pick<GlobalSettings, 'agentDefaultArgs' | 'agentDefaultEnv' | 'agentBypassDefaultsReviewed'> {
+  if (settings?.agentBypassDefaultsReviewed === true) {
+    return {
+      agentDefaultArgs: hydrated.agentDefaultArgs,
+      agentDefaultEnv: hydrated.agentDefaultEnv,
+      agentBypassDefaultsReviewed: true
+    }
+  }
+
+  const agentDefaultArgs = { ...hydrated.agentDefaultArgs }
+  for (const key of Object.keys(YOLO_TUI_AGENT_ARGS)) {
+    const agent = key as keyof typeof YOLO_TUI_AGENT_ARGS
+    if (agentDefaultArgs[agent] === YOLO_TUI_AGENT_ARGS[agent]) {
+      agentDefaultArgs[agent] = ''
+    }
+  }
+
+  const agentDefaultEnv = { ...hydrated.agentDefaultEnv }
+  for (const key of Object.keys(YOLO_TUI_AGENT_ENV)) {
+    const agent = key as keyof typeof YOLO_TUI_AGENT_ENV
+    if (sameEnv(agentDefaultEnv[agent], YOLO_TUI_AGENT_ENV[agent])) {
+      agentDefaultEnv[agent] = {}
+    }
+  }
+
+  return { agentDefaultArgs, agentDefaultEnv, agentBypassDefaultsReviewed: true }
 }

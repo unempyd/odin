@@ -110,6 +110,76 @@ describe('orchestration worker launch preferences', () => {
     })
   })
 
+  it('labels a no-model receipt catalog rather than leaving source unset (I1)', async () => {
+    // Why: nothing was requested to override, so effective trivially equals requested -- but the
+    // rule is effective is never a bare clone with no source label, even in this trivial case.
+    await expect(resolveWorkerLaunchPreferences({ agent: 'codex' })).resolves.toEqual({
+      preferences: undefined,
+      receipt: {
+        requested: { agent: 'codex', model: null, effort: null },
+        effective: { agent: 'codex', model: null, effort: null },
+        source: 'catalog'
+      }
+    })
+  })
+
+  it('never probes and reports unverified when the worker placement is remote (I1)', async () => {
+    let calls = 0
+    const countingProbe: ClaudeLaunchModelDiscovery = async (...probeArgs) => {
+      calls++
+      return claudeProbeAccepting([
+        { id: 'aws-bedrock-opus-5', thinkingLevels: ['low', 'medium', 'high'] }
+      ])(...probeArgs)
+    }
+
+    await expect(
+      resolveWorkerLaunchPreferences({
+        agent: 'claude',
+        model: 'aws-bedrock-opus-5',
+        effort: 'high',
+        remotePlacement: true,
+        discoverClaudeModels: countingProbe
+      })
+    ).resolves.toEqual({
+      preferences: { model: 'aws-bedrock-opus-5', effort: 'high' },
+      receipt: {
+        requested: { agent: 'claude', model: 'aws-bedrock-opus-5', effort: 'high' },
+        effective: null,
+        source: 'unverified',
+        unverifiedReason: expect.stringContaining('remote')
+      }
+    })
+    // Why assert this, not only the receipt shape: a local probe result can never speak for a
+    // remote placement, so the fix must skip the probe entirely, not merely relabel its answer.
+    expect(calls).toBe(0)
+  })
+
+  it('never probes and reports unverified when the agent has a launch command override (I1)', async () => {
+    let calls = 0
+    const countingProbe: ClaudeLaunchModelDiscovery = async (...probeArgs) => {
+      calls++
+      return claudeProbeAccepting([{ id: 'aws-bedrock-opus-5' }])(...probeArgs)
+    }
+
+    await expect(
+      resolveWorkerLaunchPreferences({
+        agent: 'claude',
+        model: 'aws-bedrock-opus-5',
+        agentCommandOverride: 'my-claude-wrapper --flag',
+        discoverClaudeModels: countingProbe
+      })
+    ).resolves.toEqual({
+      preferences: { model: 'aws-bedrock-opus-5' },
+      receipt: {
+        requested: { agent: 'claude', model: 'aws-bedrock-opus-5', effort: null },
+        effective: null,
+        source: 'unverified',
+        unverifiedReason: expect.stringContaining('custom launch command')
+      }
+    })
+    expect(calls).toBe(0)
+  })
+
   it('does not invent an effort when only a model is requested', async () => {
     await expect(
       resolveWorkerLaunchPreferences({ agent: 'codex', model: 'gpt-5.6-sol' })
@@ -272,12 +342,13 @@ describe('orchestration worker launch preferences', () => {
       effort: 'high'
     })
 
-    // Why: this clone is the federated coordinator's last resort before the
-    // remote server answers — it never verifies, so it must say so rather than
-    // imply the remote confirmed these options (issue #10846).
+    // Why effective: null, not a clone of requested (I1): the federated coordinator's last
+    // resort before the remote server answers never verifies, so a clone here would look
+    // identical to a verified receipt to any reader that checks `effective` without also
+    // checking `source` (issue #10846).
     expect(resolveFederatedWorkerLaunchReceipt(undefined, requested, true)).toEqual({
       requested: requested.requested,
-      effective: requested.requested,
+      effective: null,
       source: 'unverified',
       unverifiedReason: 'The worker server did not report which launch options it applied.'
     })

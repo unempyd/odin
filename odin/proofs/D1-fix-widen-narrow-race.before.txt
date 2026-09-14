@@ -1,0 +1,30 @@
+
+ RUN  v4.1.11 /Users/briankeeny/Desktop/odin-wt-fix-consent
+
+ ❯ src/main/runtime/runtime-rpc-websocket-bind-host.test.ts (24 tests | 1 failed | 23 skipped) 67ms
+     × closes a widen that completes after consent is revoked mid-flight (D1) 62ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/main/runtime/runtime-rpc-websocket-bind-host.test.ts > OrcaRuntimeRpcServer WebSocket bind host (STA-2370) > closes a widen that completes after consent is revoked mid-flight (D1)
+AssertionError: expected '0.0.0.0' to be '127.0.0.1' // Object.is equality
+
+Expected: "127.0.0.1"
+Received: "0.0.0.0"
+
+ ❯ src/main/runtime/runtime-rpc-websocket-bind-host.test.ts:819:51
+    817|       await Promise.all([widen, narrow])
+    818|
+    819|       expect(wsTransportOf(server)?.resolvedHost).toBe('127.0.0.1')
+       |                                                   ^
+    820|       expect(wsTransportOf(server)?.resolvedPort).toBe(loopbackPort)
+    821|     } finally {
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 23 skipped (24)
+   Start at  22:58:30
+   Duration  20.43s (transform 15.16s, setup 87ms, import 20.02s, tests 67ms, environment 0ms)
+

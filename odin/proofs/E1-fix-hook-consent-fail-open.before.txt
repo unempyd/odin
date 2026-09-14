@@ -1,0 +1,53 @@
+
+ RUN  v4.1.11 /Users/briankeeny/Desktop/odin-wt-fix-consent
+
+ ❯ src/main/runtime/runtime-client-settings-agent-status-hooks-consent.test.ts (2 tests | 2 failed) 20ms
+     × does not enter the install path when hooks are unset and a disabled-agent update arrives 14ms
+     × shouldContinue also treats unset hooks as disabled, not enabled 2ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/main/runtime/runtime-client-settings-agent-status-hooks-consent.test.ts > RuntimeClientSettingsController agent status hooks fail-closed default > does not enter the install path when hooks are unset and a disabled-agent update arrives
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ src/main/runtime/runtime-client-settings-agent-status-hooks-consent.test.ts:46:65
+     44|
+     45|     expect(applyAgentStatusHooksEnabledMock).toHaveBeenCalledOnce()
+     46|     expect(applyAgentStatusHooksEnabledMock.mock.calls[0]?.[0]).toBe(f…
+       |                                                                 ^
+     47|   })
+     48|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  src/main/runtime/runtime-client-settings-agent-status-hooks-consent.test.ts > RuntimeClientSettingsController agent status hooks fail-closed default > shouldContinue also treats unset hooks as disabled, not enabled
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ src/main/runtime/runtime-client-settings-agent-status-hooks-consent.test.ts:57:46
+     55|       shouldContinue: (agent: string) => boolean
+     56|     }
+     57|     expect(options.shouldContinue('claude')).toBe(false)
+       |                                              ^
+     58|   })
+     59| })
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed (2)
+   Start at  22:26:05
+   Duration  1.28s (transform 569ms, setup 93ms, import 863ms, tests 20ms, environment 0ms)
+

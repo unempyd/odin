@@ -43,6 +43,7 @@ export function normalizeLoadedGlobalSettings(
     stampPrimarySelectionTerminalDefaults,
     migratedDisabledTuiAgents,
     migratedAgentYoloDefaults,
+    migratedAgentBypassDefaults,
     migratedWindowsRuntimeDefault,
     migratedLocalAccountRuntime,
     loadedCompactWorktreeCards,
@@ -122,6 +123,9 @@ export function normalizeLoadedGlobalSettings(
     ),
     disabledTuiAgents: migratedDisabledTuiAgents,
     ...migratedAgentYoloDefaults,
+    // Why after migratedAgentYoloDefaults, not merged into it: this clears an inherited YOLO
+    // value out of the args/env that migration just hydrated, and pins its own one-shot flag.
+    ...migratedAgentBypassDefaults,
     claudeAgentTeamsDefaultDisabledMigrated: true,
     openInApplications: normalizeOpenInApplications(parsed.settings?.openInApplications, {
       seedDefaults: true
