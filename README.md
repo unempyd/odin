@@ -67,6 +67,21 @@ Two independent reviewers were given the same brief (`odin/REVIEW_BRIEF.md`): re
 
 Findings the reviews raised that are deliberately not changed, with the reason: the liveness projection keeps `unattached`, `missing` and `identity_changed` as wire values beside `live / unverifiable / exited` because existing tests pin them as distinct client-facing states; `orca serve` and `orcad --bind` bind wide by explicit operator command; positive on-screen evidence (an explicit idle marker or ready prompt the agent paints) remains tier-1 evidence.
 
+## Deviations at v0.1.0
+
+Stated plainly, because two independent reviews returned NOT FINISHED against `odin/DIRECTION.md`'s definition of done and these are the items that remain open by decision rather than by oversight:
+
+1. **Status is not yet single-writer end to end.** The main-process store is; the renderer still writes rows for remote-runtime and structured panes whose bytes never transit the host, and it still merges client identity fields into host rows. Closing it needs host-side OSC ingest plus a wire capability gate (`odin/OPEN.md`). Odin removed the cross-machine wall-clock adjudication and nothing more.
+2. **Settlement keeps two positive-evidence exceptions.** An explicit idle marker or ready prompt the agent itself paints counts as observation (a fresh first-party working status now vetoes it), and agents whose only rest signal is their name (grok, copilot, aider, mimo, agy, opencode) settle after the quiescence window. Removing the second would make `tui-idle` unusable for those agents ([#6011](https://github.com/stablyai/orca/issues/6011)); it is a named trade-off, not the pure "silence is unverifiable" rule.
+3. **The wait result is `satisfied` plus `evidence`, not the literal `accepted | refused | unverifiable` type.** The three outcomes are representable and every silence path maps to not-satisfied, but the wire shape is Orca's, kept for compatibility.
+4. **Worker observation keeps `unattached`, `missing` and `identity_changed`** beside `live / unverifiable / exited` because clients depend on them as distinct states.
+5. **The launch receipt verifies advertised support, not applied options.** `source: 'probe'` means the installed Claude CLI listed the model and effort; nothing reads back what the launched session applied. Codex and Grok have no live probe.
+6. **Sub-agent rows carry their own identity but are still renderer-derived** and their synthesized entry state falls back to `done` where the status type has no `unverifiable` member.
+7. **Proof coverage is macOS-local.** Windows and Linux process ownership, SSH-hosted worktrees, mixed-version clients, mobile pairing against an Odin host, and a third agent settling (this operator's Grok quota) are not established by the recorded runs.
+8. **Retained telemetry opt-ins from Orca's automatic enrollment are preserved** for pre-existing profiles; only fresh installs are opted out.
+
+Everything above is either in `odin/OPEN.md` with a plan, or accepted for v0.1.0 as Orca's existing behaviour.
+
 ## How to read the proofs
 
 Each residual is one commit on the `odin` branch. The commit body names the upstream site, the contract, the judgement calls, and two files under `odin/proofs/`: `<id>.before.txt` is the new test failing on the unpatched code, `<id>.after.txt` is the same test and its neighbours passing after the patch. `odin/proof/run-proofs.sh` repeats that check mechanically against the pinned upstream commit. `odin/proofs/real-sessions.*.json` are the recorded runs of real agents through the orchestration surface.
