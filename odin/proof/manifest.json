@@ -1,4 +1,11 @@
 {
   "upstream": "539d4d1f32b4",
-  "residuals": []
+  "residuals": [
+    {
+      "id": "S",
+      "title": "Agent status: host rows are never outranked by a client wall clock",
+      "commit": "f6ce5d565f",
+      "tests": ["src/renderer/src/runtime/web-session-tabs-sync-host-authority.test.ts"]
+    }
+  ]
 }
