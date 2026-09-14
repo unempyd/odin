@@ -139,6 +139,12 @@ export async function resolveWorkerLaunchPreferences(args: {
   agent: TuiAgent
   model?: string
   effort?: string
+  /** True when the worker will not execute on this host (e.g. `--on` targets a remote/SSH
+   *  execution host) -- a probe spawned here cannot speak for what that host's CLI accepts (I1). */
+  remotePlacement?: boolean
+  /** The agent's configured launch command override, if any. The probe always spawns the plain
+   *  CLI, so a custom command changes what actually runs without the probe ever seeing it (I1). */
+  agentCommandOverride?: string
   /** Test seam only; production always uses the real local discovery executor. */
   discoverClaudeModels?: ClaudeLaunchModelDiscovery
 }): Promise<{
@@ -151,7 +157,9 @@ export async function resolveWorkerLaunchPreferences(args: {
   if (!args.model) {
     return {
       preferences: undefined,
-      receipt: createWorkerLaunchReceipt({ agent: args.agent })
+      // Why an explicit 'catalog' label: nothing was requested to override, so effective trivially
+      // equals requested -- but the receipt still must not be a bare clone with no source (I1).
+      receipt: { ...createWorkerLaunchReceipt({ agent: args.agent }), source: 'catalog' }
     }
   }
 
@@ -206,6 +214,28 @@ export async function resolveWorkerLaunchPreferences(args: {
   // 'ultra'), so wiring it here would reject valid effort selections; codex
   // stays on the static catalog with an honest 'catalog' label.
   if (args.agent === 'claude') {
+    // Why scoped before probing: the probe always spawns the plain `claude` binary on THIS host
+    // (probeClaudeModelsOnce), so its answer only speaks for a launch that actually runs that
+    // exact command, here. A remote/SSH placement or a configured command override means the
+    // worker will not run what was just probed -- reporting 'probe' there would claim
+    // verification of a CLI invocation nothing ever asked (I1).
+    const unscopedReason = args.remotePlacement
+      ? 'The worker runs on a remote execution host; the local Claude CLI probe cannot verify what it will accept.'
+      : args.agentCommandOverride
+        ? 'This agent has a custom launch command the local Claude CLI probe did not see.'
+        : null
+    if (unscopedReason) {
+      const base = createWorkerLaunchReceipt({ agent: args.agent, ...preferences })
+      return {
+        preferences,
+        receipt: {
+          requested: base.requested,
+          effective: null,
+          source: 'unverified',
+          unverifiedReason: unscopedReason
+        }
+      }
+    }
     const verification = await verifyClaudeLaunchSelection(
       args.model,
       args.effort,
@@ -276,13 +306,15 @@ export function resolveFederatedWorkerLaunchReceipt(
   if (remote) {
     return remote
   }
-  // Why: the remote server never told us what it actually applied (an older
-  // remote, or one that answered before its own receipt arrived) — this clones
-  // `requested` as a last resort, so it must say so rather than imply verification.
+  // Why effective: null, not a clone (I1): the remote server never told us what it actually
+  // applied (an older remote, or one that answered before its own receipt arrived). Cloning
+  // `requested` into `effective` here would look identical to a verified receipt to anything
+  // that reads `effective` without also checking `source` -- 'unverified' means there is no
+  // effective selection to report, full stop.
   return remoteReady
     ? {
         requested: requested.requested,
-        effective: { ...requested.requested },
+        effective: null,
         source: 'unverified',
         unverifiedReason: 'The worker server did not report which launch options it applied.'
       }

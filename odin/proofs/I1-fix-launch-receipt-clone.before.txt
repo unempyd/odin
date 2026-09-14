@@ -1,0 +1,209 @@
+
+ RUN  v4.1.11 /Users/briankeeny/Desktop/odin-wt-fix-consent
+
+ ❯ src/main/runtime/rpc/methods/orchestration/worker/worker-launch-preferences.test.ts (27 tests | 4 failed) 62ms
+     × labels a no-model receipt catalog rather than leaving source unset (I1) 14ms
+     × never probes and reports unverified when the worker placement is remote (I1) 4ms
+     × never probes and reports unverified when the agent has a launch command override (I1) 2ms
+     × uses the requested launch receipt when an older worker omits it 1ms
+ ❯ src/main/runtime/rpc/methods/orchestration/worker/worker-start-validation-launch-scope.test.ts (3 tests | 3 failed) 2491ms
+     × marks the receipt unverified, never probing, for a remote --on placement 2478ms
+     × marks the receipt unverified, never probing, when the agent has a command override 1ms
+     × leaves the no-agent (--terminal reuse) receipt labeled catalog, not a bare clone 9ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 7 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/main/runtime/rpc/methods/orchestration/worker/worker-launch-preferences.test.ts > orchestration worker launch preferences > labels a no-model receipt catalog rather than leaving source unset (I1)
+AssertionError: expected { preferences: undefined, …(1) } to deeply equal { preferences: undefined, …(1) }
+
+- Expected
++ Received
+
+@@ -9,8 +9,7 @@
+      "requested": {
+        "agent": "codex",
+        "effort": null,
+        "model": null,
+      },
+-     "source": "catalog",
+    },
+  }
+
+ ❯ src/main/runtime/rpc/methods/orchestration/worker/worker-launch-preferences.test.ts:116:69
+    114|     // Why: nothing was requested to override, so effective trivially …
+    115|     // rule is effective is never a bare clone with no source label, e…
+    116|     await expect(resolveWorkerLaunchPreferences({ agent: 'codex' })).r…
+       |                                                                     ^
+    117|       preferences: undefined,
+    118|       receipt: {
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/7]⎯
+
+ FAIL  src/main/runtime/rpc/methods/orchestration/worker/worker-launch-preferences.test.ts > orchestration worker launch preferences > never probes and reports unverified when the worker placement is remote (I1)
+AssertionError: expected { preferences: { …(2) }, …(1) } to deeply equal { preferences: { …(2) }, …(1) }
+
+- Expected
++ Received
+
+@@ -2,15 +2,18 @@
+    "preferences": {
+      "effort": "high",
+      "model": "aws-bedrock-opus-5",
+    },
+    "receipt": {
+-     "effective": null,
++     "effective": {
++       "agent": "claude",
++       "effort": "high",
++       "model": "aws-bedrock-opus-5",
++     },
+      "requested": {
+        "agent": "claude",
+        "effort": "high",
+        "model": "aws-bedrock-opus-5",
+      },
+-     "source": "unverified",
+-     "unverifiedReason": StringContaining "remote",
++     "source": "probe",
+    },
+  }
+
+ ❯ src/main/runtime/rpc/methods/orchestration/worker/worker-launch-preferences.test.ts:143:6
+    141|         discoverClaudeModels: countingProbe
+    142|       })
+    143|     ).resolves.toEqual({
+       |      ^
+    144|       preferences: { model: 'aws-bedrock-opus-5', effort: 'high' },
+    145|       receipt: {
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/7]⎯
+
+ FAIL  src/main/runtime/rpc/methods/orchestration/worker/worker-launch-preferences.test.ts > orchestration worker launch preferences > never probes and reports unverified when the agent has a launch command override (I1)
+AssertionError: expected { …(2) } to deeply equal { …(2) }
+
+- Expected
++ Received
+
+  {
+    "preferences": {
+      "model": "aws-bedrock-opus-5",
+    },
+    "receipt": {
+-     "effective": null,
++     "effective": {
++       "agent": "claude",
++       "effort": null,
++       "model": "aws-bedrock-opus-5",
++     },
+      "requested": {
+        "agent": "claude",
+        "effort": null,
+        "model": "aws-bedrock-opus-5",
+      },
+-     "source": "unverified",
+-     "unverifiedReason": StringContaining "custom launch command",
++     "source": "probe",
+    },
+  }
+
+ ❯ src/main/runtime/rpc/methods/orchestration/worker/worker-launch-preferences.test.ts:171:6
+    169|         discoverClaudeModels: countingProbe
+    170|       })
+    171|     ).resolves.toEqual({
+       |      ^
+    172|       preferences: { model: 'aws-bedrock-opus-5' },
+    173|       receipt: {
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/7]⎯
+
+ FAIL  src/main/runtime/rpc/methods/orchestration/worker/worker-launch-preferences.test.ts > orchestration worker launch preferences > uses the requested launch receipt when an older worker omits it
+AssertionError: expected { requested: { …(3) }, …(3) } to deeply equal { requested: { …(3) }, …(3) }
+
+- Expected
++ Received
+
+@@ -1,7 +1,11 @@
+  {
+-   "effective": null,
++   "effective": {
++     "agent": "codex",
++     "effort": "high",
++     "model": "gpt-5.6-sol",
++   },
+    "requested": {
+      "agent": "codex",
+      "effort": "high",
+      "model": "gpt-5.6-sol",
+    },
+
+ ❯ src/main/runtime/rpc/methods/orchestration/worker/worker-launch-preferences.test.ts:349:77
+    347|     // identical to a verified receipt to any reader that checks `effe…
+    348|     // checking `source` (issue #10846).
+    349|     expect(resolveFederatedWorkerLaunchReceipt(undefined, requested, t…
+       |                                                                             ^
+    350|       requested: requested.requested,
+    351|       effective: null,
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/7]⎯
+
+ FAIL  src/main/runtime/rpc/methods/orchestration/worker/worker-start-validation-launch-scope.test.ts > prepareLocalWorkerStart launch receipt placement scoping (I1) > marks the receipt unverified, never probing, for a remote --on placement
+OrchestrationError: The installed Claude CLI does not list model "aws-bedrock-opus-5". Available: opus[1m], claude-fable-5-1[1m], sonnet, haiku.
+ ❯ resolveWorkerLaunchPreferences src/main/runtime/rpc/methods/orchestration/worker/worker-launch-preferences.ts:215:13
+    213|     )
+    214|     if (verification.outcome === 'rejected') {
+    215|       throw new OrchestrationError('invalid_argument', verification.re…
+       |             ^
+    216|     }
+    217|     const base = createWorkerLaunchReceipt({ agent: args.agent, ...pre…
+ ❯ resolveWorkerStartAgent src/main/runtime/rpc/methods/orchestration/worker/worker-start-validation.ts:150:15
+ ❯ prepareLocalWorkerStart src/main/runtime/rpc/methods/orchestration/worker/worker-start-validation.ts:79:10
+ ❯ src/main/runtime/rpc/methods/orchestration/worker/worker-start-validation-launch-scope.test.ts:30:20
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/7]⎯
+
+ FAIL  src/main/runtime/rpc/methods/orchestration/worker/worker-start-validation-launch-scope.test.ts > prepareLocalWorkerStart launch receipt placement scoping (I1) > marks the receipt unverified, never probing, when the agent has a command override
+OrchestrationError: The installed Claude CLI does not list model "aws-bedrock-opus-5". Available: opus[1m], claude-fable-5-1[1m], sonnet, haiku.
+ ❯ resolveWorkerLaunchPreferences src/main/runtime/rpc/methods/orchestration/worker/worker-launch-preferences.ts:215:13
+    213|     )
+    214|     if (verification.outcome === 'rejected') {
+    215|       throw new OrchestrationError('invalid_argument', verification.re…
+       |             ^
+    216|     }
+    217|     const base = createWorkerLaunchReceipt({ agent: args.agent, ...pre…
+ ❯ resolveWorkerStartAgent src/main/runtime/rpc/methods/orchestration/worker/worker-start-validation.ts:150:15
+ ❯ prepareLocalWorkerStart src/main/runtime/rpc/methods/orchestration/worker/worker-start-validation.ts:79:10
+ ❯ src/main/runtime/rpc/methods/orchestration/worker/worker-start-validation-launch-scope.test.ts:48:20
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/7]⎯
+
+ FAIL  src/main/runtime/rpc/methods/orchestration/worker/worker-start-validation-launch-scope.test.ts > prepareLocalWorkerStart launch receipt placement scoping (I1) > leaves the no-agent (--terminal reuse) receipt labeled catalog, not a bare clone
+AssertionError: expected { …(2) } to deeply equal { …(3) }
+
+- Expected
++ Received
+
+@@ -7,7 +7,6 @@
+    "requested": {
+      "agent": null,
+      "effort": null,
+      "model": null,
+    },
+-   "source": "catalog",
+  }
+
+ ❯ src/main/runtime/rpc/methods/orchestration/worker/worker-start-validation-launch-scope.test.ts:69:35
+     67|     })
+     68|
+     69|     expect(result.launch.receipt).toEqual({
+       |                                   ^
+     70|       requested: { agent: null, model: null, effort: null },
+     71|       effective: { agent: null, model: null, effort: null },
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/7]⎯
+
+
+ Test Files  2 failed (2)
+      Tests  7 failed | 23 passed (30)
+   Start at  23:20:17
+   Duration  3.74s (transform 1.58s, setup 135ms, import 2.03s, tests 2.55s, environment 0ms)
+
