@@ -10,7 +10,7 @@ import {
 } from './worker-launch-preferences'
 import type { WorkerStartInput } from './worker-start-schema'
 
-type WorkerStartLaunch = ReturnType<typeof resolveWorkerLaunchPreferences>
+type WorkerStartLaunch = Awaited<ReturnType<typeof resolveWorkerLaunchPreferences>>
 
 export function validateFederatedWorkerStartPlacement(
   params: WorkerStartInput,
@@ -48,11 +48,11 @@ export function validateFederatedWorkerStartPlacement(
   }
 }
 
-export function prepareLocalWorkerStart(args: {
+export async function prepareLocalWorkerStart(args: {
   params: WorkerStartInput
   createsWorktree: boolean
   runtime: OrcaRuntimeService
-}): { agent: TuiAgent | undefined; launch: WorkerStartLaunch } {
+}): Promise<{ agent: TuiAgent | undefined; launch: WorkerStartLaunch }> {
   const { params, createsWorktree, runtime } = args
   assertWorkerLaunchPreferencesCreateTerminal(params)
   if (params.terminal && params.agent) {
@@ -76,7 +76,7 @@ export function prepareLocalWorkerStart(args: {
       'Creation and setup options apply only to new-child or new-top-level worktrees.'
     )
   }
-  return resolveWorkerStartAgent({
+  return await resolveWorkerStartAgent({
     runtime,
     terminal: params.terminal,
     agent: params.agent,
@@ -86,11 +86,11 @@ export function prepareLocalWorkerStart(args: {
   })
 }
 
-export function prepareFederationAttachmentWorkerStart(args: {
+export async function prepareFederationAttachmentWorkerStart(args: {
   params: FederationAttachStartInput
   createsWorktree: boolean
   runtime: OrcaRuntimeService
-}): { agent: TuiAgent | undefined; launch: WorkerStartLaunch } {
+}): Promise<{ agent: TuiAgent | undefined; launch: WorkerStartLaunch }> {
   const { params, createsWorktree, runtime } = args
   assertWorkerLaunchPreferencesCreateTerminal(params)
   if (createsWorktree && (!params.name || !params.repo)) {
@@ -120,7 +120,7 @@ export function prepareFederationAttachmentWorkerStart(args: {
       '--terminal reuses an existing agent and cannot combine with --agent.'
     )
   }
-  return resolveWorkerStartAgent({
+  return await resolveWorkerStartAgent({
     runtime,
     terminal: params.terminal,
     agent: params.agent,
@@ -131,14 +131,14 @@ export function prepareFederationAttachmentWorkerStart(args: {
   })
 }
 
-function resolveWorkerStartAgent(args: {
+async function resolveWorkerStartAgent(args: {
   runtime: OrcaRuntimeService
   terminal?: string
   agent?: string
   model?: string
   effort?: string
   missingAgentMessage: string
-}): { agent: TuiAgent | undefined; launch: WorkerStartLaunch } {
+}): Promise<{ agent: TuiAgent | undefined; launch: WorkerStartLaunch }> {
   if (!args.terminal && (!args.agent || !isTuiAgent(args.agent))) {
     throw new OrchestrationError('agent_unconfigured', args.missingAgentMessage)
   }
@@ -147,7 +147,7 @@ function resolveWorkerStartAgent(args: {
     args.runtime.validateOrchestrationAgentLauncher(agent)
     return {
       agent,
-      launch: resolveWorkerLaunchPreferences({
+      launch: await resolveWorkerLaunchPreferences({
         agent,
         model: args.model,
         effort: args.effort

@@ -1,0 +1,211 @@
+Scope: all 2 workspace projects
+✓ Lockfile passes supply-chain policies (verified 1h ago)
+Lockfile is up to date, resolution step is skipped
+Already up to date
+native/windows-registry install$ node-gyp rebuild
+native/windows-registry install: gyp info it worked if it ends with ok
+native/windows-registry install: gyp info using node-gyp@12.3.0
+native/windows-registry install: gyp info using node@24.21.0 | darwin | x64
+native/windows-registry install: gyp info find Python using Python version 3.14.0 found at "/usr/local/opt/python@3.14/bin/python3.14"
+native/windows-registry install: 
+native/windows-registry install: gyp info spawn /usr/local/opt/python@3.14/bin/python3.14
+native/windows-registry install: gyp info spawn args [
+native/windows-registry install: gyp info spawn args '/Users/briankeeny/Desktop/odin-fork/node_modules/.pnpm/node-gyp@12.3.0/node_modules/node-gyp/gyp/gyp_main.py',
+native/windows-registry install: gyp info spawn args 'binding.gyp',
+native/windows-registry install: gyp info spawn args '-f',
+native/windows-registry install: gyp info spawn args 'make',
+native/windows-registry install: gyp info spawn args '-I',
+native/windows-registry install: gyp info spawn args '/Users/briankeeny/Desktop/odin-wt-inventory/native/windows-registry/build/config.gypi',
+native/windows-registry install: gyp info spawn args '-I',
+native/windows-registry install: gyp info spawn args '/Users/briankeeny/Desktop/odin-fork/node_modules/.pnpm/node-gyp@12.3.0/node_modules/node-gyp/addon.gypi',
+native/windows-registry install: gyp info spawn args '-I',
+native/windows-registry install: gyp info spawn args '/Users/briankeeny/Library/Caches/node-gyp/24.21.0/include/node/common.gypi',
+native/windows-registry install: gyp info spawn args '-Dlibrary=shared_library',
+native/windows-registry install: gyp info spawn args '-Dvisibility=default',
+native/windows-registry install: gyp info spawn args '-Dnode_root_dir=/Users/briankeeny/Library/Caches/node-gyp/24.21.0',
+native/windows-registry install: gyp info spawn args '-Dnode_gyp_dir=/Users/briankeeny/Desktop/odin-fork/node_modules/.pnpm/node-gyp@12.3.0/node_modules/node-gyp',
+native/windows-registry install: gyp info spawn args '-Dnode_lib_file=/Users/briankeeny/Library/Caches/node-gyp/24.21.0/<(target_arch)/node.lib',
+native/windows-registry install: gyp info spawn args '-Dmodule_root_dir=/Users/briankeeny/Desktop/odin-wt-inventory/native/windows-registry',
+native/windows-registry install: gyp info spawn args '-Dnode_engine=v8',
+native/windows-registry install: gyp info spawn args '--depth=.',
+native/windows-registry install: gyp info spawn args '--no-parallel',
+native/windows-registry install: gyp info spawn args '--generator-output',
+native/windows-registry install: gyp info spawn args 'build',
+native/windows-registry install: gyp info spawn args '-Goutput_dir=.'
+native/windows-registry install: gyp info spawn args ]
+native/windows-registry install: gyp info spawn make
+native/windows-registry install: gyp info spawn args [ 'BUILDTYPE=Release', '-C', 'build' ]
+native/windows-registry install:   TOUCH Release/obj.target/orca_windows_registry.stamp
+native/windows-registry install: gyp info ok 
+native/windows-registry install: Done
+. postinstall$ node config/scripts/rebuild-native-deps.mjs
+. postinstall: [rebuild] Skipping optional Electron rebuild modules: cpu-features
+. postinstall: [rebuild] Native modules already load in Electron; skipping rebuild.
+. postinstall: Done
+. prepare$ husky
+. prepare: Done
+Done in 4.5s using pnpm v12.0.0
+
+ RUN  v4.1.11 /Users/briankeeny/Desktop/odin-wt-inventory
+
+ ❯ src/main/runtime/rpc/methods/orchestration/worker/worker-launch-preferences.test.ts (24 tests | 17 failed) 37ms
+     × verifies the requested Claude model and effort against the installed CLI 7ms
+     × rejects a model/effort the installed Claude CLI does not accept, with the CLI-sourced reason 2ms
+     × falls back to unverified (not a clone) when the installed CLI cannot be asked 1ms
+     × does not invent an effort when only a model is requested 1ms
+     × enforces the Codex effort ceiling for 'gpt-5.6-sol' 2ms
+     × enforces the Codex effort ceiling for 'gpt-5.6-terra' 1ms
+     × enforces the Codex effort ceiling for 'gpt-5.6-luna' 1ms
+     × enforces the Codex effort ceiling for 'gpt-5.5' 0ms
+     × enforces the Codex effort ceiling for 'gpt-5.2-codex' 1ms
+     × enforces the Codex effort ceiling for 'gpt-5.4' 1ms
+     × enforces the Codex effort ceiling for 'gpt-5.4-mini' 1ms
+     × enforces the Codex effort ceiling for 'gpt-5.3-codex-spark' 0ms
+     × enforces the Codex effort ceiling for 'future-codex-model' 1ms
+     × rejects effort without a model 1ms
+     × rejects model selection for agents without a launch catalog 0ms
+     × does not expose deprecated Gemini model selection to worker-start 0ms
+     × uses the requested launch receipt when an older worker omits it 6ms
+
+⎯⎯⎯⎯⎯⎯ Failed Tests 17 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/main/runtime/rpc/methods/orchestration/worker/worker-launch-preferences.test.ts > orchestration worker launch preferences > verifies the requested Claude model and effort against the installed CLI
+TypeError: You must provide a Promise to expect() when using .resolves, not 'object'.
+ ❯ src/main/runtime/rpc/methods/orchestration/worker/worker-launch-preferences.test.ts:61:6
+     59|         ])
+     60|       })
+     61|     ).resolves.toEqual({
+       |      ^
+     62|       preferences: { model: 'aws-bedrock-opus-5', effort: 'high' },
+     63|       receipt: {
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/17]⎯
+
+ FAIL  src/main/runtime/rpc/methods/orchestration/worker/worker-launch-preferences.test.ts > orchestration worker launch preferences > rejects a model/effort the installed Claude CLI does not accept, with the CLI-sourced reason
+OrchestrationError: Agent claude model aws-bedrock-opus-5 does not support effort ultra.
+ ❯ resolveWorkerLaunchPreferences src/main/runtime/rpc/methods/orchestration/worker/worker-launch-preferences.ts:88:13
+     86|       !option.kind.choices.some((choice) => choice.value === args.effo…
+     87|     ) {
+     88|       throw new OrchestrationError(
+       |             ^
+     89|         'invalid_argument',
+     90|         `Agent ${args.agent} model ${args.model} does not support effo…
+ ❯ src/main/runtime/rpc/methods/orchestration/worker/worker-launch-preferences.test.ts:73:7
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/17]⎯
+
+ FAIL  src/main/runtime/rpc/methods/orchestration/worker/worker-launch-preferences.test.ts > orchestration worker launch preferences > falls back to unverified (not a clone) when the installed CLI cannot be asked
+TypeError: You must provide a Promise to expect() when using .resolves, not 'object'.
+ ❯ src/main/runtime/rpc/methods/orchestration/worker/worker-launch-preferences.test.ts:99:6
+     97|         discoverClaudeModels: claudeProbeUnavailable('claude not found…
+     98|       })
+     99|     ).resolves.toEqual({
+       |      ^
+    100|       preferences: { model: 'aws-bedrock-opus-5' },
+    101|       receipt: {
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/17]⎯
+
+ FAIL  src/main/runtime/rpc/methods/orchestration/worker/worker-launch-preferences.test.ts > orchestration worker launch preferences > does not invent an effort when only a model is requested
+TypeError: You must provide a Promise to expect() when using .resolves, not 'object'.
+ ❯ src/main/runtime/rpc/methods/orchestration/worker/worker-launch-preferences.test.ts:113:6
+    111|     await expect(
+    112|       resolveWorkerLaunchPreferences({ agent: 'codex', model: 'gpt-5.6…
+    113|     ).resolves.toMatchObject({ preferences: { model: 'gpt-5.6-sol' } })
+       |      ^
+    114|   })
+    115|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/17]⎯
+
+ FAIL  src/main/runtime/rpc/methods/orchestration/worker/worker-launch-preferences.test.ts > orchestration worker launch preferences > enforces the Codex effort ceiling for 'gpt-5.6-sol'
+ FAIL  src/main/runtime/rpc/methods/orchestration/worker/worker-launch-preferences.test.ts > orchestration worker launch preferences > enforces the Codex effort ceiling for 'gpt-5.6-terra'
+ FAIL  src/main/runtime/rpc/methods/orchestration/worker/worker-launch-preferences.test.ts > orchestration worker launch preferences > enforces the Codex effort ceiling for 'gpt-5.6-luna'
+ FAIL  src/main/runtime/rpc/methods/orchestration/worker/worker-launch-preferences.test.ts > orchestration worker launch preferences > enforces the Codex effort ceiling for 'gpt-5.5'
+ FAIL  src/main/runtime/rpc/methods/orchestration/worker/worker-launch-preferences.test.ts > orchestration worker launch preferences > enforces the Codex effort ceiling for 'gpt-5.2-codex'
+ FAIL  src/main/runtime/rpc/methods/orchestration/worker/worker-launch-preferences.test.ts > orchestration worker launch preferences > enforces the Codex effort ceiling for 'gpt-5.4'
+ FAIL  src/main/runtime/rpc/methods/orchestration/worker/worker-launch-preferences.test.ts > orchestration worker launch preferences > enforces the Codex effort ceiling for 'gpt-5.4-mini'
+ FAIL  src/main/runtime/rpc/methods/orchestration/worker/worker-launch-preferences.test.ts > orchestration worker launch preferences > enforces the Codex effort ceiling for 'gpt-5.3-codex-spark'
+ FAIL  src/main/runtime/rpc/methods/orchestration/worker/worker-launch-preferences.test.ts > orchestration worker launch preferences > enforces the Codex effort ceiling for 'future-codex-model'
+TypeError: You must provide a Promise to expect() when using .resolves, not 'object'.
+ ❯ src/main/runtime/rpc/methods/orchestration/worker/worker-launch-preferences.test.ts:182:8
+    180|       await expect(
+    181|         resolveWorkerLaunchPreferences({ agent: 'codex', model, effort…
+    182|       ).resolves.toMatchObject({
+       |        ^
+    183|         preferences: { model, effort: effortValue },
+    184|         receipt: { source: 'catalog' }
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/17]⎯
+
+ FAIL  src/main/runtime/rpc/methods/orchestration/worker/worker-launch-preferences.test.ts > orchestration worker launch preferences > rejects effort without a model
+OrchestrationError: --effort requires --model.
+ ❯ resolveWorkerLaunchPreferences src/main/runtime/rpc/methods/orchestration/worker/worker-launch-preferences.ts:60:11
+     58| } {
+     59|   if (args.effort && !args.model) {
+     60|     throw new OrchestrationError('invalid_argument', '--effort require…
+       |           ^
+     61|   }
+     62|   if (!args.model) {
+ ❯ src/main/runtime/rpc/methods/orchestration/worker/worker-launch-preferences.test.ts:196:7
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/17]⎯
+
+ FAIL  src/main/runtime/rpc/methods/orchestration/worker/worker-launch-preferences.test.ts > orchestration worker launch preferences > rejects model selection for agents without a launch catalog
+OrchestrationError: Agent grok does not support launch-time model selection.
+ ❯ resolveWorkerLaunchPreferences src/main/runtime/rpc/methods/orchestration/worker/worker-launch-preferences.ts:71:11
+     69|   const catalog = getAgentSessionOptionCatalog(args.agent)
+     70|   if (!catalog?.supportsWorkerLaunchPreferences || !catalog.modelApply…
+     71|     throw new OrchestrationError(
+       |           ^
+     72|       'invalid_argument',
+     73|       `Agent ${args.agent} does not support launch-time model selectio…
+ ❯ src/main/runtime/rpc/methods/orchestration/worker/worker-launch-preferences.test.ts:202:7
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/17]⎯
+
+ FAIL  src/main/runtime/rpc/methods/orchestration/worker/worker-launch-preferences.test.ts > orchestration worker launch preferences > does not expose deprecated Gemini model selection to worker-start
+OrchestrationError: Agent gemini does not support launch-time model selection.
+ ❯ resolveWorkerLaunchPreferences src/main/runtime/rpc/methods/orchestration/worker/worker-launch-preferences.ts:71:11
+     69|   const catalog = getAgentSessionOptionCatalog(args.agent)
+     70|   if (!catalog?.supportsWorkerLaunchPreferences || !catalog.modelApply…
+     71|     throw new OrchestrationError(
+       |           ^
+     72|       'invalid_argument',
+     73|       `Agent ${args.agent} does not support launch-time model selectio…
+ ❯ src/main/runtime/rpc/methods/orchestration/worker/worker-launch-preferences.test.ts:208:7
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/17]⎯
+
+ FAIL  src/main/runtime/rpc/methods/orchestration/worker/worker-launch-preferences.test.ts > orchestration worker launch preferences > uses the requested launch receipt when an older worker omits it
+AssertionError: expected { requested: { …(3) }, …(1) } to deeply equal { requested: { …(3) }, …(3) }
+
+- Expected
++ Received
+
+@@ -7,8 +7,6 @@
+    "requested": {
+      "agent": "codex",
+      "effort": "high",
+      "model": "gpt-5.6-sol",
+    },
+-   "source": "unverified",
+-   "unverifiedReason": "The worker server did not report which launch options it applied.",
+  }
+
+ ❯ src/main/runtime/rpc/methods/orchestration/worker/worker-launch-preferences.test.ts:275:77
+    273|     // remote server answers — it never verifies, so it must say so ra…
+    274|     // imply the remote confirmed these options (issue #10846).
+    275|     expect(resolveFederatedWorkerLaunchReceipt(undefined, requested, t…
+       |                                                                             ^
+    276|       requested: requested.requested,
+    277|       effective: requested.requested,
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[9/17]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  17 failed | 7 passed (24)
+   Start at  19:15:15
+   Duration  714ms (transform 191ms, setup 97ms, import 229ms, tests 37ms, environment 0ms)
+
