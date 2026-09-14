@@ -24,7 +24,7 @@ updates:
       interval: "weekly"
     open-pull-requests-limit: 0
 
-  # docs/site/ — its own pnpm@10 workspace (docs site), owned by another agent.
+  # docs/site/ — its own pnpm@10 workspace (docs site).
   - package-ecosystem: "npm"
     directory: "/docs/site"
     schedule:
