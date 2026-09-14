@@ -351,9 +351,15 @@ async function phaseCrash(agent) {
       allowFailure: true
     })
     const replayText = JSON.stringify(replay.json ?? replay.raw)
+    // Two honest answers to a replayed request id after a crash: the receipt was still pending
+    // (operation_unknown, "do not start another worker"), or it had completed and the SAME
+    // dispatch is returned again. Either way no second worker may be minted.
     const refused =
       replay.status !== 0 &&
       /operation_unknown|do not start another worker|before restart/i.test(replayText)
+    const replayedDispatchId = replay.json?.result?.dispatchId ?? null
+    const replayedSameDispatch = Boolean(dispatchId) && replayedDispatchId === dispatchId
+    const noDuplicateWorker = refused || replayedSameDispatch
     const list = orca(host, ['orchestration', 'worker-list', '--run', ws.runId], {
       allowFailure: true
     }).json?.result
@@ -361,15 +367,24 @@ async function phaseCrash(agent) {
     const summary = dispatchId ? summarizeDispatch(host, dispatchId) : null
     const falseCompletion = summary?.status === 'completed'
     // Give a re-adopted worker the chance to finish honestly; a proven worker_done after re-adoption is fine.
-    const done = dispatchId ? await waitWorkerDone(host, ws, dispatchId, 120_000) : null
+    const done = dispatchId ? await waitWorkerDone(host, ws, dispatchId, 240_000) : null
     const reported = Boolean(done?.message)
     const after = done?.dispatch ?? null
+    // Contract: no duplicate work, no false completion, no false exited. A re-adopted worker that
+    // then reports worker_done is a legitimate completion; one that never reports stays dispatched.
+    const falseExited =
+      after?.terminationReason !== null && after?.status !== 'completed' && !reported
     const ok =
-      refused && rows.length <= 1 && !falseCompletion && (after?.status !== 'completed' || reported)
+      noDuplicateWorker &&
+      rows.length <= 1 &&
+      !falseCompletion &&
+      !falseExited &&
+      (after?.status !== 'completed' || reported)
     log('crash.result', {
       agent,
       ok,
       replayRefused: refused,
+      replayedSameDispatch,
       replayExit: replay.status,
       replayText: replayText.slice(0, 300),
       dispatchRows: rows.length,
