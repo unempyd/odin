@@ -108,3 +108,7 @@ identically across two independent full-batch re-runs after the fixes.
 
 - `pnpm run tc:web` — passes clean.
 - `pnpm run tc:node` — passes clean.
+
+## Correction after merge (2026-09-15)
+
+`src/main/runtime/orchestration-cli-subprocess.test.ts` ("emits newline-flushed JSON keepalives") was listed as Odin-caused because the upstream comparison run had no `out/cli` build and skipped it. Rebuilding the CLI at the upstream commit (`tsc -p config/tsconfig.cli.json`) in a scratch worktree and running the test there fails identically (exit 1 in ~400 ms: `stable_pane_required`, "Terminal term_nobody has no live pane bound to a Run"). Class (c): pre-existing, the test predates upstream's Run-bound inbox check; Odin did not touch `run-scope.ts` or the messaging methods. After the fix-suite commits, every other Odin-caused file passes (20/20 rerun on the merged tree).
