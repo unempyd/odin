@@ -7,11 +7,16 @@ import { Callout } from '@/components/docs/prose'
 
 The Orca mobile companion is an iOS/Android app that pairs with your desktop Orca and gives you a read-mostly view of running agents — agent status, recent terminal scrollback, and the controls you actually want from a phone (replying to a prompt, sleeping a worktree, reviewing source control, switching agent accounts). Pairing is one-time and the desktop is always the source of truth.
 
-<Callout title="Beta">
-  The mobile companion is in beta. Install iOS from the [App
-  Store](https://apps.apple.com/us/app/orca-ide/id6766130217), join the [TestFlight preview
-  channel](https://testflight.apple.com/join/YjeGMQBA), or install Android from the [current APK
-  0.0.48](https://github.com/stablyai/orca/releases/download/mobile-android-v0.0.48/app-release.apk).
+<Callout title="Odin has no store builds">
+  This page describes Orca's mobile companion, which is part of the same
+  product surface Odin runs unchanged. Odin itself ships no App Store,
+  TestFlight, or Android APK build, and no hosted pairing/relay service —
+  it is source-only. See [Odin's GitHub
+  releases](https://github.com/unempyd/odin/releases) for what is
+  published, and [What is Odin?](/docs/odin) for why. If Orca's own mobile
+  builds are what you want, they remain available from Stably AI's App
+  Store, TestFlight, and APK links on
+  [stablyai/orca](https://github.com/stablyai/orca).
 </Callout>
 
 ## What you can do from mobile
@@ -108,7 +113,7 @@ The mobile terminal has a dedicated **Terminal settings** screen (Settings → T
 - **Stuck spinner on a worktree** — the phone tracks a heartbeat from the desktop agent process. If the desktop says idle but the phone shows working, force-refresh the worktree row to sync state.
 - **Pairing fails** — make sure your desktop and phone are signed into the same Orca account. Pairing codes expire after a few minutes; generate a fresh one if it's been sitting on the screen.
 - **Authentication failed / pairing invalid** — the desktop no longer accepts this device token (for example after desktop cleared paired devices). Try **Retry** on the banner first (transient rejections can recover without re-pairing). If it keeps failing, use **Re-pair** from desktop, or **Remove** the host and pair again.
-- **Update Orca Mobile / Update Orca on your computer** — the phone and desktop speak a versioned mobile protocol. If either side is too old, mobile blocks that host and points you at the App Store (iOS), [GitHub Releases](https://github.com/stablyai/orca/releases) (Android APK or desktop), then back to hosts. After updating, refresh the connection; if the message stays, remove the host and pair again.
+- **Update Orca Mobile / Update Orca on your computer** — the phone and desktop speak a versioned mobile protocol. If either side is too old, mobile blocks that host and points you at an update source appropriate to that build (Stably AI's App Store listing or [GitHub Releases](https://github.com/stablyai/orca/releases) for Orca; [GitHub Releases](https://github.com/unempyd/odin/releases) for Odin, source-only), then back to hosts. After updating, refresh the connection; if the message stays, remove the host and pair again.
 - **Quick Commands unavailable** — update the paired desktop so it advertises the quick-commands capability.
 - **Can't reach desktop** — phone and desktop must share a network path (LAN, Tailscale, or the pairing path you used). Closing the desktop app drops the connection; reopen desktop and the phone reconnects automatically.
 
