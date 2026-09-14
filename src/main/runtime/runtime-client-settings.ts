@@ -150,7 +150,6 @@ export class RuntimeClientSettingsController {
     const beforeSettings = this.store.getSettings()
     // Why: absent (not explicitly false) must read as disabled -- an unset opt-in is not consent (E1).
     const before = beforeSettings.agentStatusHooksEnabled === true
-    const credentialMirrorConsentBefore = beforeSettings.codexCredentialMirrorConsent === true
     const networkExposureConsentBefore = beforeSettings.networkExposureConsent === true
     this.store.updateSettings(updates, { notifyListeners: true })
     const settings = this.store.getSettings()
@@ -165,8 +164,10 @@ export class RuntimeClientSettingsController {
     ) {
       await this.reconcileManagedAgentHooks()
     }
-    // Why: revoking consent must remove the credential copies it already made.
-    if (credentialMirrorConsentBefore && updates.codexCredentialMirrorConsent === false) {
+    // Why not gated on credentialMirrorConsentBefore: clearMirroredCodexCredentials is
+    // idempotent (rmSync with force), and gating on the true->false edge meant an interrupted
+    // clear never retried on a later false->false apply, leaving orphaned copies (G1).
+    if (updates.codexCredentialMirrorConsent === false) {
       clearMirroredCodexCredentials()
     }
     // Why: revoking network exposure consent must re-close a live wide listener, not just refuse future widens.

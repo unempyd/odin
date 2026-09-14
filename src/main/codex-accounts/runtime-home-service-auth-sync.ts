@@ -215,8 +215,19 @@ export abstract class CodexRuntimeHomeAuthSync extends CodexRuntimeHomeLaunch {
   }
 
   protected restoreSystemDefaultSnapshot(options: { detectExternalLogin: boolean }): void {
-    const snapshotPath = this.getSystemDefaultSnapshotPath()
     const runtimeAuthPath = this.getRuntimeAuthPath()
+    if (!this.hasCredentialMirrorConsent()) {
+      // Why: every branch below either reads ~/.codex/auth.json or a cached snapshot of it and
+      // writes that credential into the runtime home. Without consent this method may still do
+      // the clearing/logout bookkeeping every caller relies on (switch-away, system-default-
+      // changed), but it must never read or write the credential itself (G1).
+      rmSync(runtimeAuthPath, { force: true })
+      this.persistRuntimeLogoutMarker()
+      this.lastWrittenAuthJson = null
+      this.persistSharedRuntimeAuthProvenance({ owner: 'system-default', authJson: null })
+      return
+    }
+    const snapshotPath = this.getSystemDefaultSnapshotPath()
     const systemDefaultAuthPath = join(getSystemCodexHomePath(), 'auth.json')
     if (existsSync(systemDefaultAuthPath)) {
       const systemDefaultAuth = readFileSync(systemDefaultAuthPath, 'utf-8')

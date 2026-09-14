@@ -58,4 +58,16 @@ describe('RuntimeClientSettingsController codex credential mirror consent revoca
 
     expect(clearMirroredCodexCredentialsMock).not.toHaveBeenCalled()
   })
+
+  // Why: clearMirroredCodexCredentials is itself idempotent (rmSync with force), but the old
+  // true->false-only gate meant a retry never ran a second time -- a false->false apply (Settings
+  // saved again, or a settled default reapplied) left orphaned copies if the first clear was
+  // interrupted (crash, disk full) partway through (G1).
+  it('retries the clear on a false->false apply, in case files from an interrupted clear remain', async () => {
+    const controller = makeController({ codexCredentialMirrorConsent: false })
+
+    await controller.update({ codexCredentialMirrorConsent: false })
+
+    expect(clearMirroredCodexCredentialsMock).toHaveBeenCalledOnce()
+  })
 })
