@@ -44,7 +44,7 @@ function normalizeArgs(value: string | null | undefined): string {
   return value?.trim() ?? ''
 }
 
-function sameEnv(
+export function sameEnv(
   left: Record<string, string> | null | undefined,
   right: Record<string, string> | null | undefined
 ): boolean {

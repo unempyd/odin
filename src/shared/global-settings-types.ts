@@ -389,6 +389,13 @@ export type GlobalSettings = {
   agentDefaultEnv?: Partial<Record<TuiAgent, Record<string, string>>>
   /** One-shot guard for adding yolo-mode default args to untouched agent launch profiles. */
   agentYoloDefaultsMigrated?: boolean
+  /**
+   * One-shot guard (Odin H1): clears any agentDefaultArgs/agentDefaultEnv value that still
+   * matches YOLO_TUI_AGENT_ARGS/YOLO_TUI_AGENT_ENV verbatim -- a bypass Orca's own earlier
+   * migration filled in, not one the user chose. A user who *had* explicitly picked the
+   * identical bypass value re-enables it once in Settings after this migration runs.
+   */
+  agentBypassDefaultsReviewed?: boolean
   /** Why: disabling must persist so startup doesn't reinstall global agent hook entries the user just removed. */
   agentStatusHooksEnabled: boolean
   /** Why: mirroring ~/.codex/auth.json into Orca's runtime home duplicates a credential; needs explicit consent, not an unset default. */

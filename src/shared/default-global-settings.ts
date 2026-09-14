@@ -208,6 +208,7 @@ export function buildDefaultSettings(args: {
     agentDefaultArgs: { ...DEFAULT_TUI_AGENT_ARGS },
     agentDefaultEnv: { ...DEFAULT_TUI_AGENT_ENV },
     agentYoloDefaultsMigrated: true,
+    agentBypassDefaultsReviewed: true,
     // Why: installing managed hooks into other tools' configs needs explicit user consent.
     agentStatusHooksEnabled: false,
     // Why: mirroring ~/.codex/auth.json into Orca's runtime home needs explicit consent.
