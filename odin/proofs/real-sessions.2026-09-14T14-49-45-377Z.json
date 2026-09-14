@@ -1,0 +1,306 @@
+{
+  "ok": true,
+  "results": {
+    "crash:claude": true,
+    "crash:codex": true,
+    "crash:grok": true
+  },
+  "agents": ["claude", "codex", "grok"],
+  "phases": ["crash"],
+  "events": [
+    {
+      "at": "2026-09-14T14:43:53.491Z",
+      "type": "profile",
+      "userDataDir": "/var/folders/08/tsc21p4n41ndkvcxq1kl0htw0000gn/T/odin-orca-dev-crash-uUgiJo",
+      "consentRecord": {
+        "claude": "--dangerously-skip-permissions",
+        "codex": "--dangerously-bypass-approvals-and-sandbox",
+        "grok": "--permission-mode bypassPermissions"
+      }
+    },
+    {
+      "at": "2026-09-14T14:43:53.627Z",
+      "type": "trust.granted",
+      "agent": "claude",
+      "file": "/Users/briankeeny/.claude.json",
+      "paths": [
+        "/var/folders/08/tsc21p4n41ndkvcxq1kl0htw0000gn/T/odin-orca-dev-crash-uUgiJo/home/orca/workspaces/odin-real-repo-EVv31h/odin-332a64",
+        "/private/var/folders/08/tsc21p4n41ndkvcxq1kl0htw0000gn/T/odin-orca-dev-crash-uUgiJo/home/orca/workspaces/odin-real-repo-EVv31h/odin-332a64"
+      ]
+    },
+    {
+      "at": "2026-09-14T14:43:55.557Z",
+      "type": "host.ready",
+      "endpoint": "ws://127.0.0.1:53007",
+      "pid": 50527
+    },
+    {
+      "at": "2026-09-14T14:43:57.513Z",
+      "type": "workspace",
+      "repoPath": "/var/folders/08/tsc21p4n41ndkvcxq1kl0htw0000gn/T/odin-real-repo-EVv31h",
+      "worktreeId": "ae957036-96e2-49dc-899f-ca2811887b31::/private/var/folders/08/tsc21p4n41ndkvcxq1kl0htw0000gn/T/odin-orca-dev-crash-uUgiJo/home/orca/workspaces/odin-real-repo-EVv31h/odin-332a64",
+      "coordinator": "term_856055e0-22ac-48b5-b3c9-c80d042d6f9f",
+      "runId": "run_5d03c0c39aac"
+    },
+    {
+      "at": "2026-09-14T14:44:04.828Z",
+      "type": "crash.worker-start",
+      "agent": "claude",
+      "exit": 0,
+      "state": "ready",
+      "dispatchId": "ctx_97311211b42f",
+      "retryRequest": "673305e3-6492-4c98-9faa-65f7748d02ff"
+    },
+    {
+      "at": "2026-09-14T14:44:04.892Z",
+      "type": "host.exit",
+      "code": null,
+      "signal": "SIGKILL"
+    },
+    {
+      "at": "2026-09-14T14:44:06.351Z",
+      "type": "crash.host-killed",
+      "pid": 50527
+    },
+    {
+      "at": "2026-09-14T14:44:07.851Z",
+      "type": "host.ready",
+      "endpoint": "ws://127.0.0.1:53007",
+      "pid": 52219
+    },
+    {
+      "at": "2026-09-14T14:44:19.984Z",
+      "type": "crash.result",
+      "agent": "claude",
+      "ok": true,
+      "replayRefused": false,
+      "replayedSameDispatch": true,
+      "replayExit": 0,
+      "replayText": "{\"id\":\"e39f6c91-2dab-451c-96f2-60ec4b3e9854\",\"ok\":true,\"result\":{\"runId\":\"run_5d03c0c39aac\",\"taskId\":\"task_fc8b03059ef5\",\"dispatchId\":\"ctx_97311211b42f\",\"state\":\"ready\",\"stage\":\"input_accepted\",\"turnStart\":\"observed\",\"setup\":{\"requested\":\"not_applicable\",\"effective\":\"not_applicable\",\"source\":\"existi",
+      "dispatchRows": 1,
+      "afterRestart": {
+        "status": "dispatched",
+        "workerState": "ready",
+        "terminationReason": null
+      },
+      "workerDoneReported": true,
+      "final": {
+        "status": "completed",
+        "workerState": "succeeded",
+        "terminationReason": null
+      }
+    },
+    {
+      "at": "2026-09-14T14:44:20.341Z",
+      "type": "host.exit",
+      "code": 0,
+      "signal": null
+    },
+    {
+      "at": "2026-09-14T14:44:20.344Z",
+      "type": "trust.revoked",
+      "agent": "claude",
+      "file": "/Users/briankeeny/.claude.json",
+      "paths": [
+        "/var/folders/08/tsc21p4n41ndkvcxq1kl0htw0000gn/T/odin-orca-dev-crash-uUgiJo/home/orca/workspaces/odin-real-repo-EVv31h/odin-332a64",
+        "/private/var/folders/08/tsc21p4n41ndkvcxq1kl0htw0000gn/T/odin-orca-dev-crash-uUgiJo/home/orca/workspaces/odin-real-repo-EVv31h/odin-332a64"
+      ]
+    },
+    {
+      "at": "2026-09-14T14:44:20.374Z",
+      "type": "profile",
+      "userDataDir": "/var/folders/08/tsc21p4n41ndkvcxq1kl0htw0000gn/T/odin-orca-dev-crash-V55zXc",
+      "consentRecord": {
+        "claude": "--dangerously-skip-permissions",
+        "codex": "--dangerously-bypass-approvals-and-sandbox",
+        "grok": "--permission-mode bypassPermissions"
+      }
+    },
+    {
+      "at": "2026-09-14T14:44:20.476Z",
+      "type": "trust.granted",
+      "agent": "claude",
+      "file": "/Users/briankeeny/.claude.json",
+      "paths": [
+        "/var/folders/08/tsc21p4n41ndkvcxq1kl0htw0000gn/T/odin-orca-dev-crash-V55zXc/home/orca/workspaces/odin-real-repo-o0A8Y6/odin-a21ca6",
+        "/private/var/folders/08/tsc21p4n41ndkvcxq1kl0htw0000gn/T/odin-orca-dev-crash-V55zXc/home/orca/workspaces/odin-real-repo-o0A8Y6/odin-a21ca6"
+      ]
+    },
+    {
+      "at": "2026-09-14T14:44:22.011Z",
+      "type": "host.ready",
+      "endpoint": "ws://127.0.0.1:53091",
+      "pid": 52883
+    },
+    {
+      "at": "2026-09-14T14:44:23.544Z",
+      "type": "workspace",
+      "repoPath": "/var/folders/08/tsc21p4n41ndkvcxq1kl0htw0000gn/T/odin-real-repo-o0A8Y6",
+      "worktreeId": "7580505f-5a26-4728-8e2f-27a4c57eb57a::/private/var/folders/08/tsc21p4n41ndkvcxq1kl0htw0000gn/T/odin-orca-dev-crash-V55zXc/home/orca/workspaces/odin-real-repo-o0A8Y6/odin-a21ca6",
+      "coordinator": "term_52c312d6-2294-4bd4-84a0-0cd2d7f9c3da",
+      "runId": "run_34cb6f429eee"
+    },
+    {
+      "at": "2026-09-14T14:44:29.555Z",
+      "type": "crash.worker-start",
+      "agent": "codex",
+      "exit": 0,
+      "state": "ready",
+      "dispatchId": "ctx_0f568ac96b73",
+      "retryRequest": "abc0abf9-7c1f-4d80-b691-6b2c6605afaa"
+    },
+    {
+      "at": "2026-09-14T14:44:29.584Z",
+      "type": "host.exit",
+      "code": null,
+      "signal": "SIGKILL"
+    },
+    {
+      "at": "2026-09-14T14:44:31.057Z",
+      "type": "crash.host-killed",
+      "pid": 52883
+    },
+    {
+      "at": "2026-09-14T14:44:32.480Z",
+      "type": "host.ready",
+      "endpoint": "ws://127.0.0.1:53091",
+      "pid": 55033
+    },
+    {
+      "at": "2026-09-14T14:48:34.912Z",
+      "type": "crash.result",
+      "agent": "codex",
+      "ok": true,
+      "replayRefused": false,
+      "replayedSameDispatch": true,
+      "replayExit": 0,
+      "replayText": "{\"id\":\"382ee617-3c1d-482e-ae9d-a66162840fa2\",\"ok\":true,\"result\":{\"runId\":\"run_34cb6f429eee\",\"taskId\":\"task_1151a9597120\",\"dispatchId\":\"ctx_0f568ac96b73\",\"state\":\"ready\",\"stage\":\"input_accepted\",\"turnStart\":\"observed\",\"setup\":{\"requested\":\"not_applicable\",\"effective\":\"not_applicable\",\"source\":\"existi",
+      "dispatchRows": 1,
+      "afterRestart": {
+        "status": "dispatched",
+        "workerState": "ready",
+        "terminationReason": null
+      },
+      "workerDoneReported": false,
+      "final": {
+        "status": "dispatched",
+        "workerState": "ready",
+        "terminationReason": null
+      }
+    },
+    {
+      "at": "2026-09-14T14:48:35.501Z",
+      "type": "host.exit",
+      "code": 0,
+      "signal": null
+    },
+    {
+      "at": "2026-09-14T14:48:35.504Z",
+      "type": "trust.revoked",
+      "agent": "claude",
+      "file": "/Users/briankeeny/.claude.json",
+      "paths": [
+        "/var/folders/08/tsc21p4n41ndkvcxq1kl0htw0000gn/T/odin-orca-dev-crash-V55zXc/home/orca/workspaces/odin-real-repo-o0A8Y6/odin-a21ca6",
+        "/private/var/folders/08/tsc21p4n41ndkvcxq1kl0htw0000gn/T/odin-orca-dev-crash-V55zXc/home/orca/workspaces/odin-real-repo-o0A8Y6/odin-a21ca6"
+      ]
+    },
+    {
+      "at": "2026-09-14T14:48:35.542Z",
+      "type": "profile",
+      "userDataDir": "/var/folders/08/tsc21p4n41ndkvcxq1kl0htw0000gn/T/odin-orca-dev-crash-rCkxhO",
+      "consentRecord": {
+        "claude": "--dangerously-skip-permissions",
+        "codex": "--dangerously-bypass-approvals-and-sandbox",
+        "grok": "--permission-mode bypassPermissions"
+      }
+    },
+    {
+      "at": "2026-09-14T14:48:35.679Z",
+      "type": "trust.granted",
+      "agent": "claude",
+      "file": "/Users/briankeeny/.claude.json",
+      "paths": [
+        "/var/folders/08/tsc21p4n41ndkvcxq1kl0htw0000gn/T/odin-orca-dev-crash-rCkxhO/home/orca/workspaces/odin-real-repo-AQMcmw/odin-dcdc1c",
+        "/private/var/folders/08/tsc21p4n41ndkvcxq1kl0htw0000gn/T/odin-orca-dev-crash-rCkxhO/home/orca/workspaces/odin-real-repo-AQMcmw/odin-dcdc1c"
+      ]
+    },
+    {
+      "at": "2026-09-14T14:48:37.668Z",
+      "type": "host.ready",
+      "endpoint": "ws://127.0.0.1:53347",
+      "pid": 55772
+    },
+    {
+      "at": "2026-09-14T14:48:39.994Z",
+      "type": "workspace",
+      "repoPath": "/var/folders/08/tsc21p4n41ndkvcxq1kl0htw0000gn/T/odin-real-repo-AQMcmw",
+      "worktreeId": "9d244983-577d-4669-994e-bf73c03f1718::/private/var/folders/08/tsc21p4n41ndkvcxq1kl0htw0000gn/T/odin-orca-dev-crash-rCkxhO/home/orca/workspaces/odin-real-repo-AQMcmw/odin-dcdc1c",
+      "coordinator": "term_c1a50f92-66a2-4213-8acd-7e84c4b34a42",
+      "runId": "run_0a2c9108af84"
+    },
+    {
+      "at": "2026-09-14T14:49:40.389Z",
+      "type": "crash.worker-start",
+      "agent": "grok",
+      "exit": 1,
+      "state": "failed",
+      "dispatchId": "ctx_b25cb295dae6",
+      "retryRequest": "5903ed4b-b05f-43e5-91d2-3a0bb397925d"
+    },
+    {
+      "at": "2026-09-14T14:49:40.423Z",
+      "type": "host.exit",
+      "code": null,
+      "signal": "SIGKILL"
+    },
+    {
+      "at": "2026-09-14T14:49:41.889Z",
+      "type": "crash.host-killed",
+      "pid": 55772
+    },
+    {
+      "at": "2026-09-14T14:49:43.619Z",
+      "type": "host.ready",
+      "endpoint": "ws://127.0.0.1:53347",
+      "pid": 58300
+    },
+    {
+      "at": "2026-09-14T14:49:44.934Z",
+      "type": "crash.result",
+      "agent": "grok",
+      "ok": true,
+      "replayRefused": false,
+      "replayedSameDispatch": true,
+      "replayExit": 1,
+      "replayText": "{\"id\":\"9d0a7276-3cbe-4b57-8557-9b857f32c323\",\"ok\":true,\"result\":{\"runId\":\"run_0a2c9108af84\",\"taskId\":\"task_26221002da13\",\"dispatchId\":\"ctx_b25cb295dae6\",\"state\":\"failed\",\"stage\":\"agent_readiness\",\"failedStage\":\"agent_readiness\",\"lastError\":\"timeout\",\"setup\":{\"requested\":\"not_applicable\",\"effective\":",
+      "dispatchRows": 1,
+      "afterRestart": {
+        "status": "failed",
+        "workerState": "failed",
+        "terminationReason": null
+      },
+      "workerDoneReported": false,
+      "final": {
+        "status": "failed",
+        "workerState": "failed",
+        "terminationReason": null
+      }
+    },
+    {
+      "at": "2026-09-14T14:49:45.340Z",
+      "type": "host.exit",
+      "code": 0,
+      "signal": null
+    },
+    {
+      "at": "2026-09-14T14:49:45.342Z",
+      "type": "trust.revoked",
+      "agent": "claude",
+      "file": "/Users/briankeeny/.claude.json",
+      "paths": [
+        "/var/folders/08/tsc21p4n41ndkvcxq1kl0htw0000gn/T/odin-orca-dev-crash-rCkxhO/home/orca/workspaces/odin-real-repo-AQMcmw/odin-dcdc1c",
+        "/private/var/folders/08/tsc21p4n41ndkvcxq1kl0htw0000gn/T/odin-orca-dev-crash-rCkxhO/home/orca/workspaces/odin-real-repo-AQMcmw/odin-dcdc1c"
+      ]
+    }
+  ]
+}
