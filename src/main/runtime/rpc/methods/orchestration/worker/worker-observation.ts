@@ -67,8 +67,17 @@ export async function inspectWorkerTerminal(
     // O1: every showTerminal exception used to collapse to 'missing', so a transport timeout
     // read the same owner-proven-absence verdict as the owner actually saying "not found".
     // Only 'terminal_gone' is owner-proven; everything else is contact loss, not death.
+    // The runtime is the handle's owner: a resolved null or its own `terminal_not_found` is the
+    // owner saying "no such terminal", so both are owner-proven absence like a PTY host's
+    // `terminal_gone`. A thrown transport/timeout failure is not.
     const failureReason = classifyTerminalProcessInspectionFailure(showTerminalFailure)
-    if (failureReason === 'terminal_gone') {
+    const ownerSaysNotFound =
+      showTerminalFailure === undefined ||
+      failureReason === 'terminal_gone' ||
+      (showTerminalFailure instanceof Error &&
+        (showTerminalFailure.message === 'terminal_not_found' ||
+          showTerminalFailure.message === 'terminal_handle_stale'))
+    if (ownerSaysNotFound) {
       return { terminal: null, exact: false, status: 'missing' }
     }
     return {
