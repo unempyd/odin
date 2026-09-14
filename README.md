@@ -9,6 +9,7 @@ Odin is Orca (upstream `stablyai/orca` at `539d4d1f32`, v1.4.197, MIT © Lovecas
 ```
 odin/proof/run-proofs.sh        # reruns every proof test at the upstream commit (must fail) and on Odin (must pass)
 odin/proof/real-sessions.mjs    # drives real claude / codex / grok workers through Orca's own orchestration on a headless host
+odin/proof/ssh-boundary.mjs     # drives a real desktop-mode host against a real SSH VPS through target registration and ssh.connect
 git log --first-parent odin     # one commit per residual, message = residual (file:line) → contract → proof files
 ```
 
@@ -49,6 +50,14 @@ Two things these runs show that a unit test cannot. First, the H1 contract actin
 
 Linux: the same 13 proofs reproduce at upstream and close on Odin inside a `node:24` Linux container, and the process-ownership test files (tombstone inspection, worker liveness, worker observation, recovery, wait results) pass there (`odin/proofs/linux-proofs.txt`). Not covered: Windows hosts, a third agent settling (Grok quota), and Orca's mobile app paired against an Odin host.
 
+| Phase | Result | Artifact |
+|---|---|---|
+| SSH host (`odin/proof/ssh-boundary.mjs` against a real VPS, `claw-vps`): a real desktop-mode host boots, seeds an SSH target + repo on disk (the only registration path — there is no CLI/RPC verb for it), and `orca host list` surfaces it through the real RPC | pass | `ssh-boundary.2026-09-14T19-48-26-225Z.json` |
+| SSH connect: `ssh.connect` authenticates against the real VPS and drives a real relay deploy end to end — SFTP upload, `npm install` + native `node-pty` compile under the VPS's own constrained memory, relay launch, a real accepted client connection — after fixing two real bugs this run found (dev-mode launches can't resolve their own bundled relay path; the upload's path-containment guard rejects a symlinked project root) | partial: deploy succeeds, handshake does not reach `connected` | same file; full narrative in `odin/proofs/ssh-boundary.md` |
+| SSH loss-of-contact matrix (worktree + terminal on the SSH host, transport-drop and relay-SIGKILL variants, reconnect, owner-proven exit) | not reached — needs a connected session the run above never obtained | `odin/proofs/ssh-boundary.md` |
+
+`odin/proofs/ssh-boundary.md` has the full diagnosis, including how a Chrome DevTools Protocol session was attached to the real (non-`--serve`) desktop process to find both root causes through a minified bundle, and exactly what remains unproven.
+
 ## Independent review
 
 Two independent reviewers were given the same brief (`odin/REVIEW_BRIEF.md`): review this repository against `odin/DIRECTION.md` and `odin/AGENTS.md`, do not rubber-stamp. Two rounds ran. Round one: Codex (`codex exec`, read-only) returned NOT FINISHED with concrete file:line findings; a Claude review covered the consent and durability sections before its session was rate-limited. Round two, on the fixed tree: Codex again returned NOT FINISHED (its remaining findings are the credential write primitive, the handle-stale classification, the veto ordering, and the contract-level items listed under Deviations); Claude returned FINISHED WITH MATERIAL DEVIATIONS and independently reran all 13 proofs (13/13 reproduce and close), finding one contradiction between two checked-in tests and one unlisted renderer writer. Every material finding from both rounds became a `odin(fix-…)` commit with its own failing-first proof:
@@ -82,7 +91,7 @@ Stated plainly, because two independent reviews returned NOT FINISHED against `o
 4. **Worker observation keeps `unattached`, `missing` and `identity_changed`** beside `live / unverifiable / exited` because clients depend on them as distinct states.
 5. **The launch receipt verifies advertised support, not applied options.** `source: 'probe'` means the installed Claude CLI listed the model and effort; nothing reads back what the launched session applied. Codex and Grok have no live probe.
 6. **Sub-agent rows carry their own identity but are still renderer-derived** and their synthesized entry state falls back to `done` where the status type has no `unverifiable` member.
-7. **Proof coverage is macOS plus a Linux container.** Windows process ownership, SSH-hosted worktrees, mixed-version clients, mobile pairing against an Odin host, and a third agent settling (this operator's Grok quota) are not established by the recorded runs.
+7. **Proof coverage is macOS plus a Linux container.** Windows process ownership, mixed-version clients, mobile pairing against an Odin host, and a third agent settling (this operator's Grok quota) are not established by the recorded runs. SSH-hosted worktrees are now partially covered: `odin/proof/ssh-boundary.mjs` runs a real desktop-mode host against a real VPS and proves target/repo registration and a real `ssh.connect` relay deploy (finding and fixing two real bugs along the way — a dev-mode relay-path resolution gap and a symlinked-worktree upload-root false rejection). What is **not** established: the connect handshake did not reach `connected` in the recorded run, so the worktree/terminal loss-of-contact matrix (transport drop, relay `SIGKILL`, reconnect, owner-proven exit) — the actual subject of `docs/reference/ssh-execution-boundary.md` — was not exercised against a live session. Full narrative and open questions in `odin/proofs/ssh-boundary.md`.
 8. **Retained telemetry opt-ins from Orca's automatic enrollment are preserved** for pre-existing profiles; only fresh installs are opted out.
 
 Everything above is either in `odin/OPEN.md` with a plan, or accepted for v0.1.0 as Orca's existing behaviour.
