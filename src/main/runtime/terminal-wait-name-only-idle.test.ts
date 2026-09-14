@@ -102,7 +102,10 @@ describe('tui-idle evidence ranking', () => {
     expect(settled).not.toHaveBeenCalled()
   })
 
-  it('settles a name-only idle once the pane has been quiet for the window', async () => {
+  // Residual C: a name-only title going quiet for Codex/Devin-style agents (which DO go on to
+  // announce rest explicitly) is corroborated silence, not the agent's own report — it must
+  // never settle a waiter as satisfied.
+  it('does not claim a quiesced name-only idle as satisfied', async () => {
     const pty = makeTuiIdlePty({ lastAgentStatus: 'idle', lastOscTitle: NAME_ONLY_TITLE })
     const { wait } = createWait({ pty, agent: 'codex' })
     const settled = watch(wait.wait(HANDLE, { condition: 'tui-idle', timeoutMs: 60_000 }))
@@ -110,7 +113,9 @@ describe('tui-idle evidence ranking', () => {
     await advanceWhileStreaming(pty, 2)
     expect(settled).not.toHaveBeenCalled()
     await vi.advanceTimersByTimeAsync(QUIESCENCE_MS + POLL_INTERVAL_MS)
-    expect(settled).toHaveBeenCalledWith({ ok: expect.objectContaining({ satisfied: true }) })
+    expect(settled).toHaveBeenCalledWith({
+      ok: expect.objectContaining({ satisfied: false, evidence: 'silence' })
+    })
   })
 
   it('settles an explicit idle title immediately, with no quiescence at all', async () => {
@@ -155,7 +160,9 @@ describe('tui-idle evidence ranking', () => {
   // Why the scoping: demoting every name-only title left agents that emit their NAME and
   // nothing else at rest with no settle signal at all. A real idle Grok pane repaints its
   // banner about four times a second forever, so output never quiesces and the wait ran to
-  // timeout — a total loss of tui-idle for that provider.
+  // timeout — a total loss of tui-idle for that provider. Carve-out unchanged by residual C:
+  // resolveTuiIdleVerdict still promotes this case to 'observed-idle', not 'silence', because
+  // no stronger signal will ever arrive for Grok.
   it('settles immediately for an agent that never emits anything but its name', async () => {
     const pty = makeTuiIdlePty({ lastAgentStatus: 'idle', lastOscTitle: 'grok' })
     const { wait } = createWait({ pty, agent: 'grok' })
@@ -286,6 +293,8 @@ describe('tui-idle over the live OSC title pipeline', () => {
     ).rejects.toThrow('timeout')
   })
 
+  // Carve-out unchanged by residual C: Grok's name-only title is the only rest signal it ever
+  // emits, so resolveTuiIdleVerdict promotes it to 'observed-idle', not 'silence'.
   it('still settles for an agent whose only rest signal is its name', async () => {
     const { runtime, handle } = await makeRuntime('grok')
     runtime.onPtyData(E2E_PTY_ID, `${oscTitle('grok')}banner\n`, Date.now())

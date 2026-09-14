@@ -1,0 +1,60 @@
+native/windows-registry install: gyp info spawn args ]
+native/windows-registry install: gyp info spawn make
+native/windows-registry install: gyp info spawn args [ 'BUILDTYPE=Release', '-C', 'build' ]
+native/windows-registry install:   TOUCH Release/obj.target/orca_windows_registry.stamp
+native/windows-registry install: gyp info ok 
+native/windows-registry install: Done
+. postinstall$ node config/scripts/rebuild-native-deps.mjs
+. postinstall: [rebuild] Skipping optional Electron rebuild modules: cpu-features
+. postinstall: [rebuild] Native modules already load in Electron; skipping rebuild.
+. postinstall: Done
+. prepare$ husky
+. prepare: Done
+Done in 4.9s using pnpm v12.0.0
+
+ RUN  v4.1.11 /Users/briankeeny/Desktop/odin-wt-settlement
+
+ ❯ src/main/runtime/orchestration/worker-terminal-process-liveness.test.ts (4 tests | 2 failed) 12ms
+     × answers unverifiable, not exited, when the inventory lists nothing for this pty 8ms
+     × answers unverifiable when the listing omits this pty id but reports others 1ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/main/runtime/orchestration/worker-terminal-process-liveness.test.ts > classifyWorkerTerminalProcessIncarnation > answers unverifiable, not exited, when the inventory lists nothing for this pty
+AssertionError: expected 'exited' to be 'unverifiable' // Object.is equality
+
+Expected: "unverifiable"
+Received: "exited"
+
+ ❯ src/main/runtime/orchestration/worker-terminal-process-liveness.test.ts:12:79
+     10|     const sessions: readonly PtyProcessInfo[] = []
+     11|
+     12|     expect(classifyWorkerTerminalProcessIncarnation('pty-1:inc-1', ses…
+       |                                                                               ^
+     13|   })
+     14|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  src/main/runtime/orchestration/worker-terminal-process-liveness.test.ts > classifyWorkerTerminalProcessIncarnation > answers unverifiable when the listing omits this pty id but reports others
+AssertionError: expected 'exited' to be 'unverifiable' // Object.is equality
+
+Expected: "unverifiable"
+Received: "exited"
+
+ ❯ src/main/runtime/orchestration/worker-terminal-process-liveness.test.ts:20:79
+     18|     ]
+     19|
+     20|     expect(classifyWorkerTerminalProcessIncarnation('pty-1:inc-1', ses…
+       |                                                                               ^
+     21|   })
+     22|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 2 passed (4)
+   Start at  18:26:01
+   Duration  370ms (transform 82ms, setup 92ms, import 23ms, tests 12ms, environment 0ms)
+

@@ -5,6 +5,11 @@ import type {
   RuntimeTerminalWaitCondition
 } from '../../shared/runtime-types'
 import type { TerminalExitCause } from '../../shared/terminal-exit-cause'
+import type { TuiIdleVerdict } from './tui-idle-evidence'
+
+/** A caller only ever has a settled verdict by the time it builds a result — 'not-idle' means no
+ *  result is built at all. */
+export type TuiIdleWaitEvidence = Exclude<TuiIdleVerdict, 'not-idle'>
 
 type ReadonlyTerminalStateRecord = {
   connected: boolean
@@ -25,7 +30,8 @@ export function getTerminalState(leaf: ReadonlyTerminalStateRecord): RuntimeTerm
 export function buildTerminalWaitResult(
   handle: string,
   condition: RuntimeTerminalWaitCondition,
-  leaf: ReadonlyTerminalStateRecord
+  leaf: ReadonlyTerminalStateRecord,
+  evidence?: TuiIdleWaitEvidence
 ): RuntimeTerminalWait {
   return buildTerminalWait(
     handle,
@@ -33,7 +39,8 @@ export function buildTerminalWaitResult(
     getTerminalState(leaf),
     leaf.lastExitCode,
     undefined,
-    leaf.lastExitCause
+    leaf.lastExitCause,
+    evidence
   )
 }
 
@@ -56,7 +63,8 @@ export function buildTerminalWaitBlockedResult(
 export function buildPtyTerminalWaitResult(
   handle: string,
   condition: RuntimeTerminalWaitCondition,
-  pty: ReadonlyTerminalStateRecord
+  pty: ReadonlyTerminalStateRecord,
+  evidence?: TuiIdleWaitEvidence
 ): RuntimeTerminalWait {
   return buildTerminalWait(
     handle,
@@ -64,7 +72,8 @@ export function buildPtyTerminalWaitResult(
     getPtyTerminalState(pty),
     pty.lastExitCode,
     undefined,
-    pty.lastExitCause
+    pty.lastExitCause,
+    evidence
   )
 }
 
@@ -90,16 +99,20 @@ export function buildTerminalWait(
   status: RuntimeTerminalState,
   exitCode: number | null,
   blockedReason?: RuntimeTerminalWaitBlockedReason,
-  exitCause?: TerminalExitCause | null
+  exitCause?: TerminalExitCause | null,
+  evidence?: TuiIdleWaitEvidence
 ): RuntimeTerminalWait {
   return {
     handle,
     condition,
-    satisfied: blockedReason === undefined,
+    // Silence is not proof: a pane that merely stopped repainting must never settle a waiter,
+    // even though nothing blocks it — residual C.
+    satisfied: blockedReason === undefined && evidence !== 'silence',
     status,
     exitCode,
     ...(exitCause ? { exitCause } : {}),
-    ...(blockedReason ? { blockedReason } : {})
+    ...(blockedReason ? { blockedReason } : {}),
+    ...(evidence ? { evidence } : {})
   }
 }
 

@@ -188,9 +188,11 @@ export async function startLocalWorker(args: {
         throw new Error(
           wait.blockedReason
             ? `Agent startup blocked: ${describeTerminalWaitBlockedReason(wait.blockedReason)}`
-            : structuredSession
-              ? `Setup did not finish before the structured worker started (${wait.status}).`
-              : `Agent did not become ready (${wait.status}).`
+            : 'evidence' in wait && wait.evidence === 'silence'
+              ? 'Agent readiness could not be verified: the pane went quiet without reporting idle.'
+              : structuredSession
+                ? `Setup did not finish before the structured worker started (${wait.status}).`
+                : `Agent did not become ready (${wait.status}).`
         )
       }
     }

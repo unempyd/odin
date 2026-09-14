@@ -25,7 +25,9 @@ type TerminalHostSessionCreateDependencies = {
   spawnSubprocess: TerminalHostOptions['spawnSubprocess']
   onDeadSessionRemoved: (sessionId: string) => void
   onSessionCreated: (sessionId: string, generation: string | undefined, isAlive: boolean) => void
-  onSessionExit: (sessionId: string, generation: string | undefined) => void
+  // Passes the exact Session that exited, not just its id — a re-lookup by id after the fact can
+  // hit a successor already recreated under the same id and mint that live process's tombstone.
+  onSessionExit: (sessionId: string, generation: string | undefined, exitedSession: Session) => void
   reportReadinessEvent?: (event: string, details: Record<string, unknown>) => void
 }
 
@@ -150,7 +152,10 @@ async function spawnAndPublishSession(
     historySeedChunks: opts.historySeedChunks,
     ...(opts.startupIngress ? { startupIngress: opts.startupIngress } : {}),
     wslDistro,
-    onExit: () => deps.onSessionExit(opts.sessionId, opts.agentSessionGeneration),
+    // Why `session` and not `opts.sessionId` alone: by the time this fires, a create racing the
+    // exit could have already replaced the map entry — capturing the exiting Session itself keeps
+    // the tombstone bound to the process that actually exited.
+    onExit: () => deps.onSessionExit(opts.sessionId, opts.agentSessionGeneration, session),
     ...(deps.reportReadinessEvent ? { reportReadinessEvent: deps.reportReadinessEvent } : {}),
     ...(opts.shellReadyTimeoutMs !== undefined
       ? { shellReadyTimeoutMs: opts.shellReadyTimeoutMs }

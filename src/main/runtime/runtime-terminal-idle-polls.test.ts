@@ -150,7 +150,7 @@ describe('RuntimeTerminalIdlePolls timer budget', () => {
   })
 
   it('runs the foreground read per waiter without one waiter blocking another', async () => {
-    const resolved: string[] = []
+    const resolved: { handle: string; result: RuntimeTerminalWait }[] = []
     const gates: ((value: string | null) => void)[] = []
     const polls = new RuntimeTerminalIdlePolls({
       intervalMs: INTERVAL_MS,
@@ -164,7 +164,7 @@ describe('RuntimeTerminalIdlePolls timer budget', () => {
       getPaneAgent: () => null,
       getFirstPartyAgentStatus: () => null,
       getLiveLeaf: (leaf) => leaf,
-      resolve: (waiter) => resolved.push(waiter.handle)
+      resolve: (waiter, result) => resolved.push({ handle: waiter.handle, result })
     })
 
     polls.startPty(makeWaiter('slow'), makePty('pty-slow', { lastOutputAt: Date.now() - 10_000 }))
@@ -177,11 +177,17 @@ describe('RuntimeTerminalIdlePolls timer budget', () => {
 
     gates[1]('node')
     await vi.advanceTimersByTimeAsync(0)
-    expect(resolved).toEqual(['fast'])
+    expect(resolved.map((entry) => entry.handle)).toEqual(['fast'])
 
     gates[0]('node')
     await vi.advanceTimersByTimeAsync(0)
-    expect(resolved).toEqual(['fast', 'slow'])
+    expect(resolved.map((entry) => entry.handle)).toEqual(['fast', 'slow'])
     expect(polls.activeTimerCount).toBe(0)
+    // Residual C: the quiet-foreground lane has no title evidence at all — it must publish
+    // 'silence', and satisfied must be false, never a positive read.
+    for (const entry of resolved) {
+      expect(entry.result.evidence).toBe('silence')
+      expect(entry.result.satisfied).toBe(false)
+    }
   })
 })

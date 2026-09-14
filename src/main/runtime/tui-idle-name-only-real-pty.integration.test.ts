@@ -87,7 +87,7 @@ async function terminalWait(
   runtime: OrcaRuntimeService,
   terminal: string,
   timeoutMs: number
-): Promise<{ satisfied: boolean; elapsedMs: number }> {
+): Promise<{ satisfied: boolean; evidence?: 'observed-idle' | 'silence'; elapsedMs: number }> {
   const startedAt = Date.now()
   try {
     const result = await waitMethod.handler(
@@ -95,7 +95,11 @@ async function terminalWait(
       // oxlint-disable-next-line typescript/consistent-type-assertions -- SAFETY: terminal.wait reads only `runtime` off its context; the rest is request plumbing this fixture has no use for.
       { runtime } as Parameters<typeof waitMethod.handler>[1]
     )
-    return { satisfied: result.wait.satisfied === true, elapsedMs: Date.now() - startedAt }
+    return {
+      satisfied: result.wait.satisfied === true,
+      evidence: result.wait.evidence,
+      elapsedMs: Date.now() - startedAt
+    }
   } catch (error) {
     // Why only `timeout`: an unsatisfied wait is the outcome under test, but any other
     // failure means the harness broke and must not read as a passing refusal.
@@ -128,13 +132,15 @@ describe.skipIf(process.platform === 'win32')('tui-idle against a real agent pty
     expect(outcome.elapsedMs).toBeGreaterThanOrEqual(1_500)
   }, 28_000)
 
-  it('satisfies once the real process goes quiet with the agent still in foreground', async () => {
+  // Residual C: the real process never emits "Codex ready" in this mode — it only goes quiet
+  // under its name-only title. That is corroborated silence, not the agent's own report, so it
+  // must not satisfy the wait even though quiescence elapsed.
+  it('does not claim satisfied when the real process merely goes quiet under a name-only title', async () => {
     const { runtime, handle } = await startRealAgentPane('quiet', 3_000)
     await new Promise((resolve) => setTimeout(resolve, 500))
 
     const outcome = await terminalWait(runtime, handle, 20_000)
-    expect(outcome.satisfied).toBe(true)
-    // Corroboration is never instant: quiescence must elapse after the last byte.
-    expect(outcome.elapsedMs).toBeGreaterThanOrEqual(3_000)
+    expect(outcome.satisfied).toBe(false)
+    expect(outcome.evidence).toBe('silence')
   }, 28_000)
 })

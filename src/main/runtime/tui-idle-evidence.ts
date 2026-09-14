@@ -124,15 +124,48 @@ export type TuiIdleSatisfactionInput = {
   quiescenceMs: number
 }
 
+/**
+ * Residual C: `hasSustainedTitleIdle`'s tier-3 verdict was published as the same settlement as
+ * tier 1 — a name-only title going quiet and an agent explicitly announcing readiness both read
+ * as `satisfied: true`. A pane that just stopped repainting is not proven idle; it went silent.
+ *
+ * `'observed-idle'`: the agent said so itself (tier 1), or it is one of the agents whose ONLY
+ * rest signal is its name going quiet (`nameOnlyIdleNeedsCorroboration` false) — there the
+ * documented carve-out promotes sustained silence to a positive verdict because no stronger
+ * signal will ever arrive.
+ * `'silence'`: an agent that DOES eventually announce rest explicitly (Codex/Devin-style) has
+ * only gone quiet so far — corroborated by quiescence, but not the agent's own report.
+ * `'not-idle'`: proven still working, or nothing to settle on yet.
+ */
+export type TuiIdleVerdict = 'observed-idle' | 'silence' | 'not-idle'
+
 /** The one place the three tiers are combined; every satisfaction site routes here. */
-export function isTuiIdleSatisfied(input: TuiIdleSatisfactionInput): boolean {
+export function resolveTuiIdleVerdict(input: TuiIdleSatisfactionInput): TuiIdleVerdict {
   // Why the title before the body: both are tier 1, so either settles, but the title is a
   // memoized lookup and the body is a fresh multi-KB scan. Same verdict, cheaper order.
   if (hasExplicitIdleTitle(input.record, input.rendererTitle) || input.readPositiveBodyEvidence()) {
-    return true
+    return 'observed-idle'
   }
   if (hasFreshWorkingFirstPartyStatus(input.firstPartyStatus)) {
-    return false
+    return 'not-idle'
   }
-  return hasSustainedTitleIdle(input.record, input.agent, input.quiescenceMs)
+  if (!hasSustainedTitleIdle(input.record, input.agent, input.quiescenceMs)) {
+    return 'not-idle'
+  }
+  return nameOnlyIdleNeedsCorroboration(input.agent, input.record.lastOscTitle)
+    ? 'silence'
+    : 'observed-idle'
+}
+
+/** Guard-only callers that only need "may this waiter settle", not the evidence tier. */
+export function isTuiIdleSatisfied(input: TuiIdleSatisfactionInput): boolean {
+  return resolveTuiIdleVerdict(input) !== 'not-idle'
+}
+
+/** A settlement site has already gated on `verdict !== 'not-idle'` by the time it builds a
+ *  result; narrows for the builders, which only accept the two settleable tiers. */
+export function tuiIdleVerdictToEvidence(
+  verdict: TuiIdleVerdict
+): 'observed-idle' | 'silence' | undefined {
+  return verdict === 'not-idle' ? undefined : verdict
 }

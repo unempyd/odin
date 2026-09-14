@@ -30,7 +30,11 @@ export type AutomationRunTerminalHost = {
   waitForTerminal(
     handle: string,
     options?: { condition?: 'tui-idle'; timeoutMs?: number; signal?: AbortSignal }
-  ): Promise<{ satisfied: boolean; blockedReason?: string }>
+  ): Promise<{
+    satisfied: boolean
+    blockedReason?: string
+    evidence?: 'observed-idle' | 'silence'
+  }>
   readTerminal(handle: string, opts?: { limit?: number }): Promise<{ tail: string[] }>
 }
 
@@ -117,7 +121,7 @@ async function readTerminalSnapshot(
 async function buildObservation(
   runtime: AutomationRunTerminalHost,
   handle: string,
-  wait: { satisfied: boolean; blockedReason?: string }
+  wait: { satisfied: boolean; blockedReason?: string; evidence?: 'observed-idle' | 'silence' }
 ): Promise<AutomationRunCompletionObservation> {
   const outputSnapshot = await readTerminalSnapshot(runtime, handle)
   if (wait.satisfied) {
@@ -128,7 +132,9 @@ async function buildObservation(
     outputSnapshot,
     error: wait.blockedReason
       ? `Automation agent is blocked: ${wait.blockedReason}.`
-      : 'Automation agent did not report completion.'
+      : wait.evidence === 'silence'
+        ? 'Automation agent completion could not be verified: the pane went quiet without reporting idle.'
+        : 'Automation agent did not report completion.'
   }
 }
 

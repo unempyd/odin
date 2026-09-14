@@ -1,0 +1,39 @@
+
+ RUN  v4.1.11 /Users/briankeeny/Desktop/odin-wt-settlement
+
+ ❯ src/main/daemon/terminal-host-process-inspection.test.ts (3 tests | 1 failed) 52ms
+     × never publishes a proven exit from a tombstone the host could not vouch for 15ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/main/daemon/terminal-host-process-inspection.test.ts > TerminalHost process inspection > never publishes a proven exit from a tombstone the host could not vouch for
+AssertionError: expected { authorityGeneration: 'gen-1', …(6) } to match object { verdict: 'unverifiable', …(2) }
+(4 matching properties omitted from actual)
+
+- Expected
++ Received
+
+  {
+    "ptyIncarnationId": "inc-1",
+-   "reason": "pty_exit_unverified",
+-   "verdict": "unverifiable",
++   "reason": "pty_exit_-1",
++   "verdict": "exited",
+  }
+
+ ❯ src/main/daemon/terminal-host-process-inspection.test.ts:63:46
+     61|     })
+     62|
+     63|     expect(result.foregroundProcessEvidence).toMatchObject({
+       |                                              ^
+     64|       verdict: 'unverifiable',
+     65|       reason: 'pty_exit_unverified',
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 2 passed (3)
+   Start at  18:41:15
+   Duration  4.18s (transform 2.25s, setup 249ms, import 3.15s, tests 52ms, environment 0ms)
+
