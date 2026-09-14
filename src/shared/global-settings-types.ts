@@ -393,6 +393,8 @@ export type GlobalSettings = {
   agentStatusHooksEnabled: boolean
   /** Why: mirroring ~/.codex/auth.json into Orca's runtime home duplicates a credential; needs explicit consent, not an unset default. */
   codexCredentialMirrorConsent?: boolean
+  /** Why: widening the runtime WS listener beyond loopback exposes it to the LAN; needs explicit consent. */
+  networkExposureConsent?: boolean
   /** Dismissed freshness tuples: no write authority, just suppress re-nudging the same official placement/revision. */
   dismissedSkillFreshnessNudges?: string[]
   /** Why: generated tab titles are subjective, so they stay opt-in and manual renames win. */

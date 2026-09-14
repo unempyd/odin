@@ -108,6 +108,7 @@ export const SettingsUpdate = z
     experimentalNewWorktreeCardStyle: z.boolean().optional(),
     agentStatusHooksEnabled: z.boolean().optional(),
     codexCredentialMirrorConsent: z.boolean().optional(),
+    networkExposureConsent: z.boolean().optional(),
     defaultRepoSelection: z.array(z.string()).nullable().optional(),
     defaultLinearTeamSelection: z.array(z.string()).nullable().optional(),
     compactWorktreeCards: z.boolean().optional(),

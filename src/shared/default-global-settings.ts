@@ -212,6 +212,8 @@ export function buildDefaultSettings(args: {
     agentStatusHooksEnabled: false,
     // Why: mirroring ~/.codex/auth.json into Orca's runtime home needs explicit consent.
     codexCredentialMirrorConsent: false,
+    // Why: widening the runtime WS listener beyond loopback needs explicit consent.
+    networkExposureConsent: false,
     tabAutoGenerateTitle: false,
     confirmClosePinnedTab: true,
     keepComputerAwakeWhileAgentsRun: false,

@@ -1,0 +1,55 @@
+=== D targeted: runtime-rpc-websocket-bind-host.test.ts ===
+
+ RUN  v4.1.11 /Users/briankeeny/Desktop/odin-wt-consent
+
+
+ Test Files  1 passed (1)
+      Tests  23 passed (23)
+   Start at  21:01:06
+   Duration  22.92s (transform 16.64s, setup 103ms, import 22.12s, tests 387ms, environment 0ms)
+
+-- mobile ipc + extracted pairing-bind-host --
+
+ RUN  v4.1.11 /Users/briankeeny/Desktop/odin-wt-consent
+
+
+ Test Files  2 passed (2)
+      Tests  42 passed (42)
+   Start at  21:01:30
+   Duration  21.69s (transform 16.36s, setup 210ms, import 21.58s, tests 347ms, environment 0ms)
+
+-- broader rpc/mobile audit (26 files) --
+
+ RUN  v4.1.11 /Users/briankeeny/Desktop/odin-wt-consent
+
+
+ Test Files  23 passed | 1 skipped (24)
+      Tests  150 passed | 4 skipped (154)
+   Start at  21:01:54
+   Duration  43.36s (transform 90.18s, setup 1.17s, import 259.82s, tests 16.18s, environment 5ms)
+
+-- runtime-client-settings unit tests --
+
+ RUN  v4.1.11 /Users/briankeeny/Desktop/odin-wt-consent
+
+
+ Test Files  3 passed (3)
+      Tests  9 passed (9)
+   Start at  21:02:39
+   Duration  2.18s (transform 3.24s, setup 266ms, import 4.48s, tests 22ms, environment 0ms)
+
+-- src/main/startup (full directory) --
+
+Unable to start the Orca CLI through Electron node mode.
+Unable to locate the Orca CLI entrypoint at /opt/Orca/resources/app.asar.unpacked/out/cli/index.js
+spawn ENOENT
+
+ Test Files  52 passed | 2 skipped (54)
+      Tests  497 passed | 8 skipped (505)
+   Start at  21:02:42
+   Duration  18.20s (transform 5.57s, setup 2.41s, import 9.18s, tests 38.68s, environment 11ms)
+
+=== tc:node ===
+$ pnpm run typecheck:node
+$ tsc --noEmit -p config/tsconfig.node.json
+=== oxlint ===

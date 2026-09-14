@@ -88,6 +88,7 @@ export type RuntimeStore = {
     floatingTerminalEnabled?: GlobalSettings['floatingTerminalEnabled']
     agentStatusHooksEnabled?: GlobalSettings['agentStatusHooksEnabled']
     codexCredentialMirrorConsent?: GlobalSettings['codexCredentialMirrorConsent']
+    networkExposureConsent?: GlobalSettings['networkExposureConsent']
     terminalCopyTrimsGutter?: GlobalSettings['terminalCopyTrimsGutter']
     experimentalNativeChat?: GlobalSettings['experimentalNativeChat']
     openAgentTabsInChatByDefault?: GlobalSettings['openAgentTabsInChatByDefault']
