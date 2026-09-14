@@ -60,11 +60,9 @@
       "id": "C",
       "title": "tui-idle waits never settle on silence; evidence is carried on the wire",
       "commit": "07522244e6",
-      "tests": [
-        "src/main/runtime/tui-idle-evidence.test.ts",
-        "src/main/runtime/terminal-wait-name-only-idle.test.ts"
-      ],
-      "reproduce": "expected undefined to be 'silence'"
+      "tests": ["src/main/runtime/terminal-wait-name-only-idle.test.ts"],
+      "reproduce": "expected \"vi\\.fn\\(\\)\" to be called with arguments",
+      "note": "The wait-path test drives upstream's real terminal.wait on a quiesced name-only Codex title; the unit test for resolveTuiIdleVerdict (tui-idle-evidence.test.ts) cannot run upstream because the verdict function is new, so it is not used as the reproduction."
     },
     {
       "id": "H",
