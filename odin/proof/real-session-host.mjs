@@ -287,6 +287,22 @@ export class Host {
     this.kill(exited ? 'SIGTERM' : 'SIGKILL')
     this.child.stdout?.destroy()
     this.child.stderr?.destroy()
+    // Orca detaches its terminal daemon into its own session on purpose (PTYs outlive the
+    // runtime), so a group kill never reaches it. Its argv names this throwaway profile's socket,
+    // token and pid files, which is the only thing that identifies it as ours.
+    const mine = spawnSync('ps', ['-axo', 'pid=,command='], { encoding: 'utf8' })
+      .stdout.split('\n')
+      .filter((l) => l.includes(this.userDataDir))
+      .map((l) => Number.parseInt(l.trim(), 10))
+      .filter((pid) => Number.isInteger(pid) && pid !== process.pid)
+    for (const pid of mine) {
+      try {
+        process.kill(pid, 'SIGKILL')
+      } catch {}
+    }
+    if (mine.length > 0) {
+      log('host.daemons-reaped', { pids: mine })
+    }
   }
 }
 
