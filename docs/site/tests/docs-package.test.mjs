@@ -61,7 +61,9 @@ test('docs package has an isolated, reproducible app contract', async () => {
     assert.ok(packageJson.dependencies[dependency], `missing runtime dependency: ${dependency}`)
   }
   assert.ok(packageJson.devDependencies.typescript)
-  assert.ok(packageJson.devDependencies.vercel)
+  // Odin publishes this site as a static export (GitHub Pages); the Vercel CLI and its
+  // vulnerable transitive tree are not part of it.
+  assert.equal(packageJson.devDependencies.vercel, undefined)
   assert.ok(existsSync(path.join(siteRoot, 'pnpm-lock.yaml')))
 })
 
