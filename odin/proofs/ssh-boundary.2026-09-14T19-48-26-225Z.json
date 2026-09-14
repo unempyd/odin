@@ -1,0 +1,322 @@
+{
+  "ok": false,
+  "phases": {
+    "phase1": {
+      "ok": true,
+      "macIp": "175.35.0.108",
+      "head": "586851b18f3a06603c5132cadd823af0061a8274",
+      "resolved": {
+        "hostname": "65.108.95.199",
+        "port": 22,
+        "username": "root",
+        "identityFile": "/Users/briankeeny/.ssh/openclaw_vps_key"
+      }
+    },
+    "phase2": {
+      "ok": false,
+      "sshRow": {
+        "kind": "ssh",
+        "name": "claw-vps",
+        "id": "ssh-1789415010957-7b3b00",
+        "selector": "--host ssh:ssh-1789415010957-7b3b00",
+        "connected": false
+      },
+      "connectState": null,
+      "relayCheck": {
+        "status": 0,
+        "stdout": "/root/.orca-remote/relay-0.1.0+9a9827b3fde2\nsrw------- 1 root root 0 Sep 14 19:35 /root/.orca-remote/relay-0.1.0+9a9827b3fde2/relay-578516318067a093.sock\nsrw------- 1 root root 0 Sep 14 19:44 /root/.orca-remote/relay-0.1.0+9a9827b3fde2/relay-68e71121d0c75bc0.sock\n3980397 /usr/bin/node relay.js --detached --grace-time 0 --sock-path /root/.orca-remote/relay-0.1.0+9a9827b3fde2/relay-68e71121d0c75bc0.sock --credential-file /root/.orca-remote/relay-0.1.0+9a9827b3fde2/relay-68e71121d0c75bc0.sock.credential --log-file /root/.orca-remote/relay-0.1.0+9a9827b3fde2/relay.log",
+        "stderr": ""
+      }
+    },
+    "phase3to7": {
+      "ok": false,
+      "skipped": true,
+      "reason": "ssh.connect never reached status:connected; see phase2 and the deviation note"
+    }
+  },
+  "fatal": "Error: stopping after phase 2: target never reached connected state\n    at main (file:///Users/briankeeny/Desktop/odin-wt-ssh/odin/proof/ssh-boundary.mjs:452:13)",
+  "iptablesClean": true,
+  "events": [
+    {
+      "at": "2026-09-14T19:43:36.189Z",
+      "type": "vps.exec",
+      "cmd": "echo $SSH_CONNECTION",
+      "status": 0,
+      "stdout": "175.35.0.108 64469 65.108.95.199 22",
+      "stderr": ""
+    },
+    {
+      "at": "2026-09-14T19:43:36.191Z",
+      "type": "phase1.mac-ip",
+      "macIp": "175.35.0.108"
+    },
+    {
+      "at": "2026-09-14T19:43:40.551Z",
+      "type": "vps.exec",
+      "cmd": "mkdir -p /root/odin-proof && rm -rf /root/odin-proof/seed && cd /root/odin-proof && git init -q -b main seed && cd seed && git config user.email odin@proof.local && git config user.name 'Odin Proof' && printf '# odin ssh proof\\n' > README.md && git add -A && git commit -qm seed && git rev-parse HEAD",
+      "status": 0,
+      "stdout": "586851b18f3a06603c5132cadd823af0061a8274",
+      "stderr": ""
+    },
+    {
+      "at": "2026-09-14T19:43:40.552Z",
+      "type": "vps.repo-seeded",
+      "path": "/root/odin-proof/seed",
+      "head": "586851b18f3a06603c5132cadd823af0061a8274"
+    },
+    {
+      "at": "2026-09-14T19:43:40.584Z",
+      "type": "phase1.resolved-target",
+      "hostname": "65.108.95.199",
+      "port": 22,
+      "username": "root",
+      "identityFile": "/Users/briankeeny/.ssh/openclaw_vps_key"
+    },
+    {
+      "at": "2026-09-14T19:43:40.585Z",
+      "type": "profile",
+      "userDataDir": "/var/folders/08/tsc21p4n41ndkvcxq1kl0htw0000gn/T/odin-ssh-proof-dKxXyq",
+      "targetId": "ssh-1789415010957-7b3b00",
+      "repoId": "repo-1789415010957-00c4be"
+    },
+    {
+      "at": "2026-09-14T19:43:50.377Z",
+      "type": "host.ready",
+      "pid": 39966,
+      "status": {
+        "target": {
+          "kind": "local"
+        },
+        "app": {
+          "running": true,
+          "pid": 39966,
+          "desktopWindowStatus": "available"
+        },
+        "runtime": {
+          "state": "ready",
+          "reachable": true,
+          "connectionState": "connected",
+          "runtimeId": "219a344f-2218-48e3-8369-54f591d395ee",
+          "appVersion": "43.7.0",
+          "remoteUpdateSupport": {
+            "installMode": "interactive",
+            "automatic": false,
+            "reason": "unpackaged-build"
+          },
+          "capabilities": [
+            "files.pathsExist",
+            "runtime.status.compat.v1",
+            "runtime.environments.v1",
+            "remote-runtime.shared-control.v1",
+            "orchestration.federation.v1",
+            "orchestration.federation-control-mail.v1",
+            "orchestration.federation-lifecycle-settlement.v1",
+            "orchestration.worker-stop-verdict.v1",
+            "orchestration.worker-launch-preferences.v1",
+            "orchestration.federation-structured-read.v1",
+            "orchestration.federation-fleet-snapshot.v1",
+            "orchestration.federation-release-archive.v1",
+            "orchestration.contract.v1",
+            "browser.screencast.v1",
+            "browser.tab-create-known-id.v1",
+            "browser.clientHost.v1",
+            "browser.clientHost.pageMetadata.v1",
+            "browser.clientHost.automation.v1",
+            "browser.clientHost.fileChannel.v1",
+            "network.browserTunnel.v1",
+            "network.browserTunnel.executionHosts.v1",
+            "terminal.binary-stream.v1",
+            "terminal.multiplex.v1",
+            "workspace-ports.v1",
+            "mobile.tasks.v1",
+            "project-host-setup.v1",
+            "task-source-context.v1",
+            "workspace-run-context.v1",
+            "worktree.linked-work-item-context.v1",
+            "worktree.github-pr-suppression.v1",
+            "folder-workspace.path-status.v1",
+            "linear.issue-attribute-filter.v1",
+            "jira.user-fields.v1",
+            "aiVault.v1",
+            "aiVault.session-titles.v1",
+            "terminal.query-reply-input.v1",
+            "terminal.prompt-delivery.v1",
+            "terminal.paired-parking.v1",
+            "terminal.quick-commands.v1",
+            "worktree.create-idempotency.v1",
+            "terminal.create-idempotency.v2",
+            "session-tabs.close-intent.v1",
+            "session-tabs.authoritative-inventory.v1",
+            "agent-session.session-boundary.v1",
+            "updater.remote-control.v1",
+            "agent-session.host-authority.v1",
+            "agent-session.omp-resume-path.v1",
+            "agent-session.structured.v1",
+            "agent-session.pending-send-result.v1",
+            "agent-session.structured.hold.v1",
+            "agent-session.structured.reveal.v1",
+            "agent-session.structured.resume-history.v1",
+            "agent-session.status-feed.v1",
+            "agent-session.rewind.v1",
+            "agent-session.background-task-stop.v1",
+            "agent-session.turn-item.v1",
+            "agent-session.background-task-row-stop.v1",
+            "agent-session.kimi-resume.v1",
+            "files.mutation-ownership.v1",
+            "github.markPRReadyForReview",
+            "gitlab.updateMR.readyForReview.v1",
+            "worktree.visibility-defaults.v1",
+            "worktree.visibility-source-defaults.v1",
+            "accounts.import-host-credentials.v1",
+            "accounts.codex-reset-credit.v1",
+            "skills.install.v1",
+            "skills.install.bundle.v1",
+            "skills.install-cancel.v1",
+            "skills.install-progress.v1",
+            "skills.install-result.v2",
+            "skills.upload.v1",
+            "skills.manage.v1",
+            "skills.install-providers.v1",
+            "skills.delete.v1",
+            "automation.list-host-scope.v1",
+            "automation.owner-fencing.v1",
+            "automation.create-idempotency.v1",
+            "notifications.remote-push.v1",
+            "browser.certificate-trust.v1"
+          ]
+        },
+        "graph": {
+          "state": "ready"
+        }
+      }
+    },
+    {
+      "at": "2026-09-14T19:43:51.393Z",
+      "type": "phase2.host-list",
+      "hosts": [
+        {
+          "kind": "local",
+          "name": "this machine",
+          "id": "local",
+          "selector": "--host local",
+          "platform": "darwin"
+        },
+        {
+          "kind": "ssh",
+          "name": "claw-vps",
+          "id": "ssh-1789415010957-7b3b00",
+          "selector": "--host ssh:ssh-1789415010957-7b3b00",
+          "connected": false
+        }
+      ],
+      "sshRow": {
+        "kind": "ssh",
+        "name": "claw-vps",
+        "id": "ssh-1789415010957-7b3b00",
+        "selector": "--host ssh:ssh-1789415010957-7b3b00",
+        "connected": false
+      }
+    },
+    {
+      "at": "2026-09-14T19:43:51.405Z",
+      "type": "host.stderr",
+      "text": "[ssh-pty-consumer] no recovery record for ssh-1789415010957-7b3b00; minting a new consumer identity. Relay PTYs the host attributes to this client's previous identity can no longer be swept.\n"
+    },
+    {
+      "at": "2026-09-14T19:43:55.846Z",
+      "type": "host.stderr",
+      "text": "[ssh] TCP_NODELAY enabled for claw-vps\n"
+    },
+    {
+      "at": "2026-09-14T19:43:55.850Z",
+      "type": "host.stdout",
+      "text": "[ssh-relay] Detecting remote platform...\n"
+    },
+    {
+      "at": "2026-09-14T19:43:57.049Z",
+      "type": "host.stdout",
+      "text": "[ssh-relay] Platform: linux-x64\n"
+    },
+    {
+      "at": "2026-09-14T19:43:59.577Z",
+      "type": "host.stdout",
+      "text": "[ssh-relay] Found node via path probe: /usr/bin/node\n"
+    },
+    {
+      "at": "2026-09-14T19:43:59.578Z",
+      "type": "host.stdout",
+      "text": "[ssh-relay] Remote dir: /root/.orca-remote/relay-0.1.0+9a9827b3fde2\n[ssh-relay] Already installed at 0.1.0+9a9827b3fde2: true\n"
+    },
+    {
+      "at": "2026-09-14T19:44:04.861Z",
+      "type": "host.stdout",
+      "text": "[ssh-relay] Launching relay...\n"
+    },
+    {
+      "at": "2026-09-14T19:44:05.567Z",
+      "type": "host.stderr",
+      "text": "[ssh-relay] Socket probe result: \"DEAD\"\n"
+    },
+    {
+      "at": "2026-09-14T19:44:09.254Z",
+      "type": "host.stdout",
+      "text": "[ssh-relay] Relay started successfully\n"
+    },
+    {
+      "at": "2026-09-14T19:47:51.405Z",
+      "type": "phase2.ssh-connect",
+      "connectState": null,
+      "connectError": "Error: rpc timeout: ssh.connect"
+    },
+    {
+      "at": "2026-09-14T19:47:58.210Z",
+      "type": "vps.exec",
+      "cmd": "ls -d ~/.orca-remote/relay-* 2>/dev/null; ls -l ~/.orca-remote/relay-*/*.sock 2>/dev/null; pgrep -af \"relay\\.js --detached\"",
+      "status": 0,
+      "stdout": "/root/.orca-remote/relay-0.1.0+9a9827b3fde2\nsrw------- 1 root root 0 Sep 14 19:35 /root/.orca-remote/relay-0.1.0+9a9827b3fde2/relay-578516318067a093.sock\nsrw------- 1 root root 0 Sep 14 19:44 /root/.orca-remote/relay-0.1.0+9a9827b3fde2/relay-68e71121d0c75bc0.sock\n3980397 /usr/bin/node relay.js --detached --grace-time 0 --sock-path /root/.orca-remote/relay-0.1.0+9a9827b3fde2/relay-68e71121d0c75bc0.sock --credential-file /root/.orca-remote/relay-0.1.0+9a9827b3fde2/relay-68e71121d0c75bc0.sock.credential --log-file /root/.orca-remote/relay-0.1.0+9a9827b3fde2/relay.log",
+      "stderr": ""
+    },
+    {
+      "at": "2026-09-14T19:47:58.211Z",
+      "type": "phases3to7.skipped",
+      "ok": false,
+      "skipped": true,
+      "reason": "ssh.connect never reached status:connected; see phase2 and the deviation note"
+    },
+    {
+      "at": "2026-09-14T19:47:58.212Z",
+      "type": "main.fatal",
+      "error": "Error: stopping after phase 2: target never reached connected state\n    at main (file:///Users/briankeeny/Desktop/odin-wt-ssh/odin/proof/ssh-boundary.mjs:452:13)"
+    },
+    {
+      "at": "2026-09-14T19:48:17.684Z",
+      "type": "vps.exec",
+      "cmd": "rm -rf /root/odin-proof",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "at": "2026-09-14T19:48:21.940Z",
+      "type": "vps.exec",
+      "cmd": "iptables -S INPUT | grep 175.35.0.108 || true",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "at": "2026-09-14T19:48:26.191Z",
+      "type": "vps.exec",
+      "cmd": "iptables -S INPUT | grep 175.35.0.108 || true",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "at": "2026-09-14T19:48:26.191Z",
+      "type": "cleanup.iptables",
+      "finalCheck": "",
+      "clean": true
+    }
+  ]
+}
