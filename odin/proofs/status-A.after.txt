@@ -1,0 +1,9 @@
+
+ RUN  v4.1.11 /Users/briankeeny/Desktop/odin-wt-rend-ab
+
+
+ Test Files  6 passed (6)
+      Tests  63 passed (63)
+   Start at  04:00:15
+   Duration  42.27s (transform 116.60s, setup 1.67s, import 136.96s, tests 14.69s, environment 3.23s)
+

@@ -49,13 +49,11 @@ export function registerAgentHookHandlers(
     // Why: the renderer pulls this after workspace hydration, so startup cannot
     // lose replayed statuses while its local store is still empty. Match the
     // live push enrichment in main/index.ts so parent/child rows survive replay.
-    return (
-      agentHookServer
-        .getStatusSnapshot()
-        // Same rule as the live push: the renderer's feed bridge owns structured rows for now.
-        .filter((entry) => entry.structuredHost === undefined)
-        .map((entry) => enrichAgentStatusIpcPayload(entry, runtime))
-    )
+    // Structured rows are included: main is their only writer now (see the live
+    // push in main-window-agent-status.ts).
+    return agentHookServer
+      .getStatusSnapshot()
+      .map((entry) => enrichAgentStatusIpcPayload(entry, runtime))
   })
   ipcMain.handle('agentStatus:inferInterrupt', (_event, request: unknown): boolean => {
     if (typeof request !== 'object' || request === null) {

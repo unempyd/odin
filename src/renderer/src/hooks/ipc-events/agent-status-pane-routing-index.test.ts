@@ -10,6 +10,7 @@ import {
   TEST_REPO
 } from '../../store/slices/store-test-helpers'
 import { makePaneKey } from '../../../../shared/stable-pane-id'
+import { structuredAgentSessionPaneKey } from '../../../../shared/structured-agent-session-projection'
 import {
   agentStatusPaneRoutingIndexCounters,
   createAgentStatusPaneRoutingIndex,
@@ -203,5 +204,65 @@ describe('agent-status leading-edge and batched pane resolution', () => {
         ...resolvePaneKey(state, paneKey)
       })
     }
+  })
+})
+
+// A structured pane key has no `tabsByWorktree` entry — that map is PTY terminals only — so it
+// needs its own existence check, or a host-published structured row (Increment A) would be
+// treated as unattributed forever: it never gains a terminalHandle or orchestration context to
+// satisfy the `hasRuntimeBackedWorktreeAttribution` fallback the way an orchestration worker does.
+describe('agent-status pane routing for a structured (native chat) tab', () => {
+  it('resolves an existing structured tab without a tabsByWorktree entry', () => {
+    const store = createTestStore()
+    const sessionId = 'a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d'
+    const tabId = 'structured-agent-session-a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d'
+    const paneKey = structuredAgentSessionPaneKey(tabId, sessionId)
+    store.setState({
+      repos: [TEST_REPO],
+      worktreesByRepo: { [TEST_REPO.id]: [makeWorktree({ id: 'wt-1', repoId: TEST_REPO.id })] },
+      tabsByWorktree: {},
+      unifiedTabsByWorktree: {
+        'wt-1': [
+          makeUnifiedTab({
+            id: tabId,
+            entityId: sessionId,
+            worktreeId: 'wt-1',
+            groupId: 'group-1',
+            contentType: 'agent-session',
+            label: 'Codex Chat',
+            agentSessionAgent: 'codex'
+          })
+        ]
+      },
+      terminalLayoutsByTabId: {}
+    } as Partial<AppState>)
+
+    const index = createAgentStatusPaneRoutingIndex(store.getState())
+    const resolved = resolvePaneKeyFromRoutingIndex(index, paneKey)
+
+    expect(resolved.exists).toBe(true)
+    expect(resolved.owningWorktreeId).toBe('wt-1')
+    expect(resolved.repoConnectionResolved).toBe(true)
+    // The host cannot mint the tab label; the tab's own label is what the sidebar renders.
+    expect(resolved.title).toBeUndefined()
+  })
+
+  it('reports no match for a structured pane key whose tab has closed', () => {
+    const store = createTestStore()
+    store.setState({
+      repos: [],
+      worktreesByRepo: {},
+      tabsByWorktree: {},
+      unifiedTabsByWorktree: {},
+      terminalLayoutsByTabId: {}
+    } as Partial<AppState>)
+
+    const index = createAgentStatusPaneRoutingIndex(store.getState())
+    const resolved = resolvePaneKeyFromRoutingIndex(
+      index,
+      structuredAgentSessionPaneKey('structured-agent-session-gone', 'gone-session')
+    )
+
+    expect(resolved.exists).toBe(false)
   })
 })
