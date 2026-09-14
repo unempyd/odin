@@ -167,6 +167,13 @@ export function exposeDispatchContext(dispatch: DispatchContextRow) {
     depth: dispatch.depth,
     dispatchedAt: dispatch.dispatched_at,
     completedAt: dispatch.completed_at,
+    // Why null rather than computed from created_at: an attempt not yet dispatched (or one whose
+    // dispatched_at predates this field) has no observed start, so a duration would be a guess.
+    wallclockMs:
+      dispatch.dispatched_at && dispatch.completed_at
+        ? Date.parse(dispatch.completed_at) - Date.parse(dispatch.dispatched_at)
+        : null,
+    exitCode: dispatch.exit_code,
     createdAt: dispatch.created_at,
     lastHeartbeatAt: dispatch.last_heartbeat_at
   }

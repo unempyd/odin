@@ -1,0 +1,12 @@
+# N: per-dispatch accounting -- passing run
+# dispatched_at now stamps the pending->dispatched edge; exit_code recorded via failDispatch; worker-show exposes exitCode + wallclockMs
+
+
+ RUN  v4.1.11 /Users/briankeeny/Desktop/odin-wt-durable
+
+
+ Test Files  9 passed (9)
+      Tests  117 passed (117)
+   Start at  19:11:23
+   Duration  20.25s (transform 21.97s, setup 864ms, import 29.19s, tests 5.43s, environment 2ms)
+

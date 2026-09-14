@@ -43,10 +43,13 @@ WHERE id = ? AND status = 'ready'
     )
   )`
 
+// Why no dispatched_at here: this row is 'pending' — a worker still 'starting' has not been
+// dispatched yet. Stamping it now would make dispatched_at a duplicate of created_at instead of
+// the pending->dispatched edge (markWorkerDispatchReady / federated ready reconcile stamp it).
 const STARTING_DISPATCH_CONTEXT_SQL = `INSERT INTO dispatch_contexts (
    id, run_id, task_id, contract_version, launch_token_hash, retry_of_dispatch_id,
-   creator_dispatch_id, creator_handle, creator_pane_key, depth, status, dispatched_at
- ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', datetime('now'))`
+   creator_dispatch_id, creator_handle, creator_pane_key, depth, status
+ ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')`
 
 const REMOTE_DISPATCH_ATTACHMENT_SQL = `INSERT INTO remote_dispatch_attachments (
    dispatch_id, home_run_id, task_id, home_peer_fingerprint, protocol_version, runtime_epoch, depth
