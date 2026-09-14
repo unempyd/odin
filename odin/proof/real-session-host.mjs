@@ -16,6 +16,7 @@ import { tmpdir } from 'node:os'
 import { basename, join, resolve } from 'node:path'
 import { randomBytes, randomUUID } from 'node:crypto'
 import { createServer } from 'node:net'
+import { createRequire } from 'node:module'
 import process from 'node:process'
 
 export const projectDir = resolve(import.meta.dirname, '../..')
@@ -174,7 +175,10 @@ export class Host {
     this.child = null
   }
   async start() {
-    const electron = join(projectDir, 'node_modules', '.bin', 'electron')
+    // Why the binary and not node_modules/.bin/electron: that shim is a node wrapper, so a signal
+    // sent to it leaves the real Electron main alive holding the single-instance lock (relaunch then
+    // exits 3). Spawning the binary in its own process group makes the crash phase kill the host.
+    const electron = createRequire(import.meta.url)('electron')
     // Why an isolated HOME: the dev build ignores --user-data-dir and the E2E user-data variable
     // refuses to start unless HOME is the disposable home beside it (main-process-preflight). The
     // agent CLIs must still find their logins, so their own state dirs are linked in read-through;
@@ -218,7 +222,7 @@ export class Host {
         '--serve-pairing-address',
         '127.0.0.1'
       ],
-      { stdio: ['ignore', 'pipe', 'pipe'], env: hostEnv }
+      { stdio: ['ignore', 'pipe', 'pipe'], env: hostEnv, detached: true }
     )
     const ready = await new Promise((res, rej) => {
       let buf = ''
@@ -253,7 +257,11 @@ export class Host {
   }
   kill(signal = 'SIGKILL') {
     if (this.child && this.child.exitCode === null) {
-      this.child.kill(signal)
+      try {
+        process.kill(-this.child.pid, signal) // the whole host process group
+      } catch {
+        this.child.kill(signal)
+      }
     }
   }
   async stop() {
