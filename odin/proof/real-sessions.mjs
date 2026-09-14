@@ -171,11 +171,12 @@ async function waitWorkerDone(host, ws, dispatchId, timeoutMs) {
   return { message: null, dispatch, timedOut: true }
 }
 
+/** Full command lines of every live process whose executable is the agent; never truncated. */
 function liveAgentArgv(agent) {
-  return spawnSync('ps', ['-axo', 'command'], { encoding: 'utf8' })
+  return spawnSync('ps', ['-axo', 'command'], { encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 })
     .stdout.split('\n')
     .filter((l) => new RegExp(`(^|/)${agent}(\\s|$)`).test(l) && !l.includes('real-sessions'))
-    .map((l) => l.trim().slice(0, 200))
+    .map((l) => l.trim())
 }
 
 async function phaseDefaultBlocks(agent) {
@@ -209,7 +210,8 @@ async function phaseDefaultBlocks(agent) {
       : null
     const settledAsDone = Boolean(done?.message)
     const summary = done?.dispatch ?? null
-    const ok = !bypassInArgv
+    // An empty capture proves nothing: the worker process must be visible with a full argv.
+    const ok = argv.length > 0 && !bypassInArgv
     log('default-blocks.result', {
       agent,
       ok,
