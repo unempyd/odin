@@ -20,10 +20,11 @@ What was actually missing was (a) a capability so a client can tell a host is
 new enough to trust its published row, and (b) the client's willingness to
 stop writing. status-A (below) closes the structured half of (b) outright —
 no capability needed, since a structured row never crosses the runtime wire.
-The remote-OSC half of (b), and the capability for (a), are the next
+status-B adds the capability for (a) — advertised and probed, wired to
+nothing yet. Consuming it to close the remote-OSC half of (b) is the next
 increment.
 
-Left open before status-A: the renderer wrote authoritative rows
+Left open before status-A/status-B: the renderer wrote authoritative rows
 itself for some panes, rather than only subscribing to the host's one store
 (`docs/reference/agent-status-store.md`'s "the execution host owns agent
 status, in one store" rule). Four call sites:
@@ -31,8 +32,10 @@ status, in one store" rule). Four call sites:
 - `src/renderer/src/components/terminal-pane/pty-connection/direct-ssh-retry-status.ts:146-211`
   — `handleRendererOwnedAgentStatus` writes `setAgentStatus` straight from the
   client's own OSC parse whenever `shouldOwnAgentStatusInRenderer` is true.
-  **Still open** — this is remote-runtime panes, untouched by status-A. A
-  capability gate for it is the next increment (status-B).
+  **Still open** — this is remote-runtime panes, untouched by status-A/B. The
+  capability status-B adds (`AGENT_STATUS_HOST_OSC_INGEST_RUNTIME_CAPABILITY`)
+  is the gate a future increment wires this decision to; it is not consumed
+  anywhere yet.
 - `src/renderer/src/lib/background-agent-status-consumer.ts:38-63` — the same
   OSC-derived write for a backgrounded/hidden pane, gated on
   `!args.mainOwnsAgentStatusWrites`. **Still open.**
@@ -78,6 +81,21 @@ synthesized title. This only reaches display for a row with no live tab
 sidebar row for an open chat tab renders the tab's own label directly, not
 `entry.terminalTitle`. Accepted rather than plumbed through, because doing so
 would require publishing renderer-only tab-label knowledge to a headless host.
+
+### status-B — the capability, advertised and probed, wired to nothing
+
+`AGENT_STATUS_HOST_OSC_INGEST_RUNTIME_CAPABILITY = 'agent-status.host-osc-ingest.v1'`
+is in `src/shared/protocol-version.ts` and `RUNTIME_CAPABILITIES`, and
+`hostOwnsRemoteAgentStatus(environmentId)`
+(`src/renderer/src/runtime/agent-status-host-osc-ingest-capability.ts`) probes
+it. Nothing calls the helper yet — remote-runtime panes still write their own
+OSC-derived rows unconditionally (see the still-open bullet above). The
+cross-version harness needed no change: neither
+`cross-version-terminal-wire.unit.test.ts` nor
+`cross-version-agent-session-wire.unit.test.ts` hardcodes today's
+`RUNTIME_CAPABILITIES` list — the latter already derives the old build's
+advertised list from its own checkout, which is what the wire doc's "never
+write down what the old side has" rule asks for.
 
 Cost of closing the still-open bullets: every remote-runtime pane's status
 would gain the latency of one host round trip before the client shows a
