@@ -45,6 +45,12 @@ vi.mock('@/runtime/remote-runtime-terminal-multiplexer', () => ({
   getRemoteRuntimeTerminalMultiplexer: () => ({ subscribeTerminal: mockSubscribeTerminal })
 }))
 
+const mockHostOwnsRemoteAgentStatus = vi.fn()
+
+vi.mock('@/runtime/agent-status-host-osc-ingest-capability', () => ({
+  hostOwnsRemoteAgentStatus: mockHostOwnsRemoteAgentStatus
+}))
+
 const DONE_STATUS_OSC = '\x1b]9999;{"state":"done","prompt":"ok","agentType":"codex"}\x07'
 const LEAF_ID = '11111111-1111-4111-8111-111111111111'
 const PANE_KEY = `tab-1:${LEAF_ID}`
@@ -64,6 +70,7 @@ describe('observeExistingAutomationSession', () => {
     mockSubscribeToPtyExit.mockReturnValue(vi.fn())
     mockCallRuntimeRpc.mockReturnValue(new Promise(() => {}))
     mockSubscribeTerminal.mockResolvedValue({ close: vi.fn() })
+    mockHostOwnsRemoteAgentStatus.mockResolvedValue(false)
   })
 
   it('skips the duplicate OSC store write for local PTYs under main authority', async () => {
@@ -121,10 +128,9 @@ describe('observeExistingAutomationSession', () => {
     )
   })
 
-  // Why inverted (status-D): this renderer-side write is a known residual
-  // gap for remote-runtime automation sessions — see odin/OPEN.md and the
-  // status-D commit body's "remaining risk" note. onAgentStatus still fires.
-  it('does not write OSC status for remote-runtime PTYs — onAgentStatus still fires', async () => {
+  // status-C: the client must probe, never assume (remote-wire-compatibility.md).
+  it('does not write OSC status for a remote-runtime PTY when the host advertises OSC-ingest', async () => {
+    mockHostOwnsRemoteAgentStatus.mockResolvedValue(true)
     state.terminalLayoutsByTabId = {
       'tab-1': { ptyIdsByLeafId: { [LEAF_ID]: 'remote:env-1@@terminal-9' } }
     }
@@ -141,6 +147,7 @@ describe('observeExistingAutomationSession', () => {
       onExit: vi.fn()
     })
 
+    expect(mockHostOwnsRemoteAgentStatus).toHaveBeenCalledWith('env-1')
     expect(mockSubscribeTerminal).toHaveBeenCalledTimes(1)
     const callbacks = mockSubscribeTerminal.mock.calls[0]?.[0]?.callbacks as {
       onData: (data: string) => void
@@ -148,6 +155,45 @@ describe('observeExistingAutomationSession', () => {
     callbacks.onData(DONE_STATUS_OSC)
 
     expect(state.setAgentStatus).not.toHaveBeenCalled()
+    expect(onAgentStatus).toHaveBeenCalledWith(
+      expect.objectContaining({ state: 'done', prompt: 'ok', agentType: 'codex' })
+    )
+  })
+
+  // status-C: an old host publishes no row for this pane at all, so this
+  // observer's own OSC parse remains the pane's only writer.
+  it('writes OSC status for a remote-runtime PTY when the host predates the capability', async () => {
+    mockHostOwnsRemoteAgentStatus.mockResolvedValue(false)
+    state.terminalLayoutsByTabId = {
+      'tab-1': { ptyIdsByLeafId: { [LEAF_ID]: 'remote:env-1@@terminal-9' } }
+    }
+    state.ptyIdsByTabId = { 'tab-1': ['remote:env-1@@terminal-9'] }
+    const onAgentStatus = vi.fn()
+    const { observeExistingAutomationSession } = await import('./automation-session-observer')
+
+    await observeExistingAutomationSession({
+      ptyId: 'remote:env-1@@terminal-9',
+      paneKey: PANE_KEY,
+      runId: 'run-1',
+      onData: vi.fn(),
+      onAgentStatus,
+      onExit: vi.fn()
+    })
+
+    expect(mockHostOwnsRemoteAgentStatus).toHaveBeenCalledWith('env-1')
+    expect(mockSubscribeTerminal).toHaveBeenCalledTimes(1)
+    const callbacks = mockSubscribeTerminal.mock.calls[0]?.[0]?.callbacks as {
+      onData: (data: string) => void
+    }
+    callbacks.onData(DONE_STATUS_OSC)
+
+    expect(state.setAgentStatus).toHaveBeenCalledWith(
+      PANE_KEY,
+      expect.objectContaining({ state: 'done', prompt: 'ok', agentType: 'codex' }),
+      undefined,
+      undefined,
+      { connectionId: null }
+    )
     expect(onAgentStatus).toHaveBeenCalledWith(
       expect.objectContaining({ state: 'done', prompt: 'ok', agentType: 'codex' })
     )

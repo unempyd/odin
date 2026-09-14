@@ -40,6 +40,7 @@ import {
   reserveAgentBackgroundSessionIdentity
 } from '@/lib/adopt-agent-background-session-tab'
 import { createBackgroundAgentStatusConsumer } from '@/lib/background-agent-status-consumer'
+import { hostOwnsRemoteAgentStatus } from '@/runtime/agent-status-host-osc-ingest-capability'
 import { isWslUncPath } from '../../../shared/wsl-paths'
 import { runtimeWaitExitCode, settleTabPtyBinding } from '@/lib/agent-background-session-exit'
 
@@ -148,11 +149,19 @@ export async function launchAgentBackgroundSession(
     useAppStore.getState().clearAgentLaunchConfig(paneKey)
     onExit?.(exitPtyId, code)
   }
+  const remoteEnvironmentId =
+    runtimeTarget.kind === 'environment' ? runtimeTarget.environmentId : null
+  // Why probe, not assume: a remote-runtime pty's bytes never transit local main, so
+  // an old host (no OSC-ingest capability) publishes no row — this consumer's own
+  // parse is that pane's only writer until the host upgrades.
+  const writesRemoteAgentStatusFallback =
+    remoteEnvironmentId !== null && !(await hostOwnsRemoteAgentStatus(remoteEnvironmentId))
   const agentStatusConsumer = createBackgroundAgentStatusConsumer({
     paneKey,
     launchToken,
     expectedConnectionId: launchHost.expectedConnectionId,
-    runtimeEnvironmentId: runtimeTarget.kind === 'environment' ? runtimeTarget.environmentId : null,
+    runtimeEnvironmentId: remoteEnvironmentId,
+    writesRemoteAgentStatusFallback,
     getPtyId: () => ptyId,
     onAgentStatus
   })
