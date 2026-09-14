@@ -1,0 +1,33 @@
+
+ RUN  v4.1.11 /Users/briankeeny/Desktop/odin-wt-fix-settlement
+
+ ❯ src/main/runtime/terminal-wait-results.test.ts (7 tests | 1 failed) 70ms
+     × never settles a tui-idle wait with no evidence at all 57ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/main/runtime/terminal-wait-results.test.ts > terminal wait results > never settles a tui-idle wait with no evidence at all
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ src/main/runtime/terminal-wait-results.test.ts:71:30
+     69|     const result = buildPtyTerminalWaitResult('pty', 'tui-idle', runni…
+     70|
+     71|     expect(result.satisfied).toBe(false)
+       |                              ^
+     72|     expect(result.evidence).toBeUndefined()
+     73|   })
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 6 passed (7)
+   Start at  22:40:53
+   Duration  2.74s (transform 262ms, setup 510ms, import 47ms, tests 70ms, environment 0ms)
+

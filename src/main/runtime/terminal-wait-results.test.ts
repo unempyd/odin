@@ -59,4 +59,32 @@ describe('terminal wait results', () => {
     expect(result.satisfied).toBe(true)
     expect(result.evidence).toBeUndefined()
   })
+
+  // C2: terminal-wait-results.ts:110 computed `satisfied: evidence !== 'silence'`, so a tui-idle
+  // result built without any evidence at all (a caller bug, not a real verdict) settled anyway.
+  // Only 'observed-idle' may satisfy a tui-idle wait.
+  it('never settles a tui-idle wait with no evidence at all', () => {
+    const running = { connected: true, lastExitCode: null }
+
+    const result = buildPtyTerminalWaitResult('pty', 'tui-idle', running)
+
+    expect(result.satisfied).toBe(false)
+    expect(result.evidence).toBeUndefined()
+  })
+
+  it('never settles a tui-idle wait on silence evidence', () => {
+    const running = { connected: true, lastExitCode: null }
+
+    const result = buildPtyTerminalWaitResult('pty', 'tui-idle', running, 'silence')
+
+    expect(result.satisfied).toBe(false)
+  })
+
+  it('settles a tui-idle wait once the agent is observed idle', () => {
+    const running = { connected: true, lastExitCode: null }
+
+    const result = buildPtyTerminalWaitResult('pty', 'tui-idle', running, 'observed-idle')
+
+    expect(result.satisfied).toBe(true)
+  })
 })

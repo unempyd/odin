@@ -110,12 +110,18 @@ export function buildTerminalWait(
   // lost, nothing here is proof. Never overrides evidence already computed for tui-idle.
   const resolvedEvidence =
     condition === 'exit' ? (status === 'exited' ? undefined : 'silence') : evidence
+  // C2: `evidence !== 'silence'` let an absent (caller-forgot-to-pass) evidence value settle a
+  // tui-idle wait the same as a positive report. A tui-idle wait has its own evidence tier and
+  // must require the positive one by name; an 'exit' wait has no such tier, so it keeps the
+  // "not silence" shape — its only positive fact is a proven exit code (resolvedEvidence undefined).
+  const satisfiedByEvidence =
+    condition === 'tui-idle' ? resolvedEvidence === 'observed-idle' : resolvedEvidence !== 'silence'
   return {
     handle,
     condition,
     // Silence is not proof: a pane that merely stopped repainting must never settle a waiter,
     // even though nothing blocks it — residual C.
-    satisfied: blockedReason === undefined && resolvedEvidence !== 'silence',
+    satisfied: blockedReason === undefined && satisfiedByEvidence,
     status,
     exitCode,
     ...(exitCause ? { exitCause } : {}),
