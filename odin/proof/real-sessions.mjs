@@ -498,6 +498,8 @@ async function main() {
   )
   log('summary', { ok, results, file: out })
   process.exitCode = ok ? 0 : 1
+  // Why explicit: stray host pipes must not keep a finished proof run alive.
+  process.exit(process.exitCode)
 }
 
 main().catch((e) => {

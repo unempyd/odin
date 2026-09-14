@@ -273,9 +273,12 @@ export class Host {
       new Promise((r) => this.child.on('exit', () => r(true))),
       new Promise((r) => setTimeout(() => r(false), SHUTDOWN_TIMEOUT_MS))
     ])
-    if (!exited) {
-      this.child.kill('SIGKILL')
-    }
+    // Why the whole group either way: Electron's helper processes and the forked terminal daemon
+    // hold the host's stdout pipe open after the main process is gone, which keeps this driver
+    // from exiting and leaks hosts across runs.
+    this.kill(exited ? 'SIGTERM' : 'SIGKILL')
+    this.child.stdout?.destroy()
+    this.child.stderr?.destroy()
   }
 }
 
