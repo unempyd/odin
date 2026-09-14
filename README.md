@@ -51,7 +51,7 @@ Not covered: Windows and Linux hosts (macOS only), a third agent settling (Grok 
 
 ## Independent review
 
-Two independent reviewers were given the same brief (`odin/REVIEW_BRIEF.md`): review this repository against `odin/DIRECTION.md` and `odin/AGENTS.md`, do not rubber-stamp. Codex (`codex exec`, read-only) returned NOT FINISHED with concrete file:line findings; a Claude review ran the consent (D–H) and durability (L, M, N) sections before its session was rate-limited. Every material finding became a `odin(fix-…)` commit with its own failing-first proof:
+Two independent reviewers were given the same brief (`odin/REVIEW_BRIEF.md`): review this repository against `odin/DIRECTION.md` and `odin/AGENTS.md`, do not rubber-stamp. Two rounds ran. Round one: Codex (`codex exec`, read-only) returned NOT FINISHED with concrete file:line findings; a Claude review covered the consent and durability sections before its session was rate-limited. Round two, on the fixed tree: Codex again returned NOT FINISHED (its remaining findings are the credential write primitive, the handle-stale classification, the veto ordering, and the contract-level items listed under Deviations); Claude returned FINISHED WITH MATERIAL DEVIATIONS and independently reran all 13 proofs (13/13 reproduce and close), finding one contradiction between two checked-in tests and one unlisted renderer writer. Every material finding from both rounds became a `odin(fix-…)` commit with its own failing-first proof:
 
 - injected-dispatch recovery had no production caller (wired into the shared recovery method, runtime-level proof);
 - the wallclock reader mis-parsed SQLite timestamps outside UTC (34,201,000 ms for a one-second interval in Adelaide; both ends normalised);
@@ -63,7 +63,8 @@ Two independent reviewers were given the same brief (`odin/REVIEW_BRIEF.md`): re
 - profiles that inherited Orca's automatic bypass values kept them (one-shot review migration clears values equal to the YOLO table; a user who chose the same value re-enables it once);
 - launch receipts still copied `requested` into `effective` in two paths (now `null` when unknown);
 - sub-agent rows defaulted to done when nothing was observed (now unverifiable);
-- the proof runner accepted any nonzero exit as a reproduction (now requires the named assertion at the upstream commit).
+- the proof runner accepted any nonzero exit as a reproduction (now requires the named assertion at the upstream commit);
+- round two: the credential copy could still be reached through retained-pane synchronisation and revocation left the credential in the provenance file (gate moved into `writeRuntimeAuth`, provenance deleted on revocation); `terminal_handle_stale` was read as owner-proven absence although it describes the client handle graph (only the PTY host's `terminal_gone` or a resolved null counts now; the injected-sweep error is returned, not dropped); a retained idle title or ready prompt outranked a fresh first-party working status (the veto is consulted first); two tests written by the original H commit contradicted the H1 review migration (reconciled to the chosen contract); `odin/OPEN.md` omitted the command-code title writer (now enumerated).
 
 Findings the reviews raised that are deliberately not changed, with the reason: the liveness projection keeps `unattached`, `missing` and `identity_changed` as wire values beside `live / unverifiable / exited` because existing tests pin them as distinct client-facing states; `orca serve` and `orcad --bind` bind wide by explicit operator command; positive on-screen evidence (an explicit idle marker or ready prompt the agent paints) remains tier-1 evidence.
 
