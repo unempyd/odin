@@ -169,7 +169,7 @@ export const AGENT_SESSION_STATUS_FEED_RUNTIME_CAPABILITY = 'agent-session.statu
 // hook store, publishing it back on `session.tabs` (see docs/reference/agent-status-store.md and
 // odin/OPEN.md), so a paired client may stop parsing the same bytes itself. A client that stopped
 // writing against a host that predates this would show blank remote-pane status forever — not yet
-// consumed by anything; see hostOwnsRemoteAgentStatus in agent-resume-host-authority-capability.ts.
+// consumed by anything; see hostOwnsRemoteAgentStatus in src/renderer/src/runtime/agent-status-host-osc-ingest-capability.ts.
 export const AGENT_STATUS_HOST_OSC_INGEST_RUNTIME_CAPABILITY =
   'agent-status.host-osc-ingest.v1' as const
 // The RPC is registered unconditionally; per-session rewind support is a separate check.
