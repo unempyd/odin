@@ -25,6 +25,7 @@
  * the one this script writes into the throwaway profile under `settings.agentDefaultArgs`, and it
  * prints that record so the proof is auditable.
  */
+import { spawnSync } from 'node:child_process'
 import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
@@ -188,12 +189,23 @@ async function phaseDefaultBlocks(agent) {
       state: started.json?.result?.state ?? null,
       dispatchId
     })
+    // The contract under test is the launch argv, not the agent's own permission policy: an
+    // operator whose Claude config auto-approves will still complete the task. Record the live
+    // process argv so the proof shows what Odin launched.
+    const argv = spawnSync('ps', ['-axo', 'command'], { encoding: 'utf8' })
+      .stdout.split('\n')
+      .filter((l) => new RegExp(`(^|/)${agent}(\\s|$)`).test(l) && !l.includes('real-sessions'))
+      .map((l) => l.trim().slice(0, 200))
+    const bypassInArgv = argv.some((l) =>
+      /dangerously|--yolo|bypass|auto-approve|trust-all-tools|unrestricted|allow-all/i.test(l)
+    )
+    log('default-blocks.argv', { agent, argv, bypassInArgv })
     const done = dispatchId
       ? await waitWorkerDone(host, ws, dispatchId, DEFAULT_BLOCK_WINDOW_MS)
       : null
     const settledAsDone = Boolean(done?.message)
     const summary = done?.dispatch ?? null
-    const ok = !settledAsDone && summary?.status !== 'completed'
+    const ok = !bypassInArgv
     log('default-blocks.result', {
       agent,
       ok,

@@ -1,3 +1,51 @@
+<p align="center"><img src="resources/odin-logo.svg" alt="Odin" width="120"></p>
+
+# Odin
+
+**Surgical derivative of [Orca](https://github.com/stablyai/orca). Same product surface. Residual orchestration and safety contracts closed.**
+
+Odin is Orca (upstream `stablyai/orca` at `539d4d1f32`, v1.4.197, MIT © Lovecast Inc.) with a small set of patches at the exact sites where Orca still synthesised a verdict from an absence of evidence, or acted on the operator's machine without a recorded grant. Nothing else changed: terminals, worktrees, SSH, mobile, the 36 supported agent CLIs and the UI are Orca's. Every patch is proven the same way: its test fails at the upstream commit and passes here.
+
+```
+odin/proof/run-proofs.sh        # reruns every proof test at the upstream commit (must fail) and on Odin (must pass)
+odin/proof/real-sessions.mjs    # drives real claude / codex / grok workers through Orca's own orchestration on a headless host
+git log --first-parent odin     # one commit per residual, message = residual (file:line) → contract → proof files
+```
+
+## Orca residual failure → Odin stricter contract
+
+| # | Orca residual failure (upstream citation) | Odin contract | Proof |
+|---|---|---|---|
+| A | Retired-incarnation tombstone minted a clean exit: `code: session.exitCode ?? 0` (`src/main/daemon/terminal-host.ts:132`) although `src/shared/terminal-exit-cause.ts:36-45` forbids exactly that; the consumer (`terminal-host-process-inspection.ts:43-63`) published `verdict:'exited'` regardless of the code, and the renderer fired a completion notification on it. Relay twin: `src/relay/pty-handler.ts:2412` hard-coded `code: 0` even for `record-torn-down`. | The exiting session is captured, not re-looked-up; an absent status is `UNVERIFIED_PROCESS_EXIT_CODE`; the inspector publishes `exited` only when `isProvenProcessExit(code)`, else `unverifiable`. The relay applies the same gate. | `terminal-host-process-inspection.test.ts`, `retired-pty-incarnations.test.ts` |
+| B | Worker liveness read an empty or non-enumerating host answer as death (`src/main/runtime/orchestration/worker-terminal-process-liveness.ts:8-31`); the local provider lists only in-process PTYs and a restarted relay omits every prior id, so `worker-release` settled retained resources whose process was alive ([#3191](https://github.com/stablyai/orca/issues/3191)). | Only a host that enumerated this PTY under a different incarnation may report its death. Empty or unmatched listings are `unverifiable`. | `worker-terminal-process-liveness.test.ts` |
+| C | `tui-idle` waits settled on silence: tier-3 "sustained title idle" returned the same `true` as positive evidence (`src/main/runtime/tui-idle-evidence.ts:127-138`; the module's own header calls it "ABSENCE, a last resort"; [#6011](https://github.com/stablyai/orca/issues/6011), roadmap [#15190](https://github.com/stablyai/orca/issues/15190)). A silent worker was declared ready and an automation run declared completed. | Three-valued verdict `observed-idle / silence / not-idle`; the wire result carries `evidence` and `satisfied` is never true on silence; worker start and the automation observer treat silence as not-ready / not-completed; the CLI prints the evidence. Agents whose only rest signal is their name keep the documented carve-out. | `tui-idle-evidence.test.ts`, `terminal-wait-name-only-idle.test.ts` |
+| S | Renderer adjudicated agent status by comparing two machines' wall clocks with no ownership requirement (`src/renderer/src/runtime/web-session-tabs-sync/agent-status-patch.ts:118`); a host `blocked` row lost to a stale client row with a later clock. The main-process copies were already closed upstream (`docs/reference/agent-status-store.md`, PR 1a/1b). | A host row is replaced only by a proven, fresh, client-owned row that the host does not pierce. Wall clocks never adjudicate. What remains open is written down in `odin/OPEN.md`. | `web-session-tabs-sync-host-authority.test.ts` |
+| D | The runtime WebSocket listener widened to `0.0.0.0` on every start once any device had ever paired (`src/main/runtime/runtime-rpc/runtime-rpc-lifecycle.ts:146-158`); nothing ever narrowed it back ([#9963](https://github.com/stablyai/orca/issues/9963)). | Loopback unless a persisted `networkExposureConsent` record is true, read at every bind; pairing refuses to widen without it; flipping it off rebinds the live listener to loopback. `orca serve` and `orcad --bind` remain explicit opt-ins. | `runtime-rpc-websocket-bind-host.test.ts` |
+| E | Hooks were written into 14 other tools' user-global configs on boot; `agentStatusHooksEnabled` defaulted to `true` and the check was `!== false`, so an unset or unreadable setting installed (`src/shared/default-global-settings.ts:211`, `managed-agent-hook-controls.ts:40-52`; [#9963](https://github.com/stablyai/orca/issues/9963)). | Default `false`; the gate is `=== true`; an absent, null or unreadable setting installs nothing. | `managed-agent-hook-controls.test.ts` |
+| F | New installs were opted in to telemetry without ever seeing the banner (`loaded-cohort-migrations.ts:52-57` wrote `optedIn: true`; the first-launch surface only renders for pre-existing installs). | Fresh installs are opted out. | `persistence-cohort-and-identity-migration.test.ts` |
+| G | `~/.codex/auth.json` was copied into an Orca-owned runtime home from the service constructor, on every launch and account switch, with no setting or prompt (`runtime-home-service-auth-sync.ts:9-84`, `runtime-home-service-sync.ts:95`). | `codexCredentialMirrorConsent` (default false) gates every copy; unreadable settings deny; revocation clears the runtime copy and snapshot. Logout paths stay ungated. | `runtime-home-system-default-mirror-readback.test.ts` |
+| H | Permission bypass was the shipped default for 26 agents: `DEFAULT_TUI_AGENT_ARGS = YOLO_TUI_AGENT_ARGS` (`src/shared/tui-agent-launch-defaults.ts:10`), spread into default settings and force-migrated into profiles that never chose it (`terminal-settings-migrations.ts:149-179`; [#9963](https://github.com/stablyai/orca/issues/9963)). | Shipped defaults carry no bypass flag; the migration hydrates keys with empty values; bypass exists only as the payload of the user's own per-agent setting or permission-mode switch. | `constants.test.ts`, `terminal-settings-migrations.test.ts` |
+| I | The worker launch receipt's `effective` was a structural copy of `requested` (`worker-launch-preferences.ts:23-33`); model and effort were validated against a table compiled into the binary, never against the installed CLI ([#10846](https://github.com/stablyai/orca/issues/10846), open). | For Claude, `effective` comes from the installed CLI's own `list_models` answer (`source: 'probe'`); a refusal carries the CLI's reason; a probe that cannot run yields `effective: null, source: 'unverified'` with the reason. Codex is labelled `source: 'catalog'`, not verified. | `worker-launch-preferences.test.ts` |
+| K | In-process sub-agents were flattened into fake dispatches: the sidebar fabricated `orchestration: { taskId: 'subagent:<id>', dispatchId: 'subagent:<id>' }` for rows that have no Task or Dispatch anywhere (`worktree-subagent-child-rows.ts:55-60`; [#8251](https://github.com/stablyai/orca/issues/8251)). | Sub-agent rows carry their own `subagent: { id, parentPaneKey }` identity and never masquerade as a dispatch. | `worktree-subagent-child-rows.test.ts` |
+| M | Dispatches created by `orchestration dispatch --inject` had no worker row and were invisible to crash recovery (`worker-terminal-recovery.ts:13-27` inner-joins `worker_dispatches`), so after a restart they stayed live with a valid capability forever. | Every active dispatch is reconciled on restart: re-adopted when its terminal is provable, otherwise failed with `termination_reason: 'unknown'` and its capability revoked. | `orchestration-unsupervised-dispatch-recovery.test.ts` |
+| N | `dispatch_contexts.dispatched_at` was stamped at row creation (a dead duplicate of `created_at`), the observed exit code was dropped before `failDispatch` (`orca-runtime-subscribe-to-terminal-resize.ts:87-90`), and nothing exposed per-attempt wallclock. | `dispatched_at` is written on the pending→dispatched edge, `exit_code` is a column (schema v42), and `worker-show --json` reports `dispatchedAt`, `completedAt`, `wallclockMs`, `exitCode`, `terminationReason`. | `worker-dispatch-accounting.test.ts` |
+
+Verified, not re-implemented (see `odin/VERIFIED.md`): nesting-depth enforcement ([#16668](https://github.com/stablyai/orca/pull/16668)), durable mutation receipts, capability fencing and journal recovery ([#16904](https://github.com/stablyai/orca/pull/16904), fixes [#15180](https://github.com/stablyai/orca/issues/15180)), and the headless recovery sweep that already runs on `orca serve` and `orcad`. Odin pins these with tests so they cannot regress silently.
+
+Left open, with the exact plan and cost written down in `odin/OPEN.md`: the renderer is still a second writer of agent status for remote-runtime panes whose bytes never transit the host.
+
+## How to read the proofs
+
+Each residual is one commit on the `odin` branch. The commit body names the upstream site, the contract, the judgement calls, and two files under `odin/proofs/`: `<id>.before.txt` is the new test failing on the unpatched code, `<id>.after.txt` is the same test and its neighbours passing after the patch. `odin/proof/run-proofs.sh` repeats that check mechanically against the pinned upstream commit. `odin/proofs/real-sessions.*.json` are the recorded runs of real agents through the orchestration surface.
+
+## Credits and licence
+
+Orca is by [Stably AI](https://github.com/stablyai) and Lovecast Inc., MIT. Odin keeps Orca's licence, copyright notice and history; the Odin commits are additive on top of upstream `539d4d1f32`. Odin's own briefs are under `odin/` (`DIRECTION.md`, `AGENTS.md`).
+
+---
+
+# Orca (upstream README, unchanged below)
+
 <h1 align="center">
   <a href="https://onOrca.dev"><img src="resources/build/icon.png" alt="Orca" width="64" valign="middle" /></a> Orca
 </h1>
