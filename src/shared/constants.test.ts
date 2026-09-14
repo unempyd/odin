@@ -129,22 +129,15 @@ describe('getDefaultSettings', () => {
     expect(getDefaultSettings('/tmp').notifications.suppressWhenFocused).toBe(true)
   })
 
-  it('defaults agent launch args to yolo mode where the CLI supports it', () => {
+  it('does not grant permission bypass in the shipped launch defaults', () => {
     const settings = getDefaultSettings('/tmp')
+    const bypassPattern =
+      /dangerously|--yolo|bypass|auto-approve|trust-all-tools|unrestricted|allow-all/i
 
-    expect(settings.agentDefaultArgs).toMatchObject({
-      claude: '--dangerously-skip-permissions',
-      codex: '--dangerously-bypass-approvals-and-sandbox',
-      gemini: '--yolo',
-      cursor: '--yolo',
-      copilot: '--yolo',
-      grok: '--permission-mode bypassPermissions'
-    })
-    expect(settings.agentDefaultArgs).not.toHaveProperty('opencode')
-    expect(settings.agentDefaultArgs).not.toHaveProperty('kilo')
-    expect(settings.agentDefaultEnv).toMatchObject({
-      goose: { GOOSE_MODE: 'auto' }
-    })
+    for (const args of Object.values(settings.agentDefaultArgs ?? {})) {
+      expect(args ?? '').not.toMatch(bypassPattern)
+    }
+    expect(settings.agentDefaultEnv).toEqual({})
     expect(settings.agentYoloDefaultsMigrated).toBe(true)
   })
 })

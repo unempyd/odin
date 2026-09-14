@@ -448,7 +448,7 @@ describe('Store', () => {
     expect(store.getSettings().claudeAgentTeamsDefaultDisabledMigrated).toBe(true)
   })
 
-  it('migrates yolo default args onto untouched agent launch settings', async () => {
+  it('never injects permission bypass into an unmigrated profile', async () => {
     writeFileSync(
       join(testState.dir, 'orca-data.json'),
       JSON.stringify({
@@ -460,12 +460,12 @@ describe('Store', () => {
     const store = await createStore()
 
     expect(store.getSettings().agentDefaultArgs).toMatchObject({
-      claude: '--dangerously-skip-permissions',
-      codex: '--dangerously-bypass-approvals-and-sandbox',
-      cursor: '--yolo'
+      claude: '',
+      codex: '',
+      cursor: ''
     })
     expect(store.getSettings().agentDefaultEnv).toMatchObject({
-      goose: { GOOSE_MODE: 'auto' }
+      goose: {}
     })
     expect(store.getSettings().agentYoloDefaultsMigrated).toBe(true)
   })
@@ -486,7 +486,23 @@ describe('Store', () => {
 
     expect(store.getSettings().agentDefaultArgs?.codex).toBe('')
     expect(store.getSettings().agentDefaultEnv?.goose).toEqual({})
+    expect(store.getSettings().agentDefaultArgs?.claude).toBe('')
+  })
+
+  it('preserves an explicitly configured bypass through migration', async () => {
+    writeFileSync(
+      join(testState.dir, 'orca-data.json'),
+      JSON.stringify({
+        settings: {
+          agentCmdOverrides: {},
+          agentDefaultArgs: { claude: '--dangerously-skip-permissions' }
+        }
+      })
+    )
+    const store = await createStore()
+
     expect(store.getSettings().agentDefaultArgs?.claude).toBe('--dangerously-skip-permissions')
+    expect(store.getSettings().agentDefaultArgs?.codex).toBe('')
   })
 
   it('removes unsupported TUI skip-permissions args from migrated profiles', async () => {

@@ -1,0 +1,119 @@
+
+ RUN  v4.1.11 /Users/briankeeny/Desktop/odin-wt-consent
+
+ ❯ src/shared/tui-agent-startup.test.ts (50 tests | 1 failed) 38ms
+     × does not append a permission bypass by default before stdin prompt delivery 10ms
+ ❯ src/shared/constants.test.ts (31 tests | 1 failed) 21ms
+     × does not grant permission bypass in the shipped launch defaults 5ms
+ ❯ src/main/persistence-settings-update.test.ts (33 tests | 3 failed) 815ms
+     × never injects permission bypass into an unmigrated profile 18ms
+     × does not add yolo defaults for legacy agents with command overrides 5ms
+     × preserves an explicitly configured bypass through migration 4ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 5 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/main/persistence-settings-update.test.ts > Store > never injects permission bypass into an unmigrated profile
+AssertionError: expected { …(26) } to match object { claude: '', codex: '', cursor: '' }
+(23 matching properties omitted from actual)
+
+- Expected
++ Received
+
+  {
+-   "claude": "",
+-   "codex": "",
+-   "cursor": "",
++   "claude": "--dangerously-skip-permissions",
++   "codex": "--dangerously-bypass-approvals-and-sandbox",
++   "cursor": "--yolo",
+  }
+
+ ❯ src/main/persistence-settings-update.test.ts:462:50
+    460|     const store = await createStore()
+    461|
+    462|     expect(store.getSettings().agentDefaultArgs).toMatchObject({
+       |                                                  ^
+    463|       claude: '',
+    464|       codex: '',
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/5]⎯
+
+ FAIL  src/main/persistence-settings-update.test.ts > Store > does not add yolo defaults for legacy agents with command overrides
+AssertionError: expected '--dangerously-skip-permissions' to be '' // Object.is equality
+
+- Expected
++ Received
+
++ --dangerously-skip-permissions
+
+ ❯ src/main/persistence-settings-update.test.ts:489:58
+    487|     expect(store.getSettings().agentDefaultArgs?.codex).toBe('')
+    488|     expect(store.getSettings().agentDefaultEnv?.goose).toEqual({})
+    489|     expect(store.getSettings().agentDefaultArgs?.claude).toBe('')
+       |                                                          ^
+    490|   })
+    491|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/5]⎯
+
+ FAIL  src/main/persistence-settings-update.test.ts > Store > preserves an explicitly configured bypass through migration
+AssertionError: expected '--dangerously-bypass-approvals-and-sa…' to be '' // Object.is equality
+
+- Expected
++ Received
+
++ --dangerously-bypass-approvals-and-sandbox
+
+ ❯ src/main/persistence-settings-update.test.ts:505:57
+    503|
+    504|     expect(store.getSettings().agentDefaultArgs?.claude).toBe('--dange…
+    505|     expect(store.getSettings().agentDefaultArgs?.codex).toBe('')
+       |                                                         ^
+    506|   })
+    507|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/5]⎯
+
+ FAIL  src/shared/constants.test.ts > getDefaultSettings > does not grant permission bypass in the shipped launch defaults
+AssertionError: expected '--dangerously-skip-permissions' not to match /dangerously|--yolo|bypass|auto-appro…/i
+
+- Expected:
+/dangerously|--yolo|bypass|auto-approve|trust-all-tools|unrestricted|allow-all/i
+
++ Received:
+"--dangerously-skip-permissions"
+
+ ❯ src/shared/constants.test.ts:138:30
+    136|
+    137|     for (const args of Object.values(settings.agentDefaultArgs ?? {}))…
+    138|       expect(args ?? '').not.toMatch(bypassPattern)
+       |                              ^
+    139|     }
+    140|     expect(settings.agentDefaultEnv).toEqual({})
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/5]⎯
+
+ FAIL  src/shared/tui-agent-startup.test.ts > tui agent startup plans > does not append a permission bypass by default before stdin prompt delivery
+AssertionError: expected '--permission-mode bypass' to be '' // Object.is equality
+
+- Expected
++ Received
+
++ --permission-mode bypass
+
+ ❯ src/shared/tui-agent-startup.test.ts:717:54
+    715|
+    716|   it('does not append a permission bypass by default before stdin prom…
+    717|     expect(resolveTuiAgentLaunchArgs('devin', null)).toBe('')
+       |                                                      ^
+    718|   })
+    719| })
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/5]⎯
+
+
+ Test Files  3 failed (3)
+      Tests  5 failed | 109 passed (114)
+   Start at  18:25:51
+   Duration  4.69s (transform 3.57s, setup 323ms, import 4.54s, tests 874ms, environment 0ms)
+
