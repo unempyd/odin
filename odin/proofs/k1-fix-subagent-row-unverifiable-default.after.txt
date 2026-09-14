@@ -1,0 +1,9 @@
+
+ RUN  v4.1.11 /Users/briankeeny/Desktop/odin-wt-fix-settlement
+
+
+ Test Files  14 passed (14)
+      Tests  152 passed (152)
+   Start at  23:27:20
+   Duration  6.99s (transform 13.51s, setup 910ms, import 19.90s, tests 2.01s, environment 984ms)
+

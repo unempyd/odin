@@ -1,0 +1,47 @@
+
+ RUN  v4.1.11 /Users/briankeeny/Desktop/odin-wt-fix-settlement
+
+ ❯ src/renderer/src/components/sidebar/worktree-subagent-child-rows.test.ts (5 tests | 2 failed) 22ms
+     × reports unverifiable, not idle, for a stale roster observation 10ms
+     × reports unverifiable, not idle, when the parent itself is stale and observation is absent 2ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/renderer/src/components/sidebar/worktree-subagent-child-rows.test.ts > buildSubagentChildRows > reports unverifiable, not idle, for a stale roster observation
+AssertionError: expected 'idle' to be 'unverifiable' // Object.is equality
+
+Expected: "unverifiable"
+Received: "idle"
+
+ ❯ src/renderer/src/components/sidebar/worktree-subagent-child-rows.test.ts:78:23
+     76|     })
+     77|
+     78|     expect(row.state).toBe('unverifiable')
+       |                       ^
+     79|   })
+     80|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  src/renderer/src/components/sidebar/worktree-subagent-child-rows.test.ts > buildSubagentChildRows > reports unverifiable, not idle, when the parent itself is stale and observation is absent
+AssertionError: expected 'idle' to be 'unverifiable' // Object.is equality
+
+Expected: "unverifiable"
+Received: "idle"
+
+ ❯ src/renderer/src/components/sidebar/worktree-subagent-child-rows.test.ts:100:23
+     98|     })
+     99|
+    100|     expect(row.state).toBe('unverifiable')
+       |                       ^
+    101|   })
+    102|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 3 passed (5)
+   Start at  22:54:23
+   Duration  685ms (transform 96ms, setup 115ms, import 20ms, tests 22ms, environment 0ms)
+

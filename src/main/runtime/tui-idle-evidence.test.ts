@@ -1,13 +1,12 @@
 import { describe, expect, it } from 'vitest'
-import {
-  isTuiIdleSatisfied,
-  resolveTuiIdleVerdict,
-  type TuiIdleSatisfactionInput
-} from './tui-idle-evidence'
+import * as tuiIdleEvidenceModule from './tui-idle-evidence'
+import { resolveTuiIdleVerdict, type TuiIdleSatisfactionInput } from './tui-idle-evidence'
 
 // Residual C: tui-idle settled on silence — a name-only title going quiet was published as the
 // same `satisfied: true` as an agent's own explicit idle report. These pin the three-way verdict
-// resolveTuiIdleVerdict now returns, and that isTuiIdleSatisfied stays a `!== 'not-idle'` guard.
+// resolveTuiIdleVerdict now returns. C3: the old boolean adapter (`isTuiIdleSatisfied`) collapsed
+// that verdict back into `true` for 'silence', so it is gone — every guard-only caller now checks
+// `resolveTuiIdleVerdict(input) !== 'not-idle'` directly.
 
 const QUIESCENCE_MS = 3000
 
@@ -69,7 +68,7 @@ describe('resolveTuiIdleVerdict', () => {
       agent: 'codex'
     })
     expect(resolveTuiIdleVerdict(input)).toBe('silence')
-    expect(isTuiIdleSatisfied(input)).toBe(true)
+    expect(resolveTuiIdleVerdict(input) !== 'not-idle').toBe(true)
   })
 
   // Carve-out: grok/copilot/aider/mimo/agy/opencode emit only their name at rest and never
@@ -86,13 +85,34 @@ describe('resolveTuiIdleVerdict', () => {
     })
     expect(resolveTuiIdleVerdict(input)).toBe('observed-idle')
   })
+
+  // C4: the name-only carve-out promoted straight to observed-idle off the title alone, with no
+  // quiescence check at all — "no stronger signal will ever arrive" earns a better verdict once
+  // settled, never an immediate one.
+  it('still holds a name-only carve-out agent to the quiescence window while it is still streaming', () => {
+    const input = baseInput({
+      record: { lastAgentStatus: 'idle', lastOutputAt: Date.now(), lastOscTitle: 'grok' },
+      agent: 'grok'
+    })
+    expect(resolveTuiIdleVerdict(input)).toBe('not-idle')
+  })
+
+  it('never promotes a name-only carve-out agent with no output clock at all', () => {
+    const input = baseInput({
+      record: { lastAgentStatus: 'idle', lastOutputAt: null, lastOscTitle: 'grok' },
+      agent: 'grok'
+    })
+    expect(resolveTuiIdleVerdict(input)).toBe('not-idle')
+  })
 })
 
-describe('isTuiIdleSatisfied', () => {
-  it('stays a guard: true for observed-idle and silence, false for not-idle', () => {
-    expect(isTuiIdleSatisfied(baseInput({ readPositiveBodyEvidence: () => true }))).toBe(true)
+describe('resolveTuiIdleVerdict as a satisfaction guard', () => {
+  it('is !== not-idle for observed-idle and silence, === not-idle otherwise', () => {
     expect(
-      isTuiIdleSatisfied(
+      resolveTuiIdleVerdict(baseInput({ readPositiveBodyEvidence: () => true })) !== 'not-idle'
+    ).toBe(true)
+    expect(
+      resolveTuiIdleVerdict(
         baseInput({
           record: {
             lastAgentStatus: 'idle',
@@ -101,8 +121,14 @@ describe('isTuiIdleSatisfied', () => {
           },
           agent: 'codex'
         })
-      )
+      ) !== 'not-idle'
     ).toBe(true)
-    expect(isTuiIdleSatisfied(baseInput())).toBe(false)
+    expect(resolveTuiIdleVerdict(baseInput()) !== 'not-idle').toBe(false)
+  })
+})
+
+describe('C3: isTuiIdleSatisfied removal', () => {
+  it('no longer exports the boolean adapter that read satisfied on silence', () => {
+    expect(Object.hasOwn(tuiIdleEvidenceModule, 'isTuiIdleSatisfied')).toBe(false)
   })
 })

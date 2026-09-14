@@ -22,6 +22,17 @@ import { detectExplicitIdleStatusFromTitle } from './terminal-wait-detection'
  *   3. ABSENCE — a name-only title, or a quiet non-shell foreground process. A last
  *      resort, and only once sustained.
  *
+ * C4 — two exceptions ride inside this ranking rather than earning their own tier: tier 1 settles
+ * before tier 2's veto is ever consulted (an explicit idle title or ready-prompt body wins even
+ * against a fresher first-party "still working" status, because a title/body the agent just
+ * painted is closer to the truth than a status event that may simply not have arrived yet); and
+ * the name-only carve-out (grok/copilot/aider/mimo/agy/opencode — see
+ * `nameOnlyIdleNeedsCorroboration`) is promoted to tier 1's `observed-idle` rather than held at
+ * tier 3's `silence`, because those agents never emit a second, corroborating rest signal and
+ * holding them to `silence` forever is indistinguishable from never settling. Both still wait out
+ * the full quiescence window first — "no stronger signal is coming" buys a better verdict, never a
+ * faster one.
+ *
  * Why derived here rather than stamped onto the record at write time: `syncWindowGraph`
  * rebuilds every leaf from an explicit field list, so a bespoke provenance field is
  * silently dropped on any renderer publish and the verdict silently flips. `lastOscTitle`
@@ -77,23 +88,25 @@ export function nameOnlyIdleNeedsCorroboration(
   return getSyntheticAgentTerminalTitle(resolved, 'done') !== null
 }
 
-/** Tier 3: a title-derived idle, usable only once the stream has also gone quiet. */
+/** Tier 3: a title-derived idle, usable only once the stream has also gone quiet.
+ *
+ * C4: the name-only carve-out used to skip straight past this quiescence check — "no stronger
+ * signal will ever arrive" bought the carve-out a better final verdict (see
+ * `nameOnlyIdleNeedsCorroboration` below), never an *immediate* one. A busy name-only agent still
+ * repaints its banner while working, so settling on the title alone reopened #6011 for exactly
+ * the agents the carve-out exists for. */
 export function hasSustainedTitleIdle(
   record: TuiIdleEvidenceRecord,
-  agent: TuiAgent | null | undefined,
   quiescenceMs: number
 ): boolean {
   if (record.lastAgentStatus !== 'idle') {
     return false
   }
-  if (!nameOnlyIdleNeedsCorroboration(agent, record.lastOscTitle)) {
-    // The title is the only rest signal this agent emits, so there is nothing to wait for.
-    return true
-  }
   // Why not "no timestamp means nothing to debounce": an adopted or daemon-backed pane has
   // no local output clock, so for an agent that WILL announce rest explicitly there is no
   // corroboration available at all. Settling here let a busy Codex/Devin satisfy the wait
   // from a name-only title (#6011); hold out for tier 1/2 or the caller's timeout instead.
+  // Applies identically to the name-only carve-out (C4): no clock means no proof of rest yet.
   if (record.lastOutputAt === null) {
     return false
   }
@@ -149,17 +162,12 @@ export function resolveTuiIdleVerdict(input: TuiIdleSatisfactionInput): TuiIdleV
   if (hasFreshWorkingFirstPartyStatus(input.firstPartyStatus)) {
     return 'not-idle'
   }
-  if (!hasSustainedTitleIdle(input.record, input.agent, input.quiescenceMs)) {
+  if (!hasSustainedTitleIdle(input.record, input.quiescenceMs)) {
     return 'not-idle'
   }
   return nameOnlyIdleNeedsCorroboration(input.agent, input.record.lastOscTitle)
     ? 'silence'
     : 'observed-idle'
-}
-
-/** Guard-only callers that only need "may this waiter settle", not the evidence tier. */
-export function isTuiIdleSatisfied(input: TuiIdleSatisfactionInput): boolean {
-  return resolveTuiIdleVerdict(input) !== 'not-idle'
 }
 
 /** A settlement site has already gated on `verdict !== 'not-idle'` by the time it builds a

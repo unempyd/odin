@@ -54,4 +54,69 @@ describe('buildSubagentChildRows', () => {
     expect(row.activationPaneKey).toBe('tab-1:leaf-1')
     expect(row.rowSource).toBe('subagent')
   })
+
+  // K1: a stale roster (`subagentObservation: 'unverifiable'`) plus a last-reported 'idle' child
+  // synthesized 'idle' — a row default of "nothing is known, so call it idle" wearing the one
+  // subagent.state value the old check didn't already route to 'unverifiable'.
+  it('reports unverifiable, not idle, for a stale roster observation', () => {
+    const [row] = buildSubagentChildRows({
+      parentEntry: parentEntry({
+        subagentObservation: 'unverifiable',
+        subagents: [
+          {
+            id: 'child-1',
+            agentType: 'general-purpose',
+            state: 'idle',
+            startedAt: 50
+          }
+        ]
+      }),
+      tab,
+      parentIsFresh: true
+    })
+
+    expect(row.state).toBe('unverifiable')
+  })
+
+  // K1: an absent observation on a stale parent is exactly as unknown as an explicit
+  // 'unverifiable' one — it must not default to idle just because nothing said otherwise.
+  it('reports unverifiable, not idle, when the parent itself is stale and observation is absent', () => {
+    const [row] = buildSubagentChildRows({
+      parentEntry: parentEntry({
+        subagentObservation: undefined,
+        subagents: [
+          {
+            id: 'child-1',
+            agentType: 'general-purpose',
+            state: 'working',
+            startedAt: 50
+          }
+        ]
+      }),
+      tab,
+      parentIsFresh: false
+    })
+
+    expect(row.state).toBe('unverifiable')
+  })
+
+  it('still trusts a fresh idle report', () => {
+    const [row] = buildSubagentChildRows({
+      parentEntry: parentEntry({
+        subagentObservation: 'live',
+        subagents: [
+          {
+            id: 'child-1',
+            agentType: 'general-purpose',
+            state: 'idle',
+            startedAt: 50
+          }
+        ]
+      }),
+      tab,
+      parentIsFresh: true
+    })
+
+    expect(row.state).toBe('idle')
+  })
 })
