@@ -181,7 +181,11 @@ describe('connectPanePty', () => {
         sshConnectionStates: new Map([['conn-1', { status: 'connected' }]]),
         settings: {
           ...mockStoreState.settings,
-          agentCmdOverrides: {}
+          agentCmdOverrides: {},
+          // Why codex: odin(H) ships no bypass default; this fixture's own grant
+          // stands in for the retired default so resume-command construction still
+          // has non-empty args to exercise (the test's real subject).
+          agentDefaultArgs: { codex: '--dangerously-bypass-approvals-and-sandbox' }
         },
         sleepingAgentSessionsByPaneKey: {
           [paneKey]: {
@@ -280,7 +284,11 @@ describe('connectPanePty', () => {
         tabsByWorktree: { 'wt-1': [{ id: 'tab-1', ptyId: 'restored-session' }] },
         settings: {
           ...mockStoreState.settings,
-          agentCmdOverrides: {}
+          agentCmdOverrides: {},
+          // Why codex: odin(H) ships no bypass default; this fixture's own grant
+          // stands in for the retired default so resume-command construction still
+          // has non-empty args to exercise (the test's real subject).
+          agentDefaultArgs: { codex: '--dangerously-bypass-approvals-and-sandbox' }
         },
         sleepingAgentSessionsByPaneKey: {
           [paneKey]: {
@@ -397,6 +405,10 @@ describe('connectPanePty', () => {
         settings: {
           ...mockStoreState.settings,
           agentCmdOverrides: {},
+          // Why codex: odin(H) ships no bypass default; this fixture's own grant
+          // stands in for the retired default so Windows-quoting still has
+          // non-empty args to exercise (the test's real subject).
+          agentDefaultArgs: { codex: '--dangerously-bypass-approvals-and-sandbox' },
           terminalWindowsShell: args.terminalWindowsShell
         },
         sleepingAgentSessionsByPaneKey: {
@@ -472,7 +484,11 @@ describe('connectPanePty', () => {
     mockStoreState = {
       ...mockStoreState,
       tabsByWorktree: { 'wt-1': [{ id: 'tab-1', ptyId: 'restored-session' }] },
-      settings: { ...mockStoreState.settings, agentCmdOverrides: {} },
+      settings: {
+        ...mockStoreState.settings,
+        agentCmdOverrides: {},
+        agentDefaultArgs: { codex: '--dangerously-bypass-approvals-and-sandbox' }
+      },
       sleepingAgentSessionsByPaneKey: {
         [paneKey]: {
           paneKey,
@@ -519,7 +535,11 @@ describe('connectPanePty', () => {
     mockStoreState = {
       ...mockStoreState,
       tabsByWorktree: { 'wt-1': [{ id: 'tab-1', ptyId: 'restored-session' }] },
-      settings: { ...mockStoreState.settings, agentCmdOverrides: {} },
+      settings: {
+        ...mockStoreState.settings,
+        agentCmdOverrides: {},
+        agentDefaultArgs: { codex: '--dangerously-bypass-approvals-and-sandbox' }
+      },
       agentStatusByPaneKey: {
         [paneKey]: {
           state: 'working',

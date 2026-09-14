@@ -2,6 +2,13 @@ import { expect, vi } from 'vitest'
 import { createCompatibleRuntimeStatusResponseIfNeeded } from '@/runtime/runtime-compatibility-test-fixture'
 import { clearRuntimeCompatibilityCacheForTests } from '@/runtime/runtime-rpc-client'
 import { resetRemoteRuntimeTerminalMultiplexersForTests } from '@/runtime/remote-runtime-terminal-multiplexer'
+import { YOLO_TUI_AGENT_ARGS } from '../../../shared/tui-agent-permissions'
+
+// Why: odin(H) ships no bypass default; these tests exercise launch-command
+// construction, not the default-args contract, so they carry an explicit
+// per-agent grant (mirroring the operator's own settings) standing in for
+// the retired YOLO defaults.
+const TEST_AGENT_DEFAULT_ARGS: Record<string, string> = { ...YOLO_TUI_AGENT_ARGS }
 
 type TestMock = ReturnType<typeof vi.fn>
 
@@ -14,6 +21,8 @@ export type AgentBackgroundSessionTestState = {
   lastTerminalInputAtByPaneKey: Record<string, number>
   settings: {
     agentCmdOverrides: Record<string, string>
+    agentDefaultArgs: Record<string, string>
+    agentDefaultEnv: Record<string, Record<string, string>>
     activeRuntimeEnvironmentId: string | null
     terminalMainSideEffectAuthority: boolean | undefined
   }
@@ -69,6 +78,8 @@ export function createAgentBackgroundSessionTestState(mocks: {
     lastTerminalInputAtByPaneKey: {},
     settings: {
       agentCmdOverrides: {},
+      agentDefaultArgs: { ...TEST_AGENT_DEFAULT_ARGS },
+      agentDefaultEnv: {},
       activeRuntimeEnvironmentId: null as string | null,
       terminalMainSideEffectAuthority: undefined as boolean | undefined
     },
@@ -129,6 +140,8 @@ export function resetAgentBackgroundSessionTestState(state: AgentBackgroundSessi
   state.lastTerminalInputAtByPaneKey = {}
   state.settings = {
     agentCmdOverrides: {},
+    agentDefaultArgs: { ...TEST_AGENT_DEFAULT_ARGS },
+    agentDefaultEnv: {},
     activeRuntimeEnvironmentId: null,
     terminalMainSideEffectAuthority: undefined
   }
@@ -160,6 +173,8 @@ export function resetAgentBackgroundSessionTestState(state: AgentBackgroundSessi
 export function useRemoteAgentBackgroundRuntime(state: AgentBackgroundSessionTestState): void {
   state.settings = {
     agentCmdOverrides: {},
+    agentDefaultArgs: { ...TEST_AGENT_DEFAULT_ARGS },
+    agentDefaultEnv: {},
     activeRuntimeEnvironmentId: 'env-1',
     terminalMainSideEffectAuthority: undefined
   }

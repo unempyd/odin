@@ -197,7 +197,11 @@ describe('launchWorkItemDirect', () => {
       settings: {
         defaultTuiAgent: 'codex',
         disabledTuiAgents: [],
-        agentCmdOverrides: {}
+        agentCmdOverrides: {},
+        // Why claude: odin(H) ships no bypass default; this fixture's own
+        // grant stands in for the retired default so the rest of the test
+        // still exercises its real subject.
+        agentDefaultArgs: { claude: '--dangerously-skip-permissions' }
       },
       ensureDetectedAgents: mocks.ensureDetectedAgents,
       ensureRemoteDetectedAgents: mocks.ensureRemoteDetectedAgents,
@@ -606,7 +610,13 @@ describe('launchWorkItemDirect', () => {
         connectionId: 'ssh-1'
       }
     ] as AppState['repos']
-    mocks.store.settings = { defaultTuiAgent: 'cursor' } as AppState['settings']
+    mocks.store.settings = {
+      defaultTuiAgent: 'cursor',
+      // Why cursor: odin(H) ships no bypass default; this fixture's own
+      // grant stands in for the retired default so the rest of the test
+      // still exercises its real subject.
+      agentDefaultArgs: { cursor: '--yolo' }
+    } as AppState['settings']
     mocks.store.ensureRemoteDetectedAgents.mockResolvedValue(['cursor'])
     vi.mocked(pickTuiAgent).mockReturnValueOnce('cursor')
     vi.mocked(buildAgentDraftLaunchPlan).mockReturnValueOnce(null)

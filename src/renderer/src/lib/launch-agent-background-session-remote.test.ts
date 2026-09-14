@@ -323,6 +323,11 @@ describe('launchAgentBackgroundSession remote runtime and SSH startup delivery',
       state.repos = [{ id: 'repo-1', connectionId: 'ssh-1', path: '/repo' }]
       state.settings = {
         agentCmdOverrides: { codex: "codex --prefill 'draft from override'" },
+        // Why: odin(H) ships no bypass default; this per-test grant stands in
+        // for the retired default so the prefill-override path still exercises
+        // shell-ready gating with a non-empty trailing argv.
+        agentDefaultArgs: { codex: '--dangerously-bypass-approvals-and-sandbox' },
+        agentDefaultEnv: {},
         activeRuntimeEnvironmentId: null,
         terminalMainSideEffectAuthority: undefined
       }

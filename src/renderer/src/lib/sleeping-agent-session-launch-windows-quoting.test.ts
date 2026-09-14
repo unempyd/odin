@@ -92,7 +92,10 @@ describe('launchSleepingAgentSession Windows shell quoting', () => {
     vi.clearAllMocks()
     store.settings = {
       agentCmdOverrides: {},
-      agentDefaultArgs: {},
+      // Why codex: odin(H) ships no bypass default; this fixture's own grant
+      // stands in for the retired default so resume-argv quoting still has
+      // non-empty args to exercise (the test's real subject).
+      agentDefaultArgs: { codex: '--dangerously-bypass-approvals-and-sandbox' },
       agentDefaultEnv: {},
       activeRuntimeEnvironmentId: null
     }

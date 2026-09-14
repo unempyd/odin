@@ -10,7 +10,10 @@ describe('buildOnboardingFolderAgentStartup', () => {
   it('queues the persisted default agent with onboarding telemetry', () => {
     const startup = buildOnboardingFolderAgentStartup({
       ...getDefaultSettings('/tmp/orca-workspaces'),
-      defaultTuiAgent: 'codex'
+      defaultTuiAgent: 'codex',
+      // Why '--dangerously-bypass-approvals-and-sandbox': odin(H) ships no bypass
+      // default, so this test's own grant stands in for the retired default.
+      agentDefaultArgs: { codex: '--dangerously-bypass-approvals-and-sandbox' }
     })
 
     expect(startup).toEqual({
@@ -131,7 +134,10 @@ describe('buildOnboardingFolderAgentStartup', () => {
         {
           ...getDefaultSettings('/tmp/orca-workspaces'),
           defaultTuiAgent: 'codex',
-          agentCmdOverrides: { codex: 'echo onboarding-folder-agent' }
+          agentCmdOverrides: { codex: 'echo onboarding-folder-agent' },
+          // Why '--dangerously-bypass-approvals-and-sandbox': odin(H) ships no bypass
+          // default, so this test's own grant stands in for the retired default.
+          agentDefaultArgs: { codex: '--dangerously-bypass-approvals-and-sandbox' }
         },
         { ...getDefaultOnboardingState(), outcome: 'dismissed' },
         false

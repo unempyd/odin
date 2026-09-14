@@ -30,8 +30,11 @@ function makeState(): ResumableAgentState {
     repos: [{ id: 'repo-1', path: '/Users/ada/repo' }],
     projects: [{ id: 'repo-1', sourceRepoIds: ['repo-1'] }],
     settings: {
-      agentDefaultArgs: { claude: '', codex: '' },
-      agentDefaultEnv: { claude: {}, codex: {} }
+      // Why kimi: '--yolo': odin(H) ships no bypass default; this test's own
+      // per-agent grant stands in for the retired default so the rest of the
+      // test still exercises the resumable-agent startup plan.
+      agentDefaultArgs: { claude: '', codex: '', kimi: '--yolo' },
+      agentDefaultEnv: { claude: {}, codex: {}, kimi: {} }
     },
     worktreesByRepo: {
       'repo-1': [{ id: 'repo-1::worktree-1', repoId: 'repo-1', path: '/Users/ada/repo' }]

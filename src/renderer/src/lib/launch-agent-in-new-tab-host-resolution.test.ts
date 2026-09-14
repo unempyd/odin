@@ -105,7 +105,10 @@ describe('launchAgentInNewTab execution host resolution', () => {
     mockCreateTab.mockReturnValue({ id: 'tab-1' })
     store.settings = {
       agentCmdOverrides: {},
-      agentDefaultArgs: {},
+      // Why 'claude-agent-teams': odin(H) ships no bypass default; this fixture's
+      // own grant stands in for the retired default so host-resolution shaping
+      // still has non-empty args to exercise (the test's real subject).
+      agentDefaultArgs: { 'claude-agent-teams': '--dangerously-skip-permissions' },
       agentDefaultEnv: {},
       activeRuntimeEnvironmentId: null
     }

@@ -45,7 +45,11 @@ describe('repo slice skipped-onboarding folder startup', () => {
     store.setState({
       settings: {
         ...getDefaultSettings('/tmp/orca-workspaces'),
-        defaultTuiAgent: 'codex'
+        defaultTuiAgent: 'codex',
+        // Why '--dangerously-bypass-approvals-and-sandbox': odin(H) ships no
+        // bypass default, so this test's own grant stands in for the retired
+        // default.
+        agentDefaultArgs: { codex: '--dangerously-bypass-approvals-and-sandbox' }
       }
     })
 

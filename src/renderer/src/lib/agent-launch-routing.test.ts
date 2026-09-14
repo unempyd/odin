@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { STRUCTURED_AGENT_SESSION_RUNTIME_CAPABILITY } from '../../../shared/protocol-version'
+import { getTuiAgentDefaultArgs } from '../../../shared/tui-agent-launch-defaults'
 import {
   hasExplicitTuiAgentArgs,
   hasExplicitTuiLaunchCustomization,
@@ -158,8 +159,12 @@ describe('resolveAgentLaunchRoute', () => {
   })
 
   it('does not classify the resolved default TUI args as customization', () => {
+    // Why getTuiAgentDefaultArgs(): odin(H) ships no bypass default, so codex's
+    // resolved default is now '' rather than a hardcoded bypass string; the
+    // invariant under test (the resolved default is never "explicit") still holds.
+    expect(hasExplicitTuiAgentArgs('codex', getTuiAgentDefaultArgs('codex'))).toBe(false)
     expect(hasExplicitTuiAgentArgs('codex', '--dangerously-bypass-approvals-and-sandbox')).toBe(
-      false
+      true
     )
     expect(hasExplicitTuiAgentArgs('codex', '--model gpt-5.6-sol')).toBe(true)
   })

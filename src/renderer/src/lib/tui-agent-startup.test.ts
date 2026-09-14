@@ -247,7 +247,10 @@ describe('buildAgentStartupPlan', () => {
         agent: 'devin',
         prompt: 'Trace the failing test',
         cmdOverrides: {},
-        agentArgs: resolveTuiAgentLaunchArgs('devin', null),
+        // Why explicit '--permission-mode bypass': odin(H) ships no bypass
+        // default, so this test's own grant stands in for the retired
+        // default to exercise the launch-then-inject sequencing under test.
+        agentArgs: resolveTuiAgentLaunchArgs('devin', { devin: '--permission-mode bypass' }),
         platform: 'linux'
       })
     ).toEqual({

@@ -113,7 +113,10 @@ describe('launchAgentInNewTab Windows shell quoting', () => {
     store.activeWorktreeId = 'wt-1'
     store.settings = {
       agentCmdOverrides: {},
-      agentDefaultArgs: {},
+      // Why claude: odin(H) ships no bypass default; this fixture's own grant
+      // stands in for the retired default so quoting still has non-empty args
+      // to exercise (the test's real subject).
+      agentDefaultArgs: { claude: '--dangerously-skip-permissions' },
       agentDefaultEnv: {},
       activeRuntimeEnvironmentId: null
     }

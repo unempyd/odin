@@ -169,7 +169,11 @@ describe('connectPanePty', () => {
       },
       settings: {
         ...mockStoreState.settings,
-        agentCmdOverrides: {}
+        agentCmdOverrides: {},
+        // Why codex: odin(H) ships no bypass default; this fixture's own grant
+        // stands in for the retired default so resume-argv construction still
+        // has non-empty args to exercise (the test's real subject).
+        agentDefaultArgs: { codex: '--dangerously-bypass-approvals-and-sandbox' }
       },
       agentStatusByPaneKey: {},
       sleepingAgentSessionsByPaneKey: {
@@ -274,7 +278,11 @@ describe('connectPanePty', () => {
       },
       settings: {
         ...mockStoreState.settings,
-        agentCmdOverrides: {}
+        agentCmdOverrides: {},
+        // Why codex: odin(H) ships no bypass default; this fixture's own grant
+        // stands in for the retired default so resume-argv construction still
+        // has non-empty args to exercise (the test's real subject).
+        agentDefaultArgs: { codex: '--dangerously-bypass-approvals-and-sandbox' }
       },
       agentStatusByPaneKey: {},
       sleepingAgentSessionsByPaneKey: {
@@ -356,7 +364,11 @@ describe('connectPanePty', () => {
           ptyIdsByLeafId: {}
         }
       },
-      settings: { ...mockStoreState.settings, agentCmdOverrides: {} },
+      settings: {
+        ...mockStoreState.settings,
+        agentCmdOverrides: {},
+        agentDefaultArgs: { codex: '--dangerously-bypass-approvals-and-sandbox' }
+      },
       agentStatusByPaneKey: {},
       sleepingAgentSessionsByPaneKey: { [paneKey]: sleepingRecord },
       suppressedPtyExitIds: { 'fresh-pty': true }

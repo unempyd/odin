@@ -147,7 +147,8 @@ describe('launchAgentInNewTab', () => {
     store.activeWorktreeId = 'wt-1'
     store.settings = {
       agentCmdOverrides: {},
-      agentDefaultArgs: {},
+      // Why odin(H): claude/'command-code' grants replace the retired bypass defaults.
+      agentDefaultArgs: { claude: '--dangerously-skip-permissions', 'command-code': '--yolo' },
       agentDefaultEnv: {},
       activeRuntimeEnvironmentId: null
     }
