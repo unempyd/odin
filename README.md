@@ -68,6 +68,10 @@ Two independent reviewers were given the same brief (`odin/REVIEW_BRIEF.md`): re
 
 Findings the reviews raised that are deliberately not changed, with the reason: the liveness projection keeps `unattached`, `missing` and `identity_changed` as wire values beside `live / unverifiable / exited` because existing tests pin them as distinct client-facing states; `orca serve` and `orcad --bind` bind wide by explicit operator command; positive on-screen evidence (an explicit idle marker or ready prompt the agent paints) remains tier-1 evidence.
 
+## Test status on this build
+
+Orca's full unit suite was run on the merged tree (8,751 files, 81,585 tests) and then every failing file was rerun both here and at the upstream commit. Twenty files failed only on Odin; all of them were tests pinned to behaviour Odin deliberately changed (bypass flags in launch and resume commands, sub-agent row state, liveness verdicts) and were updated to the new contract with a reason on each, no production code changed. Eight files fail identically at upstream and are environment-bound (real signed-in Claude CLI, real bash/PTY quirks, network, a release-checkout download, a missing optional package, a stale upstream keepalive test). The classification with evidence is `odin/proofs/full-suite-triage.md`. Typecheck is clean on node, cli and web.
+
 ## Deviations at v0.1.0
 
 Stated plainly, because two independent reviews returned NOT FINISHED against `odin/DIRECTION.md`'s definition of done and these are the items that remain open by decision rather than by oversight:
