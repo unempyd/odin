@@ -1,36 +1,119 @@
 import { describe, expect, it } from 'vitest'
 import { getAgentSessionOptionCatalog } from '../../../../../../shared/agent-session-option-catalog'
 import { ORCHESTRATION_WORKER_LAUNCH_PREFERENCES_RUNTIME_CAPABILITY } from '../../../../../../shared/protocol-version'
+import type { DiscoverCommitMessageModelsResult } from '../../../../../text-generation/commit-message-text-generation'
 import {
   assertWorkerLaunchPreferencesCreateTerminal,
   assertWorkerLaunchPreferencesRuntimeSupported,
   createPendingWorkerLaunchReceipt,
   resolveFederatedWorkerLaunchReceipt,
-  resolveWorkerLaunchPreferences
+  resolveWorkerLaunchPreferences,
+  type ClaudeLaunchModelDiscovery
 } from './worker-launch-preferences'
 import { WorkerStartParams } from './worker-start-schema'
 
+/** A fresh function reference each call, matching how production tags one
+ *  process-lifetime probe by executor identity — each test gets its own,
+ *  never sharing a cached result with another test's stub. */
+function claudeProbeAccepting(
+  models: { id: string; thinkingLevels?: string[] }[]
+): ClaudeLaunchModelDiscovery {
+  const capabilityModels = models.map((model) => ({
+    id: model.id,
+    label: model.id,
+    ...(model.thinkingLevels
+      ? { thinkingLevels: model.thinkingLevels.map((id) => ({ id, label: id })) }
+      : {})
+  }))
+  return async (): Promise<DiscoverCommitMessageModelsResult> => ({
+    success: true,
+    capability: {
+      id: 'claude',
+      label: 'Claude',
+      modelSource: 'dynamic',
+      models: capabilityModels,
+      defaultModelId: models[0]?.id ?? ''
+    },
+    models: capabilityModels,
+    defaultModelId: models[0]?.id ?? '',
+    catalogOrigin: 'probe'
+  })
+}
+
+function claudeProbeUnavailable(error: string): ClaudeLaunchModelDiscovery {
+  return async (): Promise<DiscoverCommitMessageModelsResult> => ({ success: false, error })
+}
+
 describe('orchestration worker launch preferences', () => {
-  it('passes an opaque Claude model and portable effort through the shared catalog', () => {
-    expect(
+  it('verifies the requested Claude model and effort against the installed CLI', async () => {
+    // Why: issue #10846 — `effective` must come from the installed CLI, never a
+    // clone of `requested`. The probe stub stands in for discoverModelsLocal
+    // (the existing local discovery executor), so no real CLI is spawned.
+    await expect(
       resolveWorkerLaunchPreferences({
         agent: 'claude',
         model: 'aws-bedrock-opus-5',
-        effort: 'high'
+        effort: 'high',
+        discoverClaudeModels: claudeProbeAccepting([
+          { id: 'aws-bedrock-opus-5', thinkingLevels: ['low', 'medium', 'high'] }
+        ])
       })
-    ).toEqual({
+    ).resolves.toEqual({
       preferences: { model: 'aws-bedrock-opus-5', effort: 'high' },
       receipt: {
         requested: { agent: 'claude', model: 'aws-bedrock-opus-5', effort: 'high' },
-        effective: { agent: 'claude', model: 'aws-bedrock-opus-5', effort: 'high' }
+        effective: { agent: 'claude', model: 'aws-bedrock-opus-5', effort: 'high' },
+        source: 'probe'
       }
     })
   })
 
-  it('does not invent an effort when only a model is requested', () => {
-    expect(
-      resolveWorkerLaunchPreferences({ agent: 'codex', model: 'gpt-5.6-sol' }).preferences
-    ).toEqual({ model: 'gpt-5.6-sol' })
+  it('rejects a model/effort the installed Claude CLI does not accept, with the CLI-sourced reason', async () => {
+    // Why: 'max' passes the static catalog's extended effort choices (so this
+    // exercises the PROBE's rejection, not the earlier catalog check) but the
+    // stubbed installed CLI only reports low/medium/high for this model.
+    await expect(
+      resolveWorkerLaunchPreferences({
+        agent: 'claude',
+        model: 'aws-bedrock-opus-5',
+        effort: 'max',
+        discoverClaudeModels: claudeProbeAccepting([
+          { id: 'aws-bedrock-opus-5', thinkingLevels: ['low', 'medium', 'high'] }
+        ])
+      })
+    ).rejects.toThrow('does not accept effort "max"')
+
+    await expect(
+      resolveWorkerLaunchPreferences({
+        agent: 'claude',
+        model: 'not-a-real-model',
+        discoverClaudeModels: claudeProbeAccepting([{ id: 'aws-bedrock-opus-5' }])
+      })
+    ).rejects.toThrow('does not list model "not-a-real-model"')
+  })
+
+  it('falls back to unverified (not a clone) when the installed CLI cannot be asked', async () => {
+    await expect(
+      resolveWorkerLaunchPreferences({
+        agent: 'claude',
+        model: 'aws-bedrock-opus-5',
+        discoverClaudeModels: claudeProbeUnavailable('claude not found on PATH.')
+      })
+    ).resolves.toEqual({
+      preferences: { model: 'aws-bedrock-opus-5' },
+      receipt: {
+        requested: { agent: 'claude', model: 'aws-bedrock-opus-5', effort: null },
+        effective: null,
+        source: 'unverified',
+        unverifiedReason: 'claude not found on PATH.'
+      }
+    })
+  })
+
+  it('does not invent an effort when only a model is requested', async () => {
+    await expect(
+      resolveWorkerLaunchPreferences({ agent: 'codex', model: 'gpt-5.6-sol' })
+    ).resolves.toMatchObject({ preferences: { model: 'gpt-5.6-sol' } })
   })
 
   it.each([
@@ -79,7 +162,7 @@ describe('orchestration worker launch preferences', () => {
       accepted: ['minimal', 'low', 'medium', 'high', 'xhigh'],
       rejected: ['max', 'ultra', 'future-effort']
     }
-  ])('enforces the Codex effort ceiling for $model', ({ model, accepted, rejected }) => {
+  ])('enforces the Codex effort ceiling for $model', async ({ model, accepted, rejected }) => {
     const catalog = getAgentSessionOptionCatalog('codex')!
     const effort =
       catalog.models
@@ -93,33 +176,40 @@ describe('orchestration worker launch preferences', () => {
     ).toEqual(accepted)
 
     for (const effortValue of accepted) {
-      expect(
-        resolveWorkerLaunchPreferences({ agent: 'codex', model, effort: effortValue }).preferences
-      ).toEqual({ model, effort: effortValue })
+      // Why: Codex has no live probe wired here (see worker-launch-preferences.ts) —
+      // its own commit-message probe's effort vocabulary doesn't match this
+      // per-model ceiling table — so it stays on the static catalog, labeled
+      // 'catalog' rather than silently pretending to be verified.
+      await expect(
+        resolveWorkerLaunchPreferences({ agent: 'codex', model, effort: effortValue })
+      ).resolves.toMatchObject({
+        preferences: { model, effort: effortValue },
+        receipt: { source: 'catalog' }
+      })
     }
     for (const effortValue of rejected) {
-      expect(() =>
+      await expect(
         resolveWorkerLaunchPreferences({ agent: 'codex', model, effort: effortValue })
-      ).toThrow(`does not support effort ${effortValue}`)
+      ).rejects.toThrow(`does not support effort ${effortValue}`)
     }
   })
 
-  it('rejects effort without a model', () => {
-    expect(() => resolveWorkerLaunchPreferences({ agent: 'codex', effort: 'high' })).toThrow(
-      '--effort requires --model'
-    )
+  it('rejects effort without a model', async () => {
+    await expect(
+      resolveWorkerLaunchPreferences({ agent: 'codex', effort: 'high' })
+    ).rejects.toThrow('--effort requires --model')
   })
 
-  it('rejects model selection for agents without a launch catalog', () => {
-    expect(() =>
+  it('rejects model selection for agents without a launch catalog', async () => {
+    await expect(
       resolveWorkerLaunchPreferences({ agent: 'grok', model: 'grok-code-fast-1' })
-    ).toThrow('does not support launch-time model selection')
+    ).rejects.toThrow('does not support launch-time model selection')
   })
 
-  it('does not expose deprecated Gemini model selection to worker-start', () => {
-    expect(() =>
+  it('does not expose deprecated Gemini model selection to worker-start', async () => {
+    await expect(
       resolveWorkerLaunchPreferences({ agent: 'gemini', model: 'gemini-3-pro-preview' })
-    ).toThrow('does not support launch-time model selection')
+    ).rejects.toThrow('does not support launch-time model selection')
   })
 
   it('rejects preferences when reusing an existing terminal', () => {
@@ -182,9 +272,14 @@ describe('orchestration worker launch preferences', () => {
       effort: 'high'
     })
 
+    // Why: this clone is the federated coordinator's last resort before the
+    // remote server answers — it never verifies, so it must say so rather than
+    // imply the remote confirmed these options (issue #10846).
     expect(resolveFederatedWorkerLaunchReceipt(undefined, requested, true)).toEqual({
       requested: requested.requested,
-      effective: requested.requested
+      effective: requested.requested,
+      source: 'unverified',
+      unverifiedReason: 'The worker server did not report which launch options it applied.'
     })
     expect(resolveFederatedWorkerLaunchReceipt(undefined, requested, false)).toBe(requested)
   })

@@ -22,6 +22,20 @@
       "tests": [
         "src/main/runtime/orchestration/orchestration-unsupervised-dispatch-recovery.test.ts"
       ]
+    },
+    {
+      "id": "K",
+      "title": "Sub-agent identity is first-class, never a fabricated dispatch",
+      "commit": "d7e67780a8",
+      "tests": ["src/renderer/src/components/sidebar/worktree-subagent-child-rows.test.ts"]
+    },
+    {
+      "id": "I",
+      "title": "Launch receipt effective comes from the installed CLI, never copied from requested",
+      "commit": "cc23f1c460",
+      "tests": [
+        "src/main/runtime/rpc/methods/orchestration/worker/worker-launch-preferences.test.ts"
+      ]
     }
   ]
 }
