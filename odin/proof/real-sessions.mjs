@@ -156,8 +156,10 @@ async function waitWorkerDone(host, ws, dispatchId, timeoutMs) {
       log('check.error', { exit: check.status, raw: check.raw.slice(0, 300) })
     }
     const messages = check.json?.result?.messages ?? check.json?.result?.delivery?.messages ?? []
+    // Why string containment: the CLI's message projection nests the dispatch id differently per
+    // version; the durable dispatch row below is the settlement evidence, the message is context.
     const message = messages.find(
-      (m) => m.type === 'worker_done' && (m.payload?.dispatchId ?? m.dispatchId) === dispatchId
+      (m) => m.type === 'worker_done' && JSON.stringify(m).includes(dispatchId)
     )
     dispatch = summarizeDispatch(host, dispatchId)
     if (message || ['completed', 'failed', 'circuit_broken'].includes(dispatch.status)) {
@@ -262,7 +264,9 @@ async function phaseSettle(host, ws, agent) {
   const done = await waitWorkerDone(host, ws, dispatchId, WORKER_DONE_TIMEOUT_MS)
   const mine = done.message
   const summary = done.dispatch
-  const ok = Boolean(mine) && summary.status === 'completed'
+  // Settled means the durable row reached `completed` through a worker_done report the host
+  // accepted (settleWorkerReport); nothing else transitions a dispatch to completed.
+  const ok = summary.status === 'completed' && summary.workerState === 'succeeded'
   if (!ok) {
     const read = orca(
       host,
