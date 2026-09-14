@@ -1,0 +1,12 @@
+
+ RUN  v4.1.11 /Users/briankeeny/Desktop/odin-wt-settlement
+
+[pty-handler] retired pane PTY pty2:test-mint-epoch:1 still alive after force kill; ownership retained as unverifiable
+[pty-handler] retired pane PTY pty2:test-mint-epoch:1 still alive after force kill; ownership retained as unverifiable
+[pty-handler] retired pane PTY pty2:test-mint-epoch:1 still alive after force kill; ownership retained as unverifiable
+
+ Test Files  3 passed (3)
+      Tests  19 passed (19)
+   Start at  19:00:17
+   Duration  4.82s (transform 5.05s, setup 384ms, import 6.18s, tests 866ms, environment 2ms)
+
