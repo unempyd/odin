@@ -614,7 +614,7 @@ describe('OrcaRuntimeService', () => {
 
     expect(spawn).toHaveBeenCalledWith(
       expect.objectContaining({
-        command: "command-code --profile mobile '--yolo'",
+        command: 'command-code --profile mobile',
         cwd: TEST_WORKTREE_PATH,
         env: expect.objectContaining({
           COMMAND_CODE_PROFILE: 'mobile-env'

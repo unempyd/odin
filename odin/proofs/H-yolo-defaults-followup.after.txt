@@ -1,0 +1,14 @@
+=== orca-runtime.test.ts (full aggregation) after fix ===
+
+ RUN  v4.1.11 /Users/briankeeny/Desktop/odin-wt-consent
+
+
+ Test Files  1 passed (1)
+      Tests  1267 passed | 1 skipped (1268)
+   Start at  20:13:52
+   Duration  36.26s (transform 17.48s, setup 131ms, import 22.50s, tests 13.21s, environment 0ms)
+
+=== tc:node ===
+$ pnpm run typecheck:node
+$ tsc --noEmit -p config/tsconfig.node.json
+=== oxlint ===

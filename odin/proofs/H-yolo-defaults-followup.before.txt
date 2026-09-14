@@ -1,0 +1,595 @@
+
+ RUN  v4.1.11 /Users/briankeeny/Desktop/odin-wt-consent
+
+ ❯ src/main/runtime/orca-runtime.test.ts (1268 tests | 13 failed | 1 skipped) 13101ms
+     × activates SSH worktrees created with startup agents 11ms
+     × quotes startup prompts for Windows SSH worktrees using PowerShell syntax 6ms
+     × enables Claude Agent Teams only for direct Claude launches when configured in-process 4ms
+     × falls back to background terminal creation for renderer-backed requests without a renderer window 4ms
+     × accepts renderer-backed terminal create replies only from the target renderer 3ms
+     × builds mobile session agent launch commands on the runtime host 5ms
+     × uses desktop task agent selection and bracketed-pastes startup drafts for local worktrees 63ms
+     × launches explicit startup agents with prompts for CLI-created worktrees 42ms
+     × sends follow-up prompts for CLI-created stdin-after-start startup agents 29ms
+     × honors split setup placement for opted-in local startup-draft worktrees 34ms
+     × lets explicit startup draft agents override the desktop default 28ms
+     × forwards generated-name provenance while launching SSH startup drafts 4ms
+     × pre-marks remote Codex workspaces trusted before pasting startup drafts 5ms
+
+⎯⎯⎯⎯⎯⎯ Failed Tests 13 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/main/runtime/orca-runtime.test.ts > OrcaRuntimeService > activates SSH worktrees created with startup agents
+AssertionError: expected "vi.fn()" to be called with arguments: [ ObjectContaining{…} ]
+
+Received:
+
+  1st vi.fn() call:
+
+  [
+-   ObjectContaining {
+-     "command": "codex '--dangerously-bypass-approvals-and-sandbox' 'hi'",
++   {
++     "cols": 120,
++     "command": "codex 'hi'",
++     "commandDelivery": "provider",
++     "connectionId": "ssh-1",
+      "cwd": "/remote/agent-feature",
++     "env": {
++       "ORCA_AGENT_LAUNCH_TOKEN": "4e859927-c323-4d88-9ff4-8e95e7809b02",
++       "ORCA_PANE_KEY": "1e626e81-9ad2-466a-92d9-9958a54e37c5:78e567b7-a754-487c-8e99-0dc905344426",
++       "ORCA_TAB_ID": "1e626e81-9ad2-466a-92d9-9958a54e37c5",
++       "ORCA_WORKTREE_ID": "repo-1::/remote/agent-feature",
++     },
++     "envToDelete": undefined,
++     "launchAgent": "codex",
++     "leafId": "78e567b7-a754-487c-8e99-0dc905344426",
++     "persistHostSessionBinding": true,
++     "preAllocatedHandle": "term_80cdd552-1c26-46cb-9e29-5455a72fbf9c",
++     "resumeProviderSession": undefined,
++     "rows": 40,
++     "startupCommandDelivery": "shell-ready",
++     "tabId": "1e626e81-9ad2-466a-92d9-9958a54e37c5",
++     "telemetry": undefined,
+      "worktreeId": "repo-1::/remote/agent-feature",
+    },
+  ]
+
+
+Number of calls: 1
+
+ ❯ src/main/runtime/orca-runtime-tests/ssh-worktree-lifecycle.spec.ts:459:21
+    457|       })
+    458|
+    459|       expect(spawn).toHaveBeenCalledWith(
+       |                     ^
+    460|         expect.objectContaining({
+    461|           cwd: '/remote/agent-feature',
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/13]⎯
+
+ FAIL  src/main/runtime/orca-runtime.test.ts > OrcaRuntimeService > quotes startup prompts for Windows SSH worktrees using PowerShell syntax
+AssertionError: expected "vi.fn()" to be called with arguments: [ ObjectContaining{…} ]
+
+Received:
+
+  1st vi.fn() call:
+
+  [
+-   ObjectContaining {
+-     "command": "codex '--dangerously-bypass-approvals-and-sandbox' 'fix Bob''s branch'",
++   {
++     "cols": 120,
++     "command": "codex 'fix Bob''s branch'",
++     "commandDelivery": "provider",
++     "connectionId": "ssh-1",
+      "cwd": "C:/remote/agent-feature",
++     "env": {
++       "ORCA_AGENT_LAUNCH_TOKEN": "10c991d3-74ce-47c2-85eb-70da181fb642",
++       "ORCA_PANE_KEY": "bad098cd-94f1-4cd5-9513-6c6221c341d4:448de2df-16e9-43e4-a2f8-32907e9246f0",
++       "ORCA_TAB_ID": "bad098cd-94f1-4cd5-9513-6c6221c341d4",
++       "ORCA_WORKTREE_ID": "repo-1::C:/remote/agent-feature",
++     },
++     "envToDelete": undefined,
++     "launchAgent": "codex",
++     "leafId": "448de2df-16e9-43e4-a2f8-32907e9246f0",
++     "persistHostSessionBinding": true,
++     "preAllocatedHandle": "term_476f63f0-e8b4-473f-a1fa-622ca6a7fff9",
++     "resumeProviderSession": undefined,
++     "rows": 40,
++     "startupCommandDelivery": "shell-ready",
++     "tabId": "bad098cd-94f1-4cd5-9513-6c6221c341d4",
++     "telemetry": undefined,
++     "worktreeId": "repo-1::C:/remote/agent-feature",
+    },
+  ]
+
+
+Number of calls: 1
+
+ ❯ src/main/runtime/orca-runtime-tests/ssh-worktree-lifecycle.spec.ts:570:21
+    568|       })
+    569|
+    570|       expect(spawn).toHaveBeenCalledWith(
+       |                     ^
+    571|         expect.objectContaining({
+    572|           cwd: 'C:/remote/agent-feature',
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/13]⎯
+
+ FAIL  src/main/runtime/orca-runtime.test.ts > OrcaRuntimeService > enables Claude Agent Teams only for direct Claude launches when configured in-process
+AssertionError: expected 'codex' to be 'codex \'--dangerously-bypass-approval…' // Object.is equality
+
+Expected: "codex '--dangerously-bypass-approvals-and-sandbox'"
+Received: "codex"
+
+ ❯ src/main/runtime/orca-runtime-tests/terminal-creation-and-readiness-part-03.spec.ts:472:33
+    470|     expect(compoundClaude.env?.TMUX).toBeUndefined()
+    471|
+    472|     expect(normalAgent.command).toBe("codex '--dangerously-bypass-appr…
+       |                                 ^
+    473|     expect(normalAgent.env?.CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS).toBe…
+    474|     expect(normalAgent.env?.TMUX).toBeUndefined()
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/13]⎯
+
+ FAIL  src/main/runtime/orca-runtime.test.ts > OrcaRuntimeService > falls back to background terminal creation for renderer-backed requests without a renderer window
+AssertionError: expected "vi.fn()" to be called with arguments: [ ObjectContaining{…} ]
+
+Received:
+
+  1st vi.fn() call:
+
+  [
+-   ObjectContaining {
+-     "command": "codex '--dangerously-bypass-approvals-and-sandbox'",
++   {
++     "cols": 120,
++     "command": "codex",
++     "commandDelivery": "provider",
++     "connectionId": null,
+      "cwd": "/tmp/worktree-a",
++     "env": {
++       "ORCA_AGENT_LAUNCH_TOKEN": "de1ee72a-8b07-4c5c-9607-0351c9491042",
++       "ORCA_PANE_KEY": "9d4c32d8-f070-4878-b6c0-23e30e185141:3ec65f0f-757a-4302-b21c-935194929420",
++       "ORCA_TAB_ID": "9d4c32d8-f070-4878-b6c0-23e30e185141",
++       "ORCA_WORKTREE_ID": "repo-1::/tmp/worktree-a",
++     },
++     "envToDelete": undefined,
++     "launchAgent": "codex",
++     "leafId": "3ec65f0f-757a-4302-b21c-935194929420",
++     "persistHostSessionBinding": true,
++     "preAllocatedHandle": "term_890ff653-6048-453c-bed4-88bf83210cfa",
++     "resumeProviderSession": undefined,
++     "rows": 40,
++     "startupCommandDelivery": undefined,
++     "tabId": "9d4c32d8-f070-4878-b6c0-23e30e185141",
++     "telemetry": undefined,
+      "worktreeId": "repo-1::/tmp/worktree-a",
+    },
+  ]
+
+
+Number of calls: 1
+
+ ❯ src/main/runtime/orca-runtime-tests/terminal-creation-and-readiness-part-04.spec.ts:291:19
+    289|       surface: 'background'
+    290|     })
+    291|     expect(spawn).toHaveBeenCalledWith(
+       |                   ^
+    292|       expect.objectContaining({
+    293|         command: "codex '--dangerously-bypass-approvals-and-sandbox'",
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/13]⎯
+
+ FAIL  src/main/runtime/orca-runtime.test.ts > OrcaRuntimeService > accepts renderer-backed terminal create replies only from the target renderer
+AssertionError: expected "vi.fn()" to be called with arguments: [ 'terminal:requestTabCreate', …(1) ]
+
+Received:
+
+  1st vi.fn() call:
+
+  [
+    "terminal:requestTabCreate",
+-   ObjectContaining {
+-     "command": "codex '--dangerously-bypass-approvals-and-sandbox'",
+-     "requestId": Any<String>,
++   {
++     "activate": false,
++     "command": "codex",
++     "cwd": undefined,
++     "env": {},
++     "launchAgent": "codex",
++     "launchConfig": {
++       "agentArgs": "",
++       "agentCommand": "codex",
++       "agentEnv": {},
++     },
++     "requestId": "d78f1008-d1da-496e-9e12-f84864a431f5",
++     "startupCommandDelivery": undefined,
+      "title": "Renderer Terminal",
+      "worktreeId": "repo-1::/tmp/worktree-a",
+    },
+  ]
+
+
+Number of calls: 1
+
+ ❯ src/main/runtime/orca-runtime-tests/terminal-creation-and-readiness-part-04.spec.ts:553:18
+    551|       surface: 'visible'
+    552|     })
+    553|     expect(send).toHaveBeenCalledWith(
+       |                  ^
+    554|       'terminal:requestTabCreate',
+    555|       expect.objectContaining({
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/13]⎯
+
+ FAIL  src/main/runtime/orca-runtime.test.ts > OrcaRuntimeService > builds mobile session agent launch commands on the runtime host
+AssertionError: expected "vi.fn()" to be called with arguments: [ ObjectContaining{…} ]
+
+Received:
+
+  1st vi.fn() call:
+
+  [
+-   ObjectContaining {
+-     "command": "command-code --profile mobile '--yolo'",
++   {
++     "cols": 120,
++     "command": "command-code --profile mobile",
++     "commandDelivery": "provider",
++     "connectionId": null,
+      "cwd": "/tmp/worktree-a",
+-     "env": ObjectContaining {
++     "env": {
+        "COMMAND_CODE_PROFILE": "mobile-env",
++       "ORCA_AGENT_LAUNCH_TOKEN": "5421e3bc-3f3d-4fb7-9ff5-abc962c2375c",
++       "ORCA_PANE_KEY": "86545778-0ba2-40e6-ae5c-367ffb577b05:08d0a4e4-ec7e-42d6-a460-48ae265f6601",
++       "ORCA_TAB_ID": "86545778-0ba2-40e6-ae5c-367ffb577b05",
++       "ORCA_WORKTREE_ID": "repo-1::/tmp/worktree-a",
+      },
++     "envToDelete": undefined,
++     "isNewSession": true,
++     "launchAgent": "command-code",
++     "leafId": "08d0a4e4-ec7e-42d6-a460-48ae265f6601",
++     "persistHostSessionBinding": true,
++     "preAllocatedHandle": "term_1336cfeb-5212-4a01-a745-12a2f6f2c334",
++     "resumeProviderSession": undefined,
++     "rows": 40,
++     "sessionId": "serve-b557b148-bb12-4a13-93e2-bc789212c022",
++     "startupCommandDelivery": undefined,
++     "tabId": "86545778-0ba2-40e6-ae5c-367ffb577b05",
++     "telemetry": undefined,
+      "worktreeId": "repo-1::/tmp/worktree-a",
+    },
+  ]
+
+
+Number of calls: 1
+
+ ❯ src/main/runtime/orca-runtime-tests/mobile-session-tabs-part-11.spec.ts:615:19
+    613|     })
+    614|
+    615|     expect(spawn).toHaveBeenCalledWith(
+       |                   ^
+    616|       expect.objectContaining({
+    617|         command: "command-code --profile mobile '--yolo'",
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/13]⎯
+
+ FAIL  src/main/runtime/orca-runtime.test.ts > OrcaRuntimeService > uses desktop task agent selection and bracketed-pastes startup drafts for local worktrees
+AssertionError: expected "vi.fn()" to be called with arguments: [ ObjectContaining{…} ]
+
+Received:
+
+  1st vi.fn() call:
+
+  [
+-   ObjectContaining {
+-     "command": "codex --profile work '--dangerously-bypass-approvals-and-sandbox'",
++   {
++     "cols": 120,
++     "command": "codex --profile work",
++     "commandDelivery": "provider",
++     "connectionId": null,
+      "cwd": "/tmp/workspaces/runtime-startup-draft",
++     "env": {
++       "ORCA_AGENT_LAUNCH_TOKEN": "ed5f04fe-a7e0-49c5-a862-af09c668b4b9",
++       "ORCA_PANE_KEY": "6facafe0-11ae-4d2b-97b7-1d540c8b8b03:bb927afb-0099-41e0-998a-a7d121c93849",
++       "ORCA_TAB_ID": "6facafe0-11ae-4d2b-97b7-1d540c8b8b03",
++       "ORCA_WORKTREE_ID": "repo-1::/tmp/workspaces/runtime-startup-draft",
++     },
++     "envToDelete": undefined,
++     "launchAgent": "codex",
++     "leafId": "bb927afb-0099-41e0-998a-a7d121c93849",
++     "persistHostSessionBinding": true,
++     "preAllocatedHandle": "term_438e89d6-7f32-42d3-99c8-7f91f64f2d45",
++     "resumeProviderSession": undefined,
++     "rows": 40,
++     "startupCommandDelivery": undefined,
++     "tabId": "6facafe0-11ae-4d2b-97b7-1d540c8b8b03",
++     "telemetry": undefined,
+      "worktreeId": "repo-1::/tmp/workspaces/runtime-startup-draft",
+    },
+  ]
+
+
+Number of calls: 1
+
+ ❯ src/main/runtime/orca-runtime-tests/worktree-setup-and-startup-part-03.spec.ts:404:19
+    402|     expect(detectInstalledAgentsWithShellPathHydrationMock).not.toHave…
+    403|     expect(detectRemoteAgentsMock).not.toHaveBeenCalled()
+    404|     expect(spawn).toHaveBeenCalledWith(
+       |                   ^
+    405|       expect.objectContaining({
+    406|         cwd: '/tmp/workspaces/runtime-startup-draft',
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/13]⎯
+
+ FAIL  src/main/runtime/orca-runtime.test.ts > OrcaRuntimeService > launches explicit startup agents with prompts for CLI-created worktrees
+AssertionError: expected "vi.fn()" to be called with arguments: [ ObjectContaining{…} ]
+
+Received:
+
+  1st vi.fn() call:
+
+  [
+-   ObjectContaining {
+-     "command": "codex '--dangerously-bypass-approvals-and-sandbox' 'hi'",
++   {
++     "cols": 120,
++     "command": "codex 'hi'",
++     "commandDelivery": "provider",
++     "connectionId": null,
+      "cwd": "/tmp/workspaces/runtime-cli-agent-startup",
++     "env": {
++       "ORCA_AGENT_LAUNCH_TOKEN": "7d6fa8ce-82a9-4ca1-90e9-b6f2374790fb",
++       "ORCA_PANE_KEY": "116caa9c-2b2d-4369-95eb-658bcd81f8e2:53fe8aa6-4dc8-42ee-803c-22e35930591a",
++       "ORCA_TAB_ID": "116caa9c-2b2d-4369-95eb-658bcd81f8e2",
++       "ORCA_WORKTREE_ID": "repo-1::/tmp/workspaces/runtime-cli-agent-startup",
++     },
++     "envToDelete": undefined,
++     "launchAgent": "codex",
++     "leafId": "53fe8aa6-4dc8-42ee-803c-22e35930591a",
++     "persistHostSessionBinding": true,
++     "preAllocatedHandle": "term_cc983a07-6856-432a-ae97-38be2e762ab7",
++     "resumeProviderSession": undefined,
++     "rows": 40,
++     "startupCommandDelivery": "shell-ready",
++     "tabId": "116caa9c-2b2d-4369-95eb-658bcd81f8e2",
++     "telemetry": undefined,
+      "worktreeId": "repo-1::/tmp/workspaces/runtime-cli-agent-startup",
+    },
+  ]
+
+
+Number of calls: 1
+
+ ❯ src/main/runtime/orca-runtime-tests/worktree-setup-and-startup-part-03.spec.ts:579:19
+    577|     })
+    578|
+    579|     expect(spawn).toHaveBeenCalledWith(
+       |                   ^
+    580|       expect.objectContaining({
+    581|         cwd: '/tmp/workspaces/runtime-cli-agent-startup',
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/13]⎯
+
+ FAIL  src/main/runtime/orca-runtime.test.ts > OrcaRuntimeService > sends follow-up prompts for CLI-created stdin-after-start startup agents
+AssertionError: expected "vi.fn()" to be called with arguments: [ ObjectContaining{…} ]
+
+Received:
+
+  1st vi.fn() call:
+
+  [
+-   ObjectContaining {
+-     "command": "aider '--yes-always'",
++   {
++     "cols": 120,
++     "command": "aider",
++     "commandDelivery": "provider",
++     "connectionId": null,
+      "cwd": "/tmp/workspaces/runtime-cli-aider-startup",
++     "env": {
++       "ORCA_AGENT_LAUNCH_TOKEN": "1d442001-b78e-41c5-ab32-c23a600ceaf5",
++       "ORCA_PANE_KEY": "b3f01da7-ac37-48e1-a85d-e428711cfb79:b0ce67c6-0249-4db9-84b1-acae46b50bc1",
++       "ORCA_TAB_ID": "b3f01da7-ac37-48e1-a85d-e428711cfb79",
++       "ORCA_WORKTREE_ID": "repo-1::/tmp/workspaces/runtime-cli-aider-startup",
++     },
++     "envToDelete": undefined,
++     "launchAgent": "aider",
++     "leafId": "b0ce67c6-0249-4db9-84b1-acae46b50bc1",
++     "persistHostSessionBinding": true,
++     "preAllocatedHandle": "term_38884dda-88b9-4c93-babf-de5854cb1230",
++     "resumeProviderSession": undefined,
++     "rows": 40,
++     "startupCommandDelivery": undefined,
++     "tabId": "b3f01da7-ac37-48e1-a85d-e428711cfb79",
++     "telemetry": undefined,
+      "worktreeId": "repo-1::/tmp/workspaces/runtime-cli-aider-startup",
+    },
+  ]
+
+
+Number of calls: 1
+
+ ❯ src/main/runtime/orca-runtime-tests/worktree-setup-and-startup-part-04.spec.ts:78:19
+     76|     })
+     77|
+     78|     expect(spawn).toHaveBeenCalledWith(
+       |                   ^
+     79|       expect.objectContaining({
+     80|         cwd: '/tmp/workspaces/runtime-cli-aider-startup',
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[9/13]⎯
+
+ FAIL  src/main/runtime/orca-runtime.test.ts > OrcaRuntimeService > honors split setup placement for opted-in local startup-draft worktrees
+AssertionError: expected 'deadline=$((SECONDS + 7200)); echo "W…' to contain '--dangerously-bypass-approvals-and-sa…'
+
+Expected: "--dangerously-bypass-approvals-and-sandbox"
+Received: "deadline=$((SECONDS + 7200)); echo "Waiting for setup to finish before starting agent..." >&2; while :; do if [ -f /tmp/repo/.git/orca/setup-runner.sh.bf6dea41-13e4-4b5e-99a8-361a642db199.done ]; then IFS=: read -r seen status < /tmp/repo/.git/orca/setup-runner.sh.bf6dea41-13e4-4b5e-99a8-361a642db199.done || true; if [ "$seen" = bf6dea41-13e4-4b5e-99a8-361a642db199 ]; then rm -f /tmp/repo/.git/orca/setup-runner.sh.bf6dea41-13e4-4b5e-99a8-361a642db199.done /tmp/repo/.git/orca/setup-runner.sh.bf6dea41-13e4-4b5e-99a8-361a642db199.done.tmp 2>/dev/null; if [ "$status" = "0" ]; then echo 'Setup finished; starting agent.' >&2; if [ -n "${ORCA_SEQUENCED_STARTUP_COMMAND:-}" ]; then eval "$ORCA_SEQUENCED_STARTUP_COMMAND"; exit "$?"; else exec codex; fi; fi; echo "Setup failed; skipping agent startup." >&2; exit "${status:-1}"; fi; fi; if [ "$SECONDS" -ge "$deadline" ]; then echo "Timed out waiting for setup before starting agent." >&2; exit 124; fi; sleep 1; done"
+
+ ❯ src/main/runtime/orca-runtime-tests/worktree-setup-and-startup-part-04.spec.ts:346:27
+    344|     const markerPath = `/tmp/repo/.git/orca/setup-runner.sh.${nonceMat…
+    345|     expect(startupCommand.length).toBeLessThan(256)
+    346|     expect(startupScript).toContain('--dangerously-bypass-approvals-an…
+       |                           ^
+    347|     expect(setupCommand).toContain('printf')
+    348|     expect(setupCommand).toContain(`${nonceMatch![1]} "$status"`)
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[10/13]⎯
+
+ FAIL  src/main/runtime/orca-runtime.test.ts > OrcaRuntimeService > lets explicit startup draft agents override the desktop default
+AssertionError: expected "vi.fn()" to be called with arguments: [ ObjectContaining{…} ]
+
+Received:
+
+  1st vi.fn() call:
+
+  [
+-   ObjectContaining {
+-     "command": "codex '--dangerously-bypass-approvals-and-sandbox'",
++   {
++     "cols": 120,
++     "command": "codex",
++     "commandDelivery": "provider",
++     "connectionId": null,
+      "cwd": "/tmp/workspaces/runtime-explicit-draft",
++     "env": {
++       "ORCA_AGENT_LAUNCH_TOKEN": "c0869111-47d0-423b-bd60-220a95242827",
++       "ORCA_PANE_KEY": "5bb83cd3-67c0-4103-b3d4-6961b7d6b308:c44148d1-a25e-4814-a6b4-25cecb0d87f3",
++       "ORCA_TAB_ID": "5bb83cd3-67c0-4103-b3d4-6961b7d6b308",
++       "ORCA_WORKTREE_ID": "repo-1::/tmp/workspaces/runtime-explicit-draft",
++     },
++     "envToDelete": undefined,
++     "launchAgent": "codex",
++     "leafId": "c44148d1-a25e-4814-a6b4-25cecb0d87f3",
++     "persistHostSessionBinding": true,
++     "preAllocatedHandle": "term_cca6e865-2717-4a9d-82bd-3071eb4fb3f0",
++     "resumeProviderSession": undefined,
++     "rows": 40,
++     "startupCommandDelivery": undefined,
++     "tabId": "5bb83cd3-67c0-4103-b3d4-6961b7d6b308",
++     "telemetry": undefined,
+      "worktreeId": "repo-1::/tmp/workspaces/runtime-explicit-draft",
+    },
+  ]
+
+
+Number of calls: 1
+
+ ❯ src/main/runtime/orca-runtime-tests/worktree-setup-and-startup-part-04.spec.ts:518:19
+    516|     expect(detectInstalledAgentsWithShellPathHydrationMock).not.toHave…
+    517|     expect(detectRemoteAgentsMock).not.toHaveBeenCalled()
+    518|     expect(spawn).toHaveBeenCalledWith(
+       |                   ^
+    519|       expect.objectContaining({
+    520|         cwd: '/tmp/workspaces/runtime-explicit-draft',
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[11/13]⎯
+
+ FAIL  src/main/runtime/orca-runtime.test.ts > OrcaRuntimeService > forwards generated-name provenance while launching SSH startup drafts
+AssertionError: expected "vi.fn()" to be called with arguments: [ ObjectContaining{…} ]
+
+Received:
+
+  1st vi.fn() call:
+
+  [
+-   ObjectContaining {
+-     "command": "claude '--dangerously-skip-permissions' --prefill 'https://github.com/stablyai/orca/pull/456'",
++   {
++     "cols": 120,
++     "command": "claude --prefill 'https://github.com/stablyai/orca/pull/456'",
++     "commandDelivery": "provider",
+      "connectionId": "ssh-1",
+      "cwd": "/remote/repo-nautilus-2",
++     "env": {
++       "ORCA_AGENT_LAUNCH_TOKEN": "e7820e87-555a-40be-bd0d-36ea31580827",
++       "ORCA_PANE_KEY": "f46160e4-8ca0-42a2-b7f7-dbc7614d4436:95822409-70e1-4cfa-bdcb-14ca918d701c",
++       "ORCA_TAB_ID": "f46160e4-8ca0-42a2-b7f7-dbc7614d4436",
++       "ORCA_WORKTREE_ID": "repo-1::/remote/repo-nautilus-2",
++     },
++     "envToDelete": undefined,
++     "launchAgent": "claude",
++     "leafId": "95822409-70e1-4cfa-bdcb-14ca918d701c",
++     "persistHostSessionBinding": true,
++     "preAllocatedHandle": "term_457b272b-ee86-4847-ac22-24dcd45ff8d7",
++     "resumeProviderSession": undefined,
++     "rows": 40,
++     "startupCommandDelivery": undefined,
++     "tabId": "f46160e4-8ca0-42a2-b7f7-dbc7614d4436",
++     "telemetry": undefined,
+      "worktreeId": "repo-1::/remote/repo-nautilus-2",
+    },
+  ]
+
+
+Number of calls: 1
+
+ ❯ src/main/runtime/orca-runtime-tests/worktree-setup-and-startup-part-05.spec.ts:114:19
+    112|       expect.any(Object)
+    113|     )
+    114|     expect(spawn).toHaveBeenCalledWith(
+       |                   ^
+    115|       expect.objectContaining({
+    116|         cwd: '/remote/repo-nautilus-2',
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[12/13]⎯
+
+ FAIL  src/main/runtime/orca-runtime.test.ts > OrcaRuntimeService > pre-marks remote Codex workspaces trusted before pasting startup drafts
+AssertionError: expected "vi.fn()" to be called with arguments: [ ObjectContaining{…} ]
+
+Received:
+
+  1st vi.fn() call:
+
+  [
+-   ObjectContaining {
+-     "command": "codex '--dangerously-bypass-approvals-and-sandbox'",
++   {
++     "cols": 120,
++     "command": "codex",
++     "commandDelivery": "provider",
+      "connectionId": "ssh-1",
+      "cwd": "/remote/mobile-codex-draft",
++     "env": {
++       "ORCA_AGENT_LAUNCH_TOKEN": "8792d265-5ebd-4186-903b-e3b0259b2779",
++       "ORCA_PANE_KEY": "e45a9bb6-c685-42ab-8640-70ae91888abc:5b4213f9-ae35-4aa9-bccd-a2b5f7ee0775",
++       "ORCA_TAB_ID": "e45a9bb6-c685-42ab-8640-70ae91888abc",
++       "ORCA_WORKTREE_ID": "repo-1::/remote/mobile-codex-draft",
++     },
++     "envToDelete": undefined,
++     "launchAgent": "codex",
++     "leafId": "5b4213f9-ae35-4aa9-bccd-a2b5f7ee0775",
++     "persistHostSessionBinding": true,
++     "preAllocatedHandle": "term_6c786a6b-b690-4b8a-924a-359aafb9ab82",
++     "resumeProviderSession": undefined,
++     "rows": 40,
++     "startupCommandDelivery": undefined,
++     "tabId": "e45a9bb6-c685-42ab-8640-70ae91888abc",
++     "telemetry": undefined,
+      "worktreeId": "repo-1::/remote/mobile-codex-draft",
+    },
+  ]
+
+
+Number of calls: 1
+
+ ❯ src/main/runtime/orca-runtime-tests/worktree-setup-and-startup-part-05.spec.ts:225:21
+    223|         expect.stringContaining('trust_level = "trusted"')
+    224|       )
+    225|       expect(spawn).toHaveBeenCalledWith(
+       |                     ^
+    226|         expect.objectContaining({
+    227|           cwd: '/remote/mobile-codex-draft',
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[13/13]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  13 failed | 1254 passed | 1 skipped (1268)
+   Start at  20:09:50
+   Duration  32.71s (transform 14.73s, setup 84ms, import 19.26s, tests 13.10s, environment 0ms)
+
