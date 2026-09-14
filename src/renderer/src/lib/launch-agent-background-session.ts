@@ -32,7 +32,6 @@ import {
   createSshBackgroundStartupDelivery,
   sshBackgroundLaunchWaitsForShellReady
 } from '@/lib/ssh-background-startup-delivery'
-import { isMainTerminalSideEffectAuthorityForPty } from '@/components/terminal-pane/terminal-side-effect-facts-handler'
 import { resolveLocalWindowsAgentStartupShell } from '../../../shared/windows-terminal-shell'
 import { runBestEffortAgentBackgroundCleanups } from '@/lib/agent-background-session-cleanup'
 import type { bindAutomationTerminal } from '@/lib/automation-terminal-ownership'
@@ -41,6 +40,7 @@ import {
   reserveAgentBackgroundSessionIdentity
 } from '@/lib/adopt-agent-background-session-tab'
 import { createBackgroundAgentStatusConsumer } from '@/lib/background-agent-status-consumer'
+import { hostOwnsRemoteAgentStatus } from '@/runtime/agent-status-host-osc-ingest-capability'
 import { isWslUncPath } from '../../../shared/wsl-paths'
 import { runtimeWaitExitCode, settleTabPtyBinding } from '@/lib/agent-background-session-exit'
 
@@ -149,18 +149,19 @@ export async function launchAgentBackgroundSession(
     useAppStore.getState().clearAgentLaunchConfig(paneKey)
     onExit?.(exitPtyId, code)
   }
-  // Why: local/SSH status facts already pass through main's authoritative
-  // scanner; remote-runtime bytes still need this renderer-side store write.
-  const mainOwnsAgentStatusWrites = isMainTerminalSideEffectAuthorityForPty({
-    settings: store.settings,
-    runtimeEnvironmentId: runtimeTarget.kind === 'environment' ? runtimeTarget.environmentId : null
-  })
+  const remoteEnvironmentId =
+    runtimeTarget.kind === 'environment' ? runtimeTarget.environmentId : null
+  // Why probe, not assume: a remote-runtime pty's bytes never transit local main, so
+  // an old host (no OSC-ingest capability) publishes no row — this consumer's own
+  // parse is that pane's only writer until the host upgrades.
+  const writesRemoteAgentStatusFallback =
+    remoteEnvironmentId !== null && !(await hostOwnsRemoteAgentStatus(remoteEnvironmentId))
   const agentStatusConsumer = createBackgroundAgentStatusConsumer({
     paneKey,
     launchToken,
-    mainOwnsAgentStatusWrites,
     expectedConnectionId: launchHost.expectedConnectionId,
-    runtimeEnvironmentId: runtimeTarget.kind === 'environment' ? runtimeTarget.environmentId : null,
+    runtimeEnvironmentId: remoteEnvironmentId,
+    writesRemoteAgentStatusFallback,
     getPtyId: () => ptyId,
     onAgentStatus
   })

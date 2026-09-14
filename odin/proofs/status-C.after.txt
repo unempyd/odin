@@ -1,0 +1,29 @@
+=== status-C AFTER: gate wired, capability probe cached; targeted tests green ===
+
+
+ RUN  v4.1.11 /Users/briankeeny/Desktop/odin-wt-rend-d
+
+
+ Test Files  9 passed (9)
+      Tests  94 passed (94)
+   Start at  05:45:50
+   Duration  9.84s (transform 25.77s, setup 756ms, import 29.73s, tests 9.90s, environment 2ms)
+
+
+=== tc:node ===
+tc:node: PASS (0 errors)
+
+=== oxlint (status-D-fix + status-C touched files) ===
+oxlint: PASS (0 errors)
+
+=== tc:web (new errors vs. the pre-existing baseline) ===
+290 errors total, same family as the 99 baseline from status-D's proof (tiptap/rich-markdown
+editor duplicate-package resolution: node_modules/@tiptap/core vs the .pnpm-nested copy).
+One NEW error surfaced in a touched file during this pass and was fixed in-session:
+  pty-connection-remote-runtime-attach.test.ts(129,41): TS2556 spread-into-zero-arg-mock.
+  Fixed by typing the vi.fn() mocks with their real (environmentId: string) signature
+  instead of an untyped () => T factory wrapped in a spread call.
+Confirmed zero remaining errors reference any status-D/status-D-fix/status-C touched file
+(grep across command-code-, agent-status-*, automation-session-observer, launch-agent-
+background-session, terminal-keydown-fit, parked-terminal-byte-watcher, direct-ssh-retry-
+status, pty-input-recovery — zero matches).

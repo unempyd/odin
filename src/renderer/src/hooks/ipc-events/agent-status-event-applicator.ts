@@ -15,6 +15,7 @@ import { observeAgentHookCompletionForNotification } from '../agent-hook-complet
 import { useAppStore } from '../../store'
 import {
   applyResolvedAgentTerminalTitleToTab,
+  buildAgentStatusUpdateMetadata,
   hasRuntimeBackedWorktreeAttribution,
   isAgentStatusForRecentlyClosedTab,
   resolveHookPayloadAgentType,
@@ -31,6 +32,7 @@ import type {
   PendingAgentStatusEvent
 } from './agent-status-bridge-types'
 import { normalizeAgentStatusEvent } from './normalize-agent-status-event'
+import { dropsCommandCodeAgentStatus } from './agent-status-command-code-ownership-filter'
 
 export function createAgentStatusEventApplicator(args: {
   pendingAgentStatusEvents: PendingAgentStatusEvent[]
@@ -108,6 +110,9 @@ export function createAgentStatusEventApplicator(args: {
         enqueuePendingAgentStatus(data)
       }
       return 'pending'
+    }
+    if (dropsCommandCodeAgentStatus(payload, { store, paneKey, ownerTabId, owningWorktreeId })) {
+      return 'dropped'
     }
     if (options?.replay !== true && options?.retry !== true) {
       for (let index = pendingAgentStatusEvents.length - 1; index >= 0; index -= 1) {
@@ -239,19 +244,7 @@ export function createAgentStatusEventApplicator(args: {
         terminalHandle: data.terminalHandle,
         ...(ownershipConnectionId !== undefined ? { connectionId: ownershipConnectionId } : {})
       },
-      metadata:
-        data.providerSession || data.launchToken || data.structuredHost !== undefined
-          ? {
-              ...(data.providerSession ? { providerSession: data.providerSession } : {}),
-              ...(data.launchToken ? { launchToken: data.launchToken } : {}),
-              // A structured session has no pane to resume into — its record store owns resume
-              // identity — so both `owned` and `held` hosts refuse the PTY resume affordance.
-              ...(data.structuredHost !== undefined
-                ? { terminalResumeEligible: false as const }
-                : {}),
-              ...(data.structuredHost === 'owned' ? { structuredHostOwned: true as const } : {})
-            }
-          : undefined
+      metadata: buildAgentStatusUpdateMetadata(data)
     }
     const applyPostCommitNotification = (): void => {
       if (statusWorktreeId && (options?.replay !== true || resolvedPayload.state === 'working')) {

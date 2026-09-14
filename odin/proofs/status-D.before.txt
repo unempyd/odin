@@ -1,0 +1,136 @@
+=== status-D BEFORE: command-code status had no main-side writer; two OSC writers were unconditionally gated by !mainOwnsAgentStatusWrites, not by main's actual coverage ===
+
+--- src/main/runtime/orca-runtime-create-terminal-side-effect-command-code-detector.ts (HEAD, lines 1-28) ---
+Main's detector only ever RECORDED a side-effect FACT; it never called
+onTerminalAgentStatus (the sink agentHookServer.ingestTerminalStatus reads).
+A command-code turn had no row in the hook store until a renderer fact
+consumer (title-spawn-bell.ts's seedCommandCodeOutputWorkingStatus /
+scheduleCommandCodeOutputDoneStatus, or parked-terminal-command-status.ts's
+equivalents) turned that fact into a setAgentStatus call:
+// @ts-nocheck -- mechanically split from OrcaRuntimeService; behavior is covered by AST equivalence and characterization tests.
+import { OrcaRuntimeWithApplyTrackedPtyTitle } from './orca-runtime-apply-tracked-pty-title'
+import type {
+  RuntimePtyTitleTrackerEntry,
+  RuntimePtyWorktreeRecord
+} from './runtime-terminal-state-records'
+import { createCommandCodeOutputStatusDetector } from '../../shared/command-code-output-status'
+import { extractLastOsc7Uri, extractOscScanTail } from '../daemon/osc7-uri-extraction'
+import { parseFileUriPathParts } from '../daemon/osc7-file-uri'
+import { splitWorktreeIdForFilesystem } from '../../shared/worktree/id'
+import { isWindowsAbsolutePathLike } from '../../shared/cross-platform-path'
+import type { ProcessedAgentStatusChunk } from '../../shared/agent-status-osc'
+import { mapExplicitAgentStateToRuntimeTerminalStatus } from './runtime-worktree-status-projection'
+
+export class OrcaRuntimeWithCreateTerminalSideEffectCommandCodeDetector extends OrcaRuntimeWithApplyTrackedPtyTitle {
+  protected createTerminalSideEffectCommandCodeDetector(
+    ptyId: string
+  ): NonNullable<RuntimePtyTitleTrackerEntry['commandCodeDetector']> {
+    return createCommandCodeOutputStatusDetector({
+      startupCommand: this.terminalSpawnCommandsByPtyId.get(ptyId) ?? null,
+      onWorking: (prompt) => {
+        this.recordTerminalSideEffectFact(ptyId, { kind: 'command-code-working', prompt })
+      },
+      onDone: (prompt) => {
+        this.recordTerminalSideEffectFact(ptyId, { kind: 'command-code-done', prompt })
+      }
+    })
+  }
+
+--- src/renderer/src/lib/automation-session-observer.ts (HEAD, lines 25-67) ---
+This observer wrote OSC-derived status itself whenever
+`!mainOwnsAgentStatusWrites` (kill-switch-off local, or any remote-runtime
+pty) — even though main's OSC 9999 ingest (orca-runtime-on-pty-data.ts:37) is
+unconditional and always produces the same row for local ptys regardless of
+the kill switch, making this write a guaranteed duplicate for local panes:
+}): Promise<() => void> {
+  const { ptyId, paneKey, runId, onData, onExit } = args
+  // Why: for local/SSH PTYs main already parses OSC 9999 and routes it
+  // through the hook server (agentStatus:set → store); writing here too
+  // would race/duplicate that path. Remote-runtime bytes never transit local
+  // main, and the kill switch restores the legacy write. The onAgentStatus
+  // callback always fires — automation completion tracking stays here.
+  const mainOwnsAgentStatusWrites =
+    !isRemoteRuntimePtyId(ptyId) &&
+    isMainTerminalSideEffectAuthorityForPty({
+      settings: useAppStore.getState().settings,
+      runtimeEnvironmentId: null
+    })
+  const processAgentStatus = createAgentStatusOscProcessor()
+  const handleData = (data: string): void => {
+    onData(data)
+    const processed = processAgentStatus(data)
+    for (const payload of processed.payloads) {
+      if (!mainOwnsAgentStatusWrites) {
+        const state = useAppStore.getState()
+        const routing = resolveLiveAgentStatusConnectionRouting({ state, paneKey, ptyId })
+        // Why: a delayed reuse observer must not write into a pane that has
+        // since rebound to another host's colliding tab/pane identifiers.
+        if (routing) {
+          state.setAgentStatus(
+            paneKey,
+            {
+              ...payload,
+              observation: rendererAgentStatusObservations.observe(paneKey, {
+                origin: 'osc',
+                observedAt: Date.now(),
+                kind: 'snapshot'
+              })
+            },
+            undefined,
+            undefined,
+            routing
+          )
+        }
+      }
+      args.onAgentStatus(payload)
+    }
+  }
+
+--- src/renderer/src/lib/background-agent-status-consumer.ts (HEAD, lines 39-66) ---
+Same duplicate-write shape for a backgrounded/hidden pane:
+  const consume = (data: string): void => {
+    const processed = processAgentStatus(data)
+    for (const payload of processed.payloads) {
+      if (!args.mainOwnsAgentStatusWrites) {
+        const routing = resolveRouting()
+        // Why: hidden callbacks can outlive tab reuse; only the exact current
+        // pane-to-PTY binding may update its status ownership.
+        if (routing) {
+          useAppStore.getState().setAgentStatus(
+            args.paneKey,
+            {
+              ...payload,
+              observation: rendererAgentStatusObservations.observe(args.paneKey, {
+                origin: 'osc',
+                observedAt: Date.now(),
+                kind: 'snapshot'
+              })
+            },
+            undefined,
+            undefined,
+            routing,
+            { launchToken: args.launchToken }
+          )
+        }
+      }
+      args.onAgentStatus?.(payload)
+    }
+  }
+
+--- Failing-first assertion this increment inverts (captured before edit, from
+    src/renderer/src/components/terminal-pane/pty-connection-main-side-effect-authority.test.ts) ---
+it('seeds and settles Command Code status from command-code facts', async () => {
+  ...
+  handler._dispatchTerminalSideEffectBatchForTest({
+    ptyId: 'pty-fact-cc', seq: 1,
+    facts: [{ kind: 'command-code-working', prompt: 'say hi' }]
+  })
+  expect(mockStoreState.agentStatusByPaneKey[paneKey]).toMatchObject({
+    state: 'working', prompt: 'say hi', agentType: 'command-code'
+  })
+  ... (then a command-code-done fact + a 1500ms settle timer, still driven by
+       the renderer's own command-code-done-settle.ts and setAgentStatus)
+})
+This test PASSED under main authority — proving the renderer, not main, was
+the writer of command-code status even when main held side-effect authority
+for every other fact kind on the same pane.

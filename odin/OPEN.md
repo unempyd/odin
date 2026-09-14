@@ -24,32 +24,52 @@ status-B adds the capability for (a) — advertised and probed, wired to
 nothing yet. Consuming it to close the remote-OSC half of (b) is the next
 increment.
 
-Left open before status-A/status-B: the renderer wrote authoritative rows
-itself for some panes, rather than only subscribing to the host's one store
+The renderer originally wrote authoritative rows itself for four call sites,
+rather than only subscribing to the host's one store
 (`docs/reference/agent-status-store.md`'s "the execution host owns agent
-status, in one store" rule). Four call sites:
+status, in one store" rule). All four are now resolved: one closed outright
+(status-A), one closed for local/SSH and gated on the status-B capability for
+remote-runtime (status-D-fix), and one gated on that same capability
+(status-C):
 
-- `src/renderer/src/components/terminal-pane/pty-connection/direct-ssh-retry-status.ts:146-211`
-  — `handleRendererOwnedAgentStatus` writes `setAgentStatus` straight from the
-  client's own OSC parse whenever `shouldOwnAgentStatusInRenderer` is true.
-  **Still open** — this is remote-runtime panes, untouched by status-A/B. The
-  capability status-B adds (`AGENT_STATUS_HOST_OSC_INGEST_RUNTIME_CAPABILITY`)
-  is the gate a future increment wires this decision to; it is not consumed
-  anywhere yet.
-- `src/renderer/src/lib/background-agent-status-consumer.ts:38-63` — the same
-  OSC-derived write for a backgrounded/hidden pane, gated on
-  `!args.mainOwnsAgentStatusWrites`. **Still open.**
-- `src/renderer/src/lib/automation-session-observer.ts:32-66` — the same
-  write again for an automation-session PTY reuse observer, gated on
-  `!mainOwnsAgentStatusWrites`. **Still open.**
 - `src/renderer/src/components/native-chat/StructuredAgentSessionStatusBridge.tsx:185`
-  — the structured-session chat bridge called `store.setAgentStatus` itself.
-  **Closed by status-A** for every locally-owned worktree: main now forwards
-  structured rows over `agentStatus:set` like any hook row, and the bridge's
-  `projectStatus` is a no-op there (it stays exactly as it was for a
-  remote-owned worktree's session — see status-A's commit for why: IPC is
-  local main↔renderer only, so a remote host's structured row has no other
-  channel to this client).
+  — **closed by status-A**. Main now forwards structured rows over
+  `agentStatus:set` like any hook row; the bridge's `projectStatus` is a
+  no-op for every locally-owned worktree (it stays exactly as it was for a
+  remote-owned worktree's session — IPC is local main↔renderer only, so a
+  remote host's structured row has no other channel to this client).
+- `src/renderer/src/lib/background-agent-status-consumer.ts` and
+  `src/renderer/src/lib/automation-session-observer.ts` — **closed for
+  local/SSH, gated for remote-runtime (status-D-fix)**. Main's OSC 9999
+  ingest is unconditional (`orca-runtime-on-pty-data.ts:37`, no kill-switch
+  check), so a local pty's write is always a duplicate and stays deleted —
+  **including when `terminalMainSideEffectAuthority` is off**: Odin's
+  contract is that the execution host owns status, not that a client setting
+  reinstates a second writer, so a kill-switch-off local pane relies on
+  main's unconditional OSC ingest exactly like a kill-switch-on one. A
+  **remote-runtime** pty (bytes never transit local main at all) restores the
+  write, but only for `isRemoteRuntimePtyId(ptyId) &&
+  !(await hostOwnsRemoteAgentStatus(runtimeEnvironmentId))` — resolved once,
+  asynchronously, by the caller (`launch-agent-background-session.ts`,
+  `automation-session-observer.ts` itself) before the consumer starts
+  receiving data, per remote-wire-compatibility.md rule 3 ("the client must
+  probe, never assume"). A capable host's row makes the write a no-op; an old
+  host's pane keeps exactly today's write.
+- `src/renderer/src/components/terminal-pane/pty-connection/direct-ssh-retry-status.ts:146-211`
+  — **gated (status-C)**. `handleRendererOwnedAgentStatus` still writes
+  `setAgentStatus` from the client's own OSC parse, but only when
+  `shouldOwnAgentStatusInRenderer` is true, which is now
+  `runtimeEnvironmentId !== null && !cachedHostOwnsRemoteAgentStatus(id)`.
+  Unlike the two sites above, this decision is made once, **synchronously**,
+  at transport creation (never revisited for the pane's lifetime), while the
+  capability probe is async — so it reads a small last-known-verdict cache
+  (`cachedHostOwnsRemoteAgentStatus`, `agent-status-host-osc-ingest-capability.ts`)
+  that defaults to `false` (client keeps writing — today's behavior) until a
+  probe resolves, and fires a fresh probe (`primeHostOwnsRemoteAgentStatusCache`)
+  so the *next* pane connecting to that environment (or a reconnect) reads a
+  warm verdict. The registry fence (`renderer-owned-agent-status-registry.ts`)
+  is claimed only when the pane actually owns writing, so a capable host's
+  mirror is never fenced out by a pane that stopped claiming it.
 
 ### status-A — structured sessions are host-published
 
@@ -88,19 +108,58 @@ would require publishing renderer-only tab-label knowledge to a headless host.
 is in `src/shared/protocol-version.ts` and `RUNTIME_CAPABILITIES`, and
 `hostOwnsRemoteAgentStatus(environmentId)`
 (`src/renderer/src/runtime/agent-status-host-osc-ingest-capability.ts`) probes
-it. Nothing calls the helper yet — remote-runtime panes still write their own
-OSC-derived rows unconditionally (see the still-open bullet above). The
-cross-version harness needed no change: neither
+it. Nothing calls the helper yet as of this increment — status-C and
+status-D-fix (below) are the first consumers. The cross-version harness
+needed no change: neither
 `cross-version-terminal-wire.unit.test.ts` nor
 `cross-version-agent-session-wire.unit.test.ts` hardcodes today's
 `RUNTIME_CAPABILITIES` list — the latter already derives the old build's
 advertised list from its own checkout, which is what the wire doc's "never
 write down what the old side has" rule asks for.
 
-Cost of closing the still-open bullets: every remote-runtime pane's status
-would gain the latency of one host round trip before the client shows a
-transition, since the client could no longer paint directly from its own
-byte stream.
+Cost of closing them (status-C, status-D-fix): every remote-runtime pane's
+status gains the latency of one host round trip before the client shows a
+transition, since the client can no longer paint directly from its own byte
+stream, once the host advertises the capability.
+
+### status-C — direct-ssh-retry-status.ts stops writing for a capable host
+
+Closes the last of the four call sites. `shouldOwnAgentStatusInRenderer`
+(`direct-ssh-retry-status.ts:146`) is now
+`runtimeEnvironmentId !== null && !cachedHostOwnsRemoteAgentStatus(id)`
+instead of unconditionally `runtimeEnvironmentId !== null`. Because this
+decision is made once, synchronously, at transport creation — and a
+capability probe is async — `agent-status-host-osc-ingest-capability.ts`
+gained a small last-known-verdict cache: `cachedHostOwnsRemoteAgentStatus`
+reads it (default `false`, i.e. keep writing, until a probe resolves once for
+that environment) and `primeHostOwnsRemoteAgentStatusCache` fires the real
+probe so a later pane or reconnect reads a warm verdict. Defaulting to
+"unknown → keep writing" rather than the other way is deliberate: the plan's
+own caution is that assuming capability on a cold probe would starve a pane
+on a healthy remote host that just hasn't answered yet. The registry fence
+(`registerRendererOwnedAgentStatusPane`) is claimed only when
+`shouldOwnAgentStatusInRenderer` is true, so a capable host's `session.tabs`
+mirror is never fenced out by a pane that no longer claims the pane key.
+
+Proof: `odin/proofs/status-C.before.txt` / `.after.txt`.
+
+### status-D-fix — the same gate for the other two remote sites
+
+Item 2 of the status-D increment deleted the `!mainOwnsAgentStatusWrites`
+write in `background-agent-status-consumer.ts` and
+`automation-session-observer.ts` unconditionally, which was right for local
+panes (main's OSC ingest is unconditional) but wrong for a remote-runtime pty
+reaching either path: bytes never transit local main for that pty at all, so
+an old host publishes no row, and the deleted write was that pane's only
+writer. Both sites now restore the write, gated the same way status-C is,
+but resolved via a direct `await hostOwnsRemoteAgentStatus(environmentId)`
+rather than the sync cache — both call sites' outer functions
+(`launchAgentBackgroundSession`, `observeExistingAutomationSession`) are
+already `async` and have not yet started consuming PTY data at the point the
+gate is decided, so there is no synchronous-decision constraint here and no
+need for a cold-probe default: `createBackgroundAgentStatusConsumer` takes
+a precomputed `writesRemoteAgentStatusFallback: boolean` instead of resolving
+it itself per chunk.
 
 Related non-store reader, also out of scope here: the title-derived status
 lane in `src/main/runtime/runtime-worktree-status-projection.ts:60`
@@ -117,3 +176,18 @@ status from renderer-observed PTY title bytes for the `command-code` pseudo-agen
 A full enumeration is `grep -rn "setAgentStatus(" src/renderer --include='*.ts' --include='*.tsx' | grep -v test`;
 only `hooks/ipc-events/agent-status-event-applicator.ts` is store-derived. The closing plan above applies to every
 site in that list.
+
+Partially closed (status-D, this increment): the command-code writer above is now conditional, not deleted. Main's
+`orca-runtime-create-terminal-side-effect-command-code-detector.ts` ports the renderer's done-settle window
+(`src/main/runtime/command-code-done-settle.ts`) and ingests `working`/settled `done` through
+`agentHookServer.ingestTerminalStatus` — the same sink the OSC path uses — whenever the pane is local and the
+`terminalMainSideEffectAuthority` kill switch is on. `title-spawn-bell.ts`'s and
+`parked-terminal-command-status.ts`'s command-code seed/settle functions are **not** deleted: they remain the only
+writer for a kill-switch-off local pane and for a remote-runtime pane (`direct-ssh-retry-status.ts`'s
+`commandCodeOutputStatusDetector`, created only when `!session.mainSideEffectAuthority`), both out of scope here.
+The renderer's `terminal-keydown-fit.ts` and `parked-terminal-byte-watcher.ts` fact-consumer registrations now omit
+`onCommandCodeWorking`/`onCommandCodeDone` exactly when `mainSideEffectAuthority` is true, so main's direct ingest
+and the renderer's byte-parser fallback never both write the same pane. `agent-status-event-applicator.ts` gained a
+`dropsCommandCodeAgentStatus` ownership filter (`agent-status-command-code-ownership-filter.ts`) so a command-code
+row main observed cannot overwrite a pane a different foreground/retained/launch agent owns — main has no visibility
+into that renderer-only state, so filtering stays client-side per §3.2(b) of the renderer-writer plan.

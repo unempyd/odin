@@ -11,6 +11,16 @@ import { splitWorktreeIdForFilesystem } from '../../shared/worktree/id'
 import { isWindowsAbsolutePathLike } from '../../shared/cross-platform-path'
 import type { ProcessedAgentStatusChunk } from '../../shared/agent-status-osc'
 import { mapExplicitAgentStateToRuntimeTerminalStatus } from './runtime-worktree-status-projection'
+import { cancelCommandCodeDoneSettle, openCommandCodeDoneSettle } from './command-code-done-settle'
+
+type TerminalAgentStatusTarget = {
+  source: 'mounted-leaf' | 'pty-record'
+  paneKey: string
+  tabId?: string
+  worktreeId?: string
+  connectionId?: string | null
+  terminalHandle?: string
+}
 
 export class OrcaRuntimeWithCreateTerminalSideEffectCommandCodeDetector extends OrcaRuntimeWithApplyTrackedPtyTitle {
   protected createTerminalSideEffectCommandCodeDetector(
@@ -19,12 +29,125 @@ export class OrcaRuntimeWithCreateTerminalSideEffectCommandCodeDetector extends 
     return createCommandCodeOutputStatusDetector({
       startupCommand: this.terminalSpawnCommandsByPtyId.get(ptyId) ?? null,
       onWorking: (prompt) => {
+        // Why kept alongside the ingest below: a remote-paired host still
+        // forwards this fact over the environment stream, and a kill-switch-off
+        // renderer's mounted/parked-pane fact registration still expects it —
+        // neither of those consumers is affected by this increment.
         this.recordTerminalSideEffectFact(ptyId, { kind: 'command-code-working', prompt })
+        this.ingestCommandCodeWorkingStatus(ptyId, prompt)
       },
       onDone: (prompt) => {
         this.recordTerminalSideEffectFact(ptyId, { kind: 'command-code-done', prompt })
+        this.scheduleCommandCodeDoneStatusIngest(ptyId, prompt)
       }
     })
+  }
+
+  /** Same local-only kill switch the renderer's byte-parser fallback checks
+   *  (`isMainTerminalSideEffectAuthorityForPty`'s local clause) — a
+   *  kill-switch-off pane already writes this status itself from its own
+   *  scrape, so main ingesting too would double-write it. */
+  protected isCommandCodeStatusMainAuthorityEnabled(): boolean {
+    return this.store?.getSettings().terminalMainSideEffectAuthority !== false
+  }
+
+  /** Same target resolution `emitTerminalAgentStatusEvents` uses for OSC
+   *  payloads: mounted leaves first, else the spawn-time PTY record binding. */
+  protected resolveTerminalAgentStatusTargets(
+    ptyId: string
+  ): Map<string, TerminalAgentStatusTarget> {
+    const targets = new Map<string, TerminalAgentStatusTarget>()
+    const pty = this.ptysById.get(ptyId)
+    const connectionId = pty?.connectionId ?? null
+    for (const leaf of this.getLeavesForPty(ptyId)) {
+      const paneKey = this.makeRuntimePaneKey(leaf)
+      targets.set(paneKey, {
+        source: 'mounted-leaf',
+        paneKey,
+        tabId: leaf.tabId,
+        worktreeId: leaf.worktreeId,
+        connectionId
+      })
+    }
+    if (targets.size === 0 && pty?.paneKey) {
+      targets.set(pty.paneKey, {
+        source: 'pty-record',
+        paneKey: pty.paneKey,
+        tabId: pty.tabId ?? undefined,
+        worktreeId: pty.worktreeId,
+        connectionId
+      })
+    }
+    if (this.onTerminalAgentStatus) {
+      for (const target of targets.values()) {
+        const terminalHandle = this.getAgentStatusTerminalHandleForPaneKey(target.paneKey)
+        if (terminalHandle) {
+          target.terminalHandle = terminalHandle
+        }
+      }
+    }
+    return targets
+  }
+
+  /** Command Code has no working hook, so this is the whole of that turn's
+   *  boundary evidence; ingest through the same sink the OSC path uses
+   *  (`agentHookServer.ingestTerminalStatus`) so main is the only writer. */
+  protected ingestCommandCodeWorkingStatus(ptyId: string, prompt: string): void {
+    if (!this.onTerminalAgentStatus || !this.isCommandCodeStatusMainAuthorityEnabled()) {
+      return
+    }
+    for (const target of this.resolveTerminalAgentStatusTargets(ptyId).values()) {
+      // Why: a fresh working repaint supersedes any done-settle left over from the prior turn.
+      cancelCommandCodeDoneSettle(target.paneKey)
+      try {
+        this.onTerminalAgentStatus({
+          ptyId,
+          ...target,
+          payload: { state: 'working', prompt, agentType: 'command-code' }
+        })
+      } catch (err) {
+        console.error('[runtime] command-code agent status listener threw', {
+          ptyId,
+          paneKey: target.paneKey,
+          state: 'working',
+          err
+        })
+      }
+    }
+  }
+
+  /** Command Code keeps rendering the composer while tools run, so only
+   *  complete the row if no active repaint arrives during the settle window —
+   *  ported from the renderer's command-code-done-settle.ts, keyed by pane. */
+  protected scheduleCommandCodeDoneStatusIngest(ptyId: string, prompt: string): void {
+    if (!this.onTerminalAgentStatus || !this.isCommandCodeStatusMainAuthorityEnabled()) {
+      return
+    }
+    for (const target of this.resolveTerminalAgentStatusTargets(ptyId).values()) {
+      openCommandCodeDoneSettle(target.paneKey, () => {
+        if (!this.onTerminalAgentStatus) {
+          return
+        }
+        // Why re-resolved: the settle fires off a timer, not a chunk, so the
+        // target captured at schedule time may be stale by the deadline.
+        const freshTarget =
+          this.resolveTerminalAgentStatusTargets(ptyId).get(target.paneKey) ?? target
+        try {
+          this.onTerminalAgentStatus({
+            ptyId,
+            ...freshTarget,
+            payload: { state: 'done', prompt, agentType: 'command-code' }
+          })
+        } catch (err) {
+          console.error('[runtime] command-code agent status listener threw', {
+            ptyId,
+            paneKey: target.paneKey,
+            state: 'done',
+            err
+          })
+        }
+      })
+    }
   }
 
   protected extractLastOsc7CwdForPty(
@@ -89,48 +212,9 @@ export class OrcaRuntimeWithCreateTerminalSideEffectCommandCodeDetector extends 
     if (chunk.payloads.length === 0) {
       return
     }
-    const targets = new Map<
-      string,
-      {
-        source: 'mounted-leaf' | 'pty-record'
-        paneKey: string
-        tabId?: string
-        worktreeId?: string
-        connectionId?: string | null
-        terminalHandle?: string
-      }
-    >()
-    const pty = this.ptysById.get(ptyId)
-    const connectionId = pty?.connectionId ?? null
-    for (const leaf of this.getLeavesForPty(ptyId)) {
-      const paneKey = this.makeRuntimePaneKey(leaf)
-      targets.set(paneKey, {
-        source: 'mounted-leaf',
-        paneKey,
-        tabId: leaf.tabId,
-        worktreeId: leaf.worktreeId,
-        connectionId
-      })
-    }
-    if (targets.size === 0 && pty?.paneKey) {
-      targets.set(pty.paneKey, {
-        source: 'pty-record',
-        paneKey: pty.paneKey,
-        tabId: pty.tabId ?? undefined,
-        worktreeId: pty.worktreeId,
-        connectionId
-      })
-    }
     // Why once per chunk and not per payload: the same lookup the renderer-facing IPC boundary
     // runs, and it is the pane's only durable join back to its terminal once the pane key moves.
-    if (this.onTerminalAgentStatus) {
-      for (const target of targets.values()) {
-        const terminalHandle = this.getAgentStatusTerminalHandleForPaneKey(target.paneKey)
-        if (terminalHandle) {
-          target.terminalHandle = terminalHandle
-        }
-      }
-    }
+    const targets = this.resolveTerminalAgentStatusTargets(ptyId)
     for (const payload of chunk.payloads) {
       // Why not gated on a listener: the prompt lifecycle is main's own state, read by
       // terminal waits that run with no status consumer attached.

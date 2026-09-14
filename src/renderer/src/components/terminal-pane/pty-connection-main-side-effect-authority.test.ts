@@ -452,167 +452,40 @@ describe('connectPanePty', () => {
       expect(mockStoreState.dropAgentStatus).not.toHaveBeenCalled()
     })
 
-    it('seeds and settles Command Code status from command-code facts', async () => {
+    // Why inverted (status-D): main now ingests command-code status directly
+    // through agentHookServer (agent-status-store.ts) instead of emitting a
+    // fact the renderer seeds/settles from — consuming these facts here too
+    // would double-write the row. Ownership rejection and the settle/repaint
+    // race are now main-side (command-code-done-settle.test.ts,
+    // orca-runtime-create-terminal-side-effect-command-code-detector); the
+    // renderer's remaining job is the ownership drop filter on the inbound
+    // agentStatus:set (agent-status-event-applicator.test.ts).
+    it('ignores command-code facts under main authority — main ingests directly', async () => {
       enableMainAuthority()
       const { connectPanePty } = await import('./pty-connection')
       const handler = await import('./terminal-side-effect-facts-handler')
       const transport = createMockTransport()
       transportFactoryQueue.push(transport)
       vi.useFakeTimers()
-      const paneKey = makePaneKey('tab-1', LEAF_1)
 
       connectPanePty(createPane(1) as never, createManager(1) as never, createDeps() as never)
       const onPtySpawn = createdTransportOptions[0]?.onPtySpawn as (ptyId: string) => void
       onPtySpawn('pty-fact-cc')
+      mockStoreState.setAgentStatus.mockClear()
 
       handler._dispatchTerminalSideEffectBatchForTest({
         ptyId: 'pty-fact-cc',
         seq: 1,
         facts: [{ kind: 'command-code-working', prompt: 'say hi' }]
       })
-      expect(mockStoreState.agentStatusByPaneKey[paneKey]).toMatchObject({
-        state: 'working',
-        prompt: 'say hi',
-        agentType: 'command-code'
-      })
-
-      // Why: done is a hint — the settle timer stays in pane policy so it can consult the live status row before completing.
       handler._dispatchTerminalSideEffectBatchForTest({
         ptyId: 'pty-fact-cc',
         seq: 2,
         facts: [{ kind: 'command-code-done', prompt: 'say hi' }]
       })
-      vi.advanceTimersByTime(1499)
-      expect(mockStoreState.agentStatusByPaneKey[paneKey]).toMatchObject({ state: 'working' })
-      vi.advanceTimersByTime(1)
-      expect(mockStoreState.agentStatusByPaneKey[paneKey]).toMatchObject({
-        state: 'done',
-        prompt: 'say hi',
-        agentType: 'command-code'
-      })
-    })
-
-    it('rejects Command Code facts when Claude owns the pane', async () => {
-      enableMainAuthority()
-      const { connectPanePty } = await import('./pty-connection')
-      const handler = await import('./terminal-side-effect-facts-handler')
-      const transport = createMockTransport()
-      transportFactoryQueue.push(transport)
-      vi.useFakeTimers()
-      const paneKey = makePaneKey('tab-1', LEAF_1)
-      const claudeStatus = {
-        paneKey,
-        state: 'done' as const,
-        prompt: 'Previous Claude turn',
-        updatedAt: Date.now(),
-        stateStartedAt: Date.now(),
-        agentType: 'claude' as const,
-        stateHistory: []
-      }
-      mockStoreState.tabsByWorktree = {
-        'wt-1': [{ id: 'tab-1', ptyId: null, launchAgent: 'claude' }]
-      }
-      mockStoreState.agentStatusByPaneKey[paneKey] = claudeStatus
-      mockStoreState.paneForegroundAgentByPaneKey[paneKey] = {
-        agent: 'claude',
-        shellForeground: false
-      }
-
-      connectPanePty(createPane(1) as never, createManager(1) as never, createDeps() as never)
-      const onPtySpawn = createdTransportOptions[0]?.onPtySpawn as (ptyId: string) => void
-      onPtySpawn('pty-fact-false-cc')
-      mockStoreState.setAgentStatus.mockClear()
-
-      handler._dispatchTerminalSideEffectBatchForTest({
-        ptyId: 'pty-fact-false-cc',
-        seq: 1,
-        facts: [
-          { kind: 'command-code-working', prompt: 'False prompt' },
-          { kind: 'command-code-done', prompt: 'False prompt' }
-        ]
-      })
       vi.advanceTimersByTime(2000)
 
       expect(mockStoreState.setAgentStatus).not.toHaveBeenCalled()
-      expect(mockStoreState.agentStatusByPaneKey[paneKey]).toBe(claudeStatus)
-    })
-
-    it('rejects Command Code facts when retained Claude identity owns the pane', async () => {
-      enableMainAuthority()
-      const { connectPanePty } = await import('./pty-connection')
-      const handler = await import('./terminal-side-effect-facts-handler')
-      const transport = createMockTransport()
-      transportFactoryQueue.push(transport)
-      vi.useFakeTimers()
-      const paneKey = makePaneKey('tab-1', LEAF_1)
-      const unknownStatus = {
-        paneKey,
-        state: 'working' as const,
-        prompt: '',
-        updatedAt: Date.now(),
-        stateStartedAt: Date.now(),
-        agentType: 'unknown' as const,
-        stateHistory: []
-      }
-      mockStoreState.retainedAgentsByPaneKey[paneKey] = { agentType: 'claude' }
-      mockStoreState.agentStatusByPaneKey[paneKey] = unknownStatus
-
-      connectPanePty(createPane(1) as never, createManager(1) as never, createDeps() as never)
-      const onPtySpawn = createdTransportOptions[0]?.onPtySpawn as (ptyId: string) => void
-      onPtySpawn('pty-fact-retained-false-cc')
-      mockStoreState.setAgentStatus.mockClear()
-
-      handler._dispatchTerminalSideEffectBatchForTest({
-        ptyId: 'pty-fact-retained-false-cc',
-        seq: 1,
-        facts: [
-          { kind: 'command-code-working', prompt: 'False prompt' },
-          { kind: 'command-code-done', prompt: 'False prompt' }
-        ]
-      })
-      vi.advanceTimersByTime(2000)
-
-      expect(mockStoreState.setAgentStatus).not.toHaveBeenCalled()
-      expect(mockStoreState.agentStatusByPaneKey[paneKey]).toBe(unknownStatus)
-    })
-
-    it('keeps Command Code working when a working fact lands before the done settles', async () => {
-      enableMainAuthority()
-      const { connectPanePty } = await import('./pty-connection')
-      const handler = await import('./terminal-side-effect-facts-handler')
-      const transport = createMockTransport()
-      transportFactoryQueue.push(transport)
-      vi.useFakeTimers()
-      const paneKey = makePaneKey('tab-1', LEAF_1)
-
-      connectPanePty(createPane(1) as never, createManager(1) as never, createDeps() as never)
-      const onPtySpawn = createdTransportOptions[0]?.onPtySpawn as (ptyId: string) => void
-      onPtySpawn('pty-fact-cc-repaint')
-
-      handler._dispatchTerminalSideEffectBatchForTest({
-        ptyId: 'pty-fact-cc-repaint',
-        seq: 1,
-        facts: [{ kind: 'command-code-working', prompt: 'Run a slow command' }]
-      })
-      handler._dispatchTerminalSideEffectBatchForTest({
-        ptyId: 'pty-fact-cc-repaint',
-        seq: 2,
-        facts: [{ kind: 'command-code-done', prompt: 'Run a slow command' }]
-      })
-      vi.advanceTimersByTime(1000)
-      // An active repaint within the settle window cancels the pending done.
-      handler._dispatchTerminalSideEffectBatchForTest({
-        ptyId: 'pty-fact-cc-repaint',
-        seq: 3,
-        facts: [{ kind: 'command-code-working', prompt: 'Run a slow command' }]
-      })
-      vi.advanceTimersByTime(2000)
-
-      expect(mockStoreState.agentStatusByPaneKey[paneKey]).toMatchObject({
-        state: 'working',
-        prompt: 'Run a slow command',
-        agentType: 'command-code'
-      })
     })
 
     it('does not byte-scan Command Code output — facts are the only consumer', async () => {

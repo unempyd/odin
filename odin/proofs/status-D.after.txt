@@ -1,0 +1,25 @@
+=== status-D AFTER: targeted new tests (main ingests command-code status directly) ===
+
+
+ RUN  v4.1.11 /Users/briankeeny/Desktop/odin-wt-rend-d
+
+
+ Test Files  9 passed (9)
+      Tests  1381 passed | 1 skipped (1382)
+   Start at  05:11:58
+   Duration  45.55s (transform 36.44s, setup 848ms, import 35.21s, tests 28.40s, environment 2ms)
+
+
+=== tc:node ===
+tc:node: PASS (0 errors)
+
+=== oxlint (touched files) ===
+oxlint: PASS (0 errors)
+
+=== tc:web (pre-existing) ===
+99 pre-existing errors, all in rich-markdown/tiptap editor files (duplicate @tiptap/core
+resolution: node_modules/@tiptap/core vs node_modules/.pnpm/@tiptap+core@3.22.5.../@tiptap/core).
+None reference command-code, agent-status-event-applicator, automation-session-observer,
+background-agent-status-consumer, launch-agent-background-session, terminal-keydown-fit,
+parked-terminal-byte-watcher, or pty-connection-main-side-effect-authority — confirmed by grep.
+Pre-existing environment/symlink artifact, unrelated to status-D.

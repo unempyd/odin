@@ -8,7 +8,25 @@ import type {
 } from '../../../../shared/agent-status-types'
 import { makePaneKey, parsePaneKey } from '../../../../shared/stable-pane-id'
 import { getRepoMapFromState, getWorktreeMapFromState } from '@/store/selectors'
+import type { AgentStatusMetadata } from '@/store/slices/agent-status-contract'
 import type { useAppStore } from '../../store'
+
+/** `update.metadata` for an `agentStatus:set` — providerSession/launchToken pass through, and a
+ *  structured row (no pane to resume into; its record store owns resume identity) always refuses
+ *  the PTY resume affordance and flags ownership while the host holds it live. */
+export function buildAgentStatusUpdateMetadata(
+  data: Pick<AgentStatusIpcPayload, 'providerSession' | 'launchToken' | 'structuredHost'>
+): AgentStatusMetadata | undefined {
+  if (!data.providerSession && !data.launchToken && data.structuredHost === undefined) {
+    return undefined
+  }
+  return {
+    ...(data.providerSession ? { providerSession: data.providerSession } : {}),
+    ...(data.launchToken ? { launchToken: data.launchToken } : {}),
+    ...(data.structuredHost !== undefined ? { terminalResumeEligible: false as const } : {}),
+    ...(data.structuredHost === 'owned' ? { structuredHostOwned: true as const } : {})
+  }
+}
 
 export function isAgentStatusForRecentlyClosedTab(
   store: Pick<AppState, 'recentlyClosedAgentStatusTabIds' | 'recentlyRetiredAgentStatusPaneKeys'>,

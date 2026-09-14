@@ -1,0 +1,73 @@
+=== status-C BEFORE: shouldOwnAgentStatusInRenderer wrote unconditionally for every remote-runtime pane, regardless of whether the paired host had already ingested and republished its own OSC bytes ===
+
+--- src/renderer/src/components/terminal-pane/pty-connection/direct-ssh-retry-status.ts (pre-status-C) ---
+    !session.tab?.forceHostRuntime && !session.connectionId && session.runtimeEnvironmentId === null
+      ? getLocalProjectExecutionRuntimeContext(session.state, session.deps.worktreeId, undefined, {
+          wslAvailable: session.localWindowsTerminalCapabilities?.wslAvailable,
+          availableWslDistros: session.localWindowsTerminalCapabilities?.wslDistros ?? null
+        })
+      : undefined
+  session.shouldOwnAgentStatusInRenderer = session.runtimeEnvironmentId !== null
+  // Why: the host also mirrors agent status for this pane through tabs.
+  // Claiming here (decided once at transport creation, like the side-effect
+  // authority below) lets the mirror keep this renderer's byte-derived status
+  // instead of overwriting/deleting it on every republication.
+  session.releaseRendererOwnedAgentStatusPane =
+    session.runtimeEnvironmentId !== null
+      ? registerRendererOwnedAgentStatusPane(session.cacheKey, session.runtimeEnvironmentId)
+      : null
+  session.handleRendererOwnedAgentStatus = (payload): void => {
+    if (
+      shouldSuppressCodexAutoApprovalStatus(payload, {
+        paneKey: session.cacheKey,
+        tabId: session.deps.tabId,
+        ...(session.launchToken ? { launchToken: session.launchToken } : {})
+
+The capability status-B added (AGENT_STATUS_HOST_OSC_INGEST_RUNTIME_CAPABILITY,
+hostOwnsRemoteAgentStatus in agent-status-host-osc-ingest-capability.ts) was
+wired to nothing: `session.shouldOwnAgentStatusInRenderer` never consulted it.
+Every remote-runtime pane's renderer kept parsing its own OSC bytes and
+writing setAgentStatus even after the paired host advertised that it already
+ingests those same bytes and republishes the row on session.tabs — a
+guaranteed duplicate writer for any capable host.
+
+--- Failing-first assertion this increment adds (new test, run against the
+    pre-status-C code to confirm it was red) ---
+it('stops writing its own OSC-derived status when the paired host advertises the ingest capability', async () => {
+  mockCachedHostOwnsRemoteAgentStatus.mockReturnValue(true)
+  ...
+  connectPanePty(pane, manager, deps)
+  ...
+  expect(createdTransportOptions[0]?.onAgentStatus).toBeUndefined()
+})
+
+--- Actual RED run against pre-status-C code (odin/proofs above stashed away) ---
+
+ RUN  v4.1.11 /Users/briankeeny/Desktop/odin-wt-rend-d
+
+ ❯ src/renderer/src/components/terminal-pane/pty-connection-remote-runtime-attach.test.ts (18 tests | 1 failed) 4426ms
+     × stops writing its own OSC-derived status when the paired host advertises the ingest capability 59ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/renderer/src/components/terminal-pane/pty-connection-remote-runtime-attach.test.ts > connectPanePty > stops writing its own OSC-derived status when the paired host advertises the ingest capability
+AssertionError: expected "vi.fn()" to be called with arguments: [ 'env-1' ]
+
+Number of calls: 0
+
+ ❯ src/renderer/src/components/terminal-pane/pty-connection-remote-runtime-attach.test.ts:298:49
+    296|     await flushAsyncTicks()
+    297|
+    298|     expect(mockCachedHostOwnsRemoteAgentStatus).toHaveBeenCalledWith('…
+       |                                                 ^
+    299|     expect(mockPrimeHostOwnsRemoteAgentStatusCache).toHaveBeenCalledWi…
+    300|     expect(createdTransportOptions[0]?.onAgentStatus).toBeUndefined()
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 17 passed (18)
+   Start at  05:45:30
+   Duration  4.99s (transform 2.62s, setup 75ms, import 241ms, tests 4.43s, environment 0ms)
+

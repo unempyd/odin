@@ -7,11 +7,11 @@ import {
   getRemoteRuntimePtyEnvironmentId,
   getRemoteRuntimeTerminalHandle
 } from '@/runtime/runtime-terminal-stream'
+import { hostOwnsRemoteAgentStatus } from '@/runtime/agent-status-host-osc-ingest-capability'
 import { useAppStore } from '@/store'
 import { createAgentStatusOscProcessor } from '../../../shared/agent-status-osc'
 import { runtimeWaitExitCode } from '@/lib/agent-background-session-exit'
 import type { ParsedAgentStatusPayload } from '../../../shared/agent-status-types'
-import { isMainTerminalSideEffectAuthorityForPty } from '@/components/terminal-pane/terminal-side-effect-facts-handler'
 import { resolveLiveAgentStatusConnectionRouting } from '@/lib/agent-status-connection-ownership'
 import { rendererAgentStatusObservations } from '@/lib/renderer-agent-status-observations'
 
@@ -24,23 +24,16 @@ export async function observeExistingAutomationSession(args: {
   onExit: (code: number) => void
 }): Promise<() => void> {
   const { ptyId, paneKey, runId, onData, onExit } = args
-  // Why: for local/SSH PTYs main already parses OSC 9999 and routes it
-  // through the hook server (agentStatus:set → store); writing here too
-  // would race/duplicate that path. Remote-runtime bytes never transit local
-  // main, and the kill switch restores the legacy write. The onAgentStatus
-  // callback always fires — automation completion tracking stays here.
-  const mainOwnsAgentStatusWrites =
-    !isRemoteRuntimePtyId(ptyId) &&
-    isMainTerminalSideEffectAuthorityForPty({
-      settings: useAppStore.getState().settings,
-      runtimeEnvironmentId: null
-    })
   const processAgentStatus = createAgentStatusOscProcessor()
+  // Why default false, resolved below only for a remote-runtime pty: local/SSH
+  // status facts already pass through main's unconditional OSC ingest, so
+  // writing here too would duplicate that path.
+  let writesRemoteAgentStatusFallback = false
   const handleData = (data: string): void => {
     onData(data)
     const processed = processAgentStatus(data)
     for (const payload of processed.payloads) {
-      if (!mainOwnsAgentStatusWrites) {
+      if (writesRemoteAgentStatusFallback) {
         const state = useAppStore.getState()
         const routing = resolveLiveAgentStatusConnectionRouting({ state, paneKey, ptyId })
         // Why: a delayed reuse observer must not write into a pane that has
@@ -76,6 +69,12 @@ export async function observeExistingAutomationSession(args: {
     if (runtimeTarget.kind !== 'environment' || !terminal) {
       return () => {}
     }
+    // Why probe, not assume: bytes never transit local main for this pty, so an
+    // old host (no OSC-ingest capability) publishes no row at all — this
+    // observer's own parse is that pane's only writer until the host upgrades.
+    writesRemoteAgentStatusFallback = !(await hostOwnsRemoteAgentStatus(
+      runtimeTarget.environmentId
+    ))
     const stream = await getRemoteRuntimeTerminalMultiplexer(
       runtimeTarget.environmentId
     ).subscribeTerminal({

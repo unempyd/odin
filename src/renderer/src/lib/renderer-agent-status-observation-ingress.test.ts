@@ -74,7 +74,11 @@ describe('renderer-side observation origins', () => {
     expect(titleRowObservation(3_000).revision).toBeGreaterThan(titleRowObservation(2_000).revision)
   })
 
-  it('tags renderer-parsed OSC 9999 rows as osc-origin under the renderer authority', async () => {
+  // status-C: createBackgroundAgentStatusConsumer writes again, but only for a
+  // remote-runtime pty whose host the caller has already probed and found not
+  // to advertise OSC-ingest (`writesRemoteAgentStatusFallback`, resolved via
+  // hostOwnsRemoteAgentStatus before this consumer is constructed).
+  it('tags a remote-runtime OSC write as osc-origin under the renderer authority', async () => {
     setAgentStatusMock.mockReset()
     const { createBackgroundAgentStatusConsumer } =
       await import('./background-agent-status-consumer')
@@ -82,11 +86,12 @@ describe('renderer-side observation origins', () => {
     const consumer = createBackgroundAgentStatusConsumer({
       paneKey,
       launchToken: 'launch-1',
-      // Why: main parses OSC for local/SSH PTYs; only when it does not is the renderer the authority.
-      mainOwnsAgentStatusWrites: false,
       expectedConnectionId: null,
       runtimeEnvironmentId: 'env-1',
-      getPtyId: () => 'pty-1'
+      // Why true: this pane is remote-runtime and the caller's probe found the
+      // host does not advertise OSC-ingest — the pre-status-C legacy write.
+      writesRemoteAgentStatusFallback: true,
+      getPtyId: () => 'remote:env-1@@terminal-9'
     })
 
     consumer.consume(`\x1b]9999;{"state":"working","prompt":"remote turn"}\x07`)
@@ -104,5 +109,41 @@ describe('renderer-side observation origins', () => {
       })
     }
     expect(observations[1]!.revision).toBeGreaterThan(observations[0]!.revision)
+  })
+
+  it('never writes when the caller resolved the host as capable (writesRemoteAgentStatusFallback: false)', async () => {
+    setAgentStatusMock.mockReset()
+    const { createBackgroundAgentStatusConsumer } =
+      await import('./background-agent-status-consumer')
+    const consumer = createBackgroundAgentStatusConsumer({
+      paneKey: 'tab-osc:99999999-9999-4999-8999-999999999999',
+      launchToken: 'launch-1',
+      expectedConnectionId: null,
+      runtimeEnvironmentId: 'env-1',
+      writesRemoteAgentStatusFallback: false,
+      getPtyId: () => 'remote:env-1@@terminal-9'
+    })
+
+    consumer.consume(`\x1b]9999;{"state":"working","prompt":"remote turn"}\x07`)
+
+    expect(setAgentStatusMock).not.toHaveBeenCalled()
+  })
+
+  it('never writes for a local pty even if writesRemoteAgentStatusFallback were left on', async () => {
+    setAgentStatusMock.mockReset()
+    const { createBackgroundAgentStatusConsumer } =
+      await import('./background-agent-status-consumer')
+    const consumer = createBackgroundAgentStatusConsumer({
+      paneKey: 'tab-local:99999999-9999-4999-8999-999999999999',
+      launchToken: 'launch-1',
+      expectedConnectionId: null,
+      runtimeEnvironmentId: null,
+      writesRemoteAgentStatusFallback: true,
+      getPtyId: () => 'pty-local-1'
+    })
+
+    consumer.consume(`\x1b]9999;{"state":"working","prompt":"local turn"}\x07`)
+
+    expect(setAgentStatusMock).not.toHaveBeenCalled()
   })
 })

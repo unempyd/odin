@@ -1,4 +1,5 @@
 import { useAppStore } from '@/store'
+import { isRemoteRuntimePtyId } from '@/runtime/runtime-terminal-inspection'
 import { createAgentStatusOscProcessor } from '../../../shared/agent-status-osc'
 import type { ParsedAgentStatusPayload } from '../../../shared/agent-status-types'
 import {
@@ -11,9 +12,13 @@ import type { AgentStatusObservation } from '../../../shared/agent-status-observ
 export function createBackgroundAgentStatusConsumer(args: {
   paneKey: string
   launchToken: string
-  mainOwnsAgentStatusWrites: boolean
   expectedConnectionId: string | null | undefined
   runtimeEnvironmentId: string | null
+  /** Resolved by the caller (via `hostOwnsRemoteAgentStatus`) before this consumer
+   *  starts receiving data: true only for a remote-runtime pty whose host does not
+   *  (yet) advertise OSC-ingest — bytes never transit local main for that pty, so
+   *  this consumer's own parse is its only writer until the host upgrades. */
+  writesRemoteAgentStatusFallback: boolean
   getPtyId: () => string
   onAgentStatus?: (payload: ParsedAgentStatusPayload) => void
 }): {
@@ -36,10 +41,13 @@ export function createBackgroundAgentStatusConsumer(args: {
       runtimeEnvironmentId: args.runtimeEnvironmentId
     })
   }
+  // Why local/SSH writes no store: main's OSC ingest is unconditional
+  // (agent-status-store.ts). Only a remote-runtime pty on a host that hasn't
+  // advertised OSC-ingest still needs this consumer's own write.
   const consume = (data: string): void => {
     const processed = processAgentStatus(data)
     for (const payload of processed.payloads) {
-      if (!args.mainOwnsAgentStatusWrites) {
+      if (args.writesRemoteAgentStatusFallback && isRemoteRuntimePtyId(args.getPtyId())) {
         const routing = resolveRouting()
         // Why: hidden callbacks can outlive tab reuse; only the exact current
         // pane-to-PTY binding may update its status ownership.
