@@ -17,6 +17,7 @@ import type { ExecutionHostId } from '../../shared/execution-host'
 import type { TerminalQuickCommand } from '../../shared/terminal-quick-command-types'
 import { recordManagedHookInstallFailure } from '../agent-hooks/install-telemetry'
 import { applyAgentStatusHooksEnabled } from '../agent-hooks/managed-agent-hook-controls'
+import { clearMirroredCodexCredentials } from '../codex-accounts/codex-credential-mirror-consent-revocation'
 import type { RuntimeStore } from './runtime-store-contract'
 
 export type RuntimeClientSettings = Pick<
@@ -27,6 +28,8 @@ export type RuntimeClientSettings = Pick<
   | 'agentDefaultArgs'
   | 'agentDefaultEnv'
   | 'agentStatusHooksEnabled'
+  | 'codexCredentialMirrorConsent'
+  | 'networkExposureConsent'
   | 'terminalCopyTrimsGutter'
   | 'defaultTaskSource'
   | 'defaultTaskViewPreset'
@@ -58,6 +61,8 @@ export type RuntimeHostDisplayLabelOverrides = Partial<
 export type RuntimeClientSettingsUpdate = Pick<
   Partial<GlobalSettings>,
   | 'agentStatusHooksEnabled'
+  | 'codexCredentialMirrorConsent'
+  | 'networkExposureConsent'
   | 'defaultTuiAgent'
   | 'disabledTuiAgents'
   | 'agentDefaultArgs'
@@ -80,11 +85,18 @@ export type RuntimeClientSettingsUpdate = Pick<
 export class RuntimeClientSettingsController {
   private reconciliationGeneration = 0
   private reconciliationTail: Promise<void> = Promise.resolve()
+  // Why: set post-construction from main-process-runtime-launch.ts once the live RPC server
+  // exists, so a consent revocation here can re-close its listener without a circular dependency.
+  private narrowNetworkExposure: (() => Promise<void>) | undefined
 
   constructor(
     private readonly store: RuntimeStore | null,
     private readonly notifyReposChanged: (() => void) | undefined = undefined
   ) {}
+
+  setNetworkExposureNarrower(narrow: (() => Promise<void>) | undefined): void {
+    this.narrowNetworkExposure = narrow
+  }
 
   get(): RuntimeClientSettings {
     if (!this.store?.getSettings) {
@@ -97,7 +109,9 @@ export class RuntimeClientSettingsController {
       agentCmdOverrides: settings.agentCmdOverrides ?? {},
       agentDefaultArgs: settings.agentDefaultArgs ?? {},
       agentDefaultEnv: settings.agentDefaultEnv ?? {},
-      agentStatusHooksEnabled: settings.agentStatusHooksEnabled !== false,
+      agentStatusHooksEnabled: settings.agentStatusHooksEnabled === true,
+      codexCredentialMirrorConsent: settings.codexCredentialMirrorConsent === true,
+      networkExposureConsent: settings.networkExposureConsent === true,
       // Why projected: mobile's terminal Copy honours this, and a host predating
       // the setting sends no key, which the client reads as on (#19770).
       terminalCopyTrimsGutter: settings.terminalCopyTrimsGutter !== false,
@@ -135,6 +149,8 @@ export class RuntimeClientSettingsController {
     }
     const beforeSettings = this.store.getSettings()
     const before = beforeSettings.agentStatusHooksEnabled !== false
+    const credentialMirrorConsentBefore = beforeSettings.codexCredentialMirrorConsent === true
+    const networkExposureConsentBefore = beforeSettings.networkExposureConsent === true
     this.store.updateSettings(updates, { notifyListeners: true })
     const settings = this.store.getSettings()
     if (updates.worktreeVisibilityDefaults !== undefined) {
@@ -147,6 +163,14 @@ export class RuntimeClientSettingsController {
         !haveSameDisabledTuiAgents(beforeSettings.disabledTuiAgents, settings.disabledTuiAgents))
     ) {
       await this.reconcileManagedAgentHooks()
+    }
+    // Why: revoking consent must remove the credential copies it already made.
+    if (credentialMirrorConsentBefore && updates.codexCredentialMirrorConsent === false) {
+      clearMirroredCodexCredentials()
+    }
+    // Why: revoking network exposure consent must re-close a live wide listener, not just refuse future widens.
+    if (networkExposureConsentBefore && updates.networkExposureConsent === false) {
+      await this.narrowNetworkExposure?.()
     }
     return this.get()
   }

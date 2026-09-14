@@ -1,0 +1,90 @@
+
+ RUN  v4.1.11 /Users/briankeeny/Desktop/odin-wt-consent
+
+ ❯ src/main/runtime/runtime-rpc-websocket-bind-host.test.ts (23 tests | 5 failed) 267ms
+     × stays on loopback at startup when a network device connected but consent was never granted 14ms
+     × stays on loopback at startup for a legacy-registry device without consent 8ms
+     × upgrades a reused pending grant to network reach but still stays on loopback without consent 14ms
+     × rebinds a live 0.0.0.0 listener back to loopback when consent is revoked 11ms
+     × does not narrow a bind pinned to all interfaces when consent is revoked 7ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 5 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/main/runtime/runtime-rpc-websocket-bind-host.test.ts > OrcaRuntimeRpcServer WebSocket bind host (STA-2370) > stays on loopback at startup when a network device connected but consent was never granted
+AssertionError: expected '0.0.0.0' to be '127.0.0.1' // Object.is equality
+
+Expected: "127.0.0.1"
+Received: "0.0.0.0"
+
+ ❯ src/main/runtime/runtime-rpc-websocket-bind-host.test.ts:132:51
+    130|           .some((d) => d.lastSeenAt > 0)
+    131|       ).toBe(true)
+    132|       expect(wsTransportOf(server)?.resolvedHost).toBe('127.0.0.1')
+       |                                                   ^
+    133|       await expect(server.ensureNetworkExposure()).rejects.toThrow(/co…
+    134|     } finally {
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/5]⎯
+
+ FAIL  src/main/runtime/runtime-rpc-websocket-bind-host.test.ts > OrcaRuntimeRpcServer WebSocket bind host (STA-2370) > stays on loopback at startup for a legacy-registry device without consent
+AssertionError: expected '0.0.0.0' to be '127.0.0.1' // Object.is equality
+
+Expected: "127.0.0.1"
+Received: "0.0.0.0"
+
+ ❯ src/main/runtime/runtime-rpc-websocket-bind-host.test.ts:243:51
+    241|     await server.start()
+    242|     try {
+    243|       expect(wsTransportOf(server)?.resolvedHost).toBe('127.0.0.1')
+       |                                                   ^
+    244|     } finally {
+    245|       await server.stop()
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/5]⎯
+
+ FAIL  src/main/runtime/runtime-rpc-websocket-bind-host.test.ts > OrcaRuntimeRpcServer WebSocket bind host (STA-2370) > upgrades a reused pending grant to network reach but still stays on loopback without consent
+AssertionError: expected '0.0.0.0' to be '127.0.0.1' // Object.is equality
+
+Expected: "127.0.0.1"
+Received: "0.0.0.0"
+
+ ❯ src/main/runtime/runtime-rpc-websocket-bind-host.test.ts:325:55
+    323|     await relaunched.start()
+    324|     try {
+    325|       expect(wsTransportOf(relaunched)?.resolvedHost).toBe('127.0.0.1')
+       |                                                       ^
+    326|     } finally {
+    327|       await relaunched.stop()
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/5]⎯
+
+ FAIL  src/main/runtime/runtime-rpc-websocket-bind-host.test.ts > OrcaRuntimeRpcServer WebSocket bind host (STA-2370) > rebinds a live 0.0.0.0 listener back to loopback when consent is revoked
+TypeError: server.narrowWebSocketBindToLoopback is not a function
+ ❯ src/main/runtime/runtime-rpc-websocket-bind-host.test.ts:761:20
+    759|       // refuse the next widen.
+    760|       consentGranted = false
+    761|       await server.narrowWebSocketBindToLoopback()
+       |                    ^
+    762|
+    763|       expect(wsTransportOf(server)?.resolvedHost).toBe('127.0.0.1')
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/5]⎯
+
+ FAIL  src/main/runtime/runtime-rpc-websocket-bind-host.test.ts > OrcaRuntimeRpcServer WebSocket bind host (STA-2370) > does not narrow a bind pinned to all interfaces when consent is revoked
+TypeError: server.narrowWebSocketBindToLoopback is not a function
+ ❯ src/main/runtime/runtime-rpc-websocket-bind-host.test.ts:786:20
+    784|     try {
+    785|       expect(wsTransportOf(server)?.resolvedHost).toBe('0.0.0.0')
+    786|       await server.narrowWebSocketBindToLoopback()
+       |                    ^
+    787|       // Why: an operator's pin outranks a paired client's Settings to…
+    788|       expect(wsTransportOf(server)?.resolvedHost).toBe('0.0.0.0')
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/5]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  5 failed | 18 passed (23)
+   Start at  20:40:45
+   Duration  21.98s (transform 16.07s, setup 91ms, import 21.34s, tests 267ms, environment 0ms)
+

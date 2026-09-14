@@ -114,7 +114,7 @@ describe('OrcaRuntimeService', () => {
     expect(spawn).toHaveBeenCalledWith(
       expect.objectContaining({
         cwd: '/remote/repo-nautilus-2',
-        command: `claude '--dangerously-skip-permissions' --prefill '${draftUrl}'`,
+        command: `claude --prefill '${draftUrl}'`,
         connectionId: 'ssh-1',
         worktreeId: result.worktree.id
       })
@@ -225,7 +225,7 @@ describe('OrcaRuntimeService', () => {
       expect(spawn).toHaveBeenCalledWith(
         expect.objectContaining({
           cwd: '/remote/mobile-codex-draft',
-          command: "codex '--dangerously-bypass-approvals-and-sandbox'",
+          command: 'codex',
           connectionId: 'ssh-1',
           worktreeId: result.worktree.id
         })

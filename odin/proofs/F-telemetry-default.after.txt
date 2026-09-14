@@ -1,0 +1,15 @@
+=== F targeted tests ===
+
+ RUN  v4.1.11 /Users/briankeeny/Desktop/odin-wt-consent
+
+[telemetry] DO_NOT_TRACK="0" is not a recognized truthy value (expected "1" or "true"); treating as unset.
+
+ Test Files  8 passed (8)
+      Tests  118 passed (118)
+   Start at  19:41:59
+   Duration  9.20s (transform 11.37s, setup 664ms, import 16.07s, tests 468ms, environment 2ms)
+
+=== tc:node ===
+$ pnpm run typecheck:node
+$ tsc --noEmit -p config/tsconfig.node.json
+=== oxlint ===

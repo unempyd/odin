@@ -1,0 +1,33 @@
+
+ RUN  v4.1.11 /Users/briankeeny/Desktop/odin-wt-consent
+
+ ❯ src/main/codex-accounts/runtime-home-system-default-mirror-readback.test.ts (19 tests | 1 failed) 1078ms
+     × does not copy ~/.codex/auth.json into the runtime home without mirror consent 643ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/main/codex-accounts/runtime-home-system-default-mirror-readback.test.ts > CodexRuntimeHomeService > does not copy ~/.codex/auth.json into the runtime home without mirror consent
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ src/main/codex-accounts/runtime-home-system-default-mirror-readback.test.ts:49:41
+     47|
+     48|     expect(service).toBeInstanceOf(CodexRuntimeHomeService)
+     49|     expect(existsSync(runtimeAuthPath)).toBe(false)
+       |                                         ^
+     50|   })
+     51|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 18 passed (19)
+   Start at  19:46:41
+   Duration  1.76s (transform 800ms, setup 86ms, import 374ms, tests 1.08s, environment 0ms)
+

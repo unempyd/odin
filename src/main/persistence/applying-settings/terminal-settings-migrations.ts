@@ -5,11 +5,10 @@ import {
   normalizeDesktopTerminalScrollbackRows
 } from '../../../shared/terminal-scrollback-policy'
 import {
-  DEFAULT_TUI_AGENT_ARGS,
-  DEFAULT_TUI_AGENT_ENV,
   normalizeTuiAgentArgsRecord,
   normalizeTuiAgentEnvRecord
 } from '../../../shared/tui-agent-launch-defaults'
+import { YOLO_TUI_AGENT_ARGS, YOLO_TUI_AGENT_ENV } from '../../../shared/tui-agent-permissions'
 
 export function buildWorkspaceDirHistoryForUpdate(
   current: GlobalSettings,
@@ -126,55 +125,22 @@ export function migrateAgentYoloDefaults(
 ): Pick<GlobalSettings, 'agentDefaultArgs' | 'agentDefaultEnv' | 'agentYoloDefaultsMigrated'> {
   const existingArgs = normalizeTuiAgentArgsRecord(settings?.agentDefaultArgs)
   const existingEnv = normalizeTuiAgentEnvRecord(settings?.agentDefaultEnv)
-  if (settings?.agentYoloDefaultsMigrated === true) {
-    // Keep newly added agents manual for profiles migrated by an older build.
-    // Missing keys otherwise fall through to the current (possibly yolo) defaults.
-    for (const agent of Object.keys(DEFAULT_TUI_AGENT_ARGS)) {
-      if (!(agent in existingArgs)) {
-        existingArgs[agent as keyof typeof DEFAULT_TUI_AGENT_ARGS] = ''
-      }
-    }
-    for (const agent of Object.keys(DEFAULT_TUI_AGENT_ENV)) {
-      if (!(agent in existingEnv)) {
-        existingEnv[agent as keyof typeof DEFAULT_TUI_AGENT_ENV] = {}
-      }
-    }
-    return {
-      agentDefaultArgs: existingArgs,
-      agentDefaultEnv: existingEnv,
-      agentYoloDefaultsMigrated: true
+
+  // Why: hydrate every known agent to manual ('' / {}); migration never injects a permission bypass.
+  for (const agent of Object.keys(YOLO_TUI_AGENT_ARGS)) {
+    if (!(agent in existingArgs)) {
+      existingArgs[agent as keyof typeof YOLO_TUI_AGENT_ARGS] = ''
     }
   }
-
-  const commandOverrides = settings?.agentCmdOverrides ?? {}
-  const migratedArgs = { ...existingArgs }
-  for (const [agent, args] of Object.entries(DEFAULT_TUI_AGENT_ARGS)) {
-    if (agent in migratedArgs) {
-      continue
+  for (const agent of Object.keys(YOLO_TUI_AGENT_ENV)) {
+    if (!(agent in existingEnv)) {
+      existingEnv[agent as keyof typeof YOLO_TUI_AGENT_ENV] = {}
     }
-    if (agent in commandOverrides) {
-      migratedArgs[agent as keyof typeof DEFAULT_TUI_AGENT_ARGS] = ''
-      continue
-    }
-    migratedArgs[agent as keyof typeof DEFAULT_TUI_AGENT_ARGS] = args
-  }
-
-  const migratedEnv = { ...existingEnv }
-  for (const [agent, env] of Object.entries(DEFAULT_TUI_AGENT_ENV)) {
-    if (agent in migratedEnv) {
-      continue
-    }
-    if (agent in commandOverrides) {
-      migratedEnv[agent as keyof typeof DEFAULT_TUI_AGENT_ENV] = {}
-      continue
-    }
-    migratedEnv[agent as keyof typeof DEFAULT_TUI_AGENT_ENV] = { ...env }
   }
 
   return {
-    // Why: legacy users could only customize launch defaults via command overrides, so those agents count as already user-owned.
-    agentDefaultArgs: migratedArgs,
-    agentDefaultEnv: migratedEnv,
+    agentDefaultArgs: existingArgs,
+    agentDefaultEnv: existingEnv,
     agentYoloDefaultsMigrated: true
   }
 }

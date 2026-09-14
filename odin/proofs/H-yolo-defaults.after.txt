@@ -1,0 +1,22 @@
+=== vitest: H targeted tests ===
+
+ RUN  v4.1.11 /Users/briankeeny/Desktop/odin-wt-consent
+
+
+ Test Files  4 passed (4)
+      Tests  115 passed (115)
+   Start at  18:47:43
+   Duration  7.88s (transform 6.72s, setup 482ms, import 8.01s, tests 1.33s, environment 1ms)
+
+=== tc:node ===
+native/windows-registry install: Done
+. postinstall$ node config/scripts/rebuild-native-deps.mjs
+. postinstall: [rebuild] Skipping optional Electron rebuild modules: cpu-features
+. postinstall: [rebuild] Native modules already load in Electron; skipping rebuild.
+. postinstall: Done
+. prepare$ husky
+. prepare: Done
+Done in 4.8s using pnpm v12.0.0
+$ pnpm run typecheck:node
+$ tsc --noEmit -p config/tsconfig.node.json
+=== oxlint ===
