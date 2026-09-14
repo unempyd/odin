@@ -489,12 +489,33 @@ describe('Store', () => {
     expect(store.getSettings().agentDefaultArgs?.claude).toBe('')
   })
 
-  it('preserves an explicitly configured bypass through migration', async () => {
+  // Why the contract changed (odin fix-H1): a value byte-identical to Orca's former automatic
+  // bypass default cannot be told apart from a user's own choice, so an unreviewed profile has it
+  // cleared once and the profile is marked reviewed; a reviewed profile keeps whatever it holds.
+  it('clears a verbatim inherited bypass once, then preserves it on a reviewed profile', async () => {
     writeFileSync(
       join(testState.dir, 'orca-data.json'),
       JSON.stringify({
         settings: {
           agentCmdOverrides: {},
+          agentDefaultArgs: { claude: '--dangerously-skip-permissions' }
+        }
+      })
+    )
+    const store = await createStore()
+
+    expect(store.getSettings().agentDefaultArgs?.claude).toBe('')
+    expect(store.getSettings().agentDefaultArgs?.codex).toBe('')
+    expect(store.getSettings().agentBypassDefaultsReviewed).toBe(true)
+  })
+
+  it('preserves an explicitly configured bypass on a reviewed profile', async () => {
+    writeFileSync(
+      join(testState.dir, 'orca-data.json'),
+      JSON.stringify({
+        settings: {
+          agentCmdOverrides: {},
+          agentBypassDefaultsReviewed: true,
           agentDefaultArgs: { claude: '--dangerously-skip-permissions' }
         }
       })
@@ -511,6 +532,9 @@ describe('Store', () => {
       JSON.stringify({
         settings: {
           agentYoloDefaultsMigrated: true,
+          // Why reviewed: this case is about stripping unsupported args, not the odin fix-H1
+          // review migration, which would otherwise clear the verbatim codex value first.
+          agentBypassDefaultsReviewed: true,
           agentDefaultArgs: {
             opencode: '--dangerously-skip-permissions --model opencode/gpt-5',
             kilo: '--dangerously-skip-permissions',
