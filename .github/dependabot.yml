@@ -1,0 +1,32 @@
+version: 2
+updates:
+  # Root workspace (pnpm@12) — Electron app.
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    # Security-fix PRs only: open-pull-requests-limit: 0 disables routine
+    # version-update PRs but does not affect Dependabot security updates,
+    # which ignore this limit.
+    open-pull-requests-limit: 0
+
+  # cloud/ — its own pnpm@10 workspace (relay, push, ops apps + packages).
+  - package-ecosystem: "npm"
+    directory: "/cloud"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 0
+
+  # mobile/ — its own pnpm@10 workspace (Expo app).
+  - package-ecosystem: "npm"
+    directory: "/mobile"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 0
+
+  # docs/site/ — its own pnpm@10 workspace (docs site), owned by another agent.
+  - package-ecosystem: "npm"
+    directory: "/docs/site"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 0
