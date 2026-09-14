@@ -1,19 +1,22 @@
 # SSH boundary proof against a real host (claw-vps)
 
 Real-machine run of `odin/proof/ssh-boundary.mjs` against `claw-vps` (Ubuntu 24.04, Node 18, ~1 GB
-free RAM, root over key auth). Driver source: `odin/proof/ssh-boundary.mjs`. Recorded artifact:
-`odin/proofs/ssh-boundary.2026-09-14T19-48-26-225Z.json` (NDJSON events + summary).
+free RAM, root over key auth). Driver source: `odin/proof/ssh-boundary.mjs`. Recorded artifacts:
+`odin/proofs/ssh-boundary.2026-09-14T19-48-26-225Z.json` (the original run, phases 1–2 only —
+kept for the historical record of §Deviations 1–3 below) and
+`odin/proofs/ssh-boundary.2026-09-14T21-46-07-872Z.json` (the full run after the fix in
+§Deviation 3, phases 1–7, `ok: true`).
 
 ## Result in one line
 
-Phase 1 (desktop-mode host boot, target/repo registration) is fully proven. Phase 2 (`ssh.connect`
-against the real VPS) authenticates, deploys, and launches a real relay end-to-end — but the
-connect handshake does not reach `status: "connected"` within the driver's patience window, every
-time it was tried. Two real, previously-unknown Odin/Orca bugs were found and fixed along the way
-(§Deviations 1–2). A third, still-open finding blocks phases 3–7 (§Deviation 3): worktree/terminal
-creation on the SSH host and the loss-of-contact matrix were **not** exercised, because there was
-never a connected relay to build them on. Every verdict that *could* be obtained without a
-connected session is recorded below and in the JSON artifact.
+All seven phases now pass end to end against the real VPS: desktop-mode host boot, `ssh.connect`
+authenticating/deploying/reaching `status: "connected"`, worktree + terminal creation on the SSH
+host, the loss-of-contact matrix (transport drop via `iptables`, reconnect re-adoption,
+owner-proven exit, relay `SIGKILL` + relaunch). Three real, previously-unknown Odin/Orca bugs were
+found and fixed (§Deviations 1–3); §Deviation 3 — the connect handshake never reaching
+`status: "connected"` — was the blocker for phases 3–7 and is now root-caused and fixed at the
+product level (`src/main/host/electron-secret-store.ts`), not worked around in the driver. See
+§Deviation 3 for the exact stuck call, the evidence trail, and the fix.
 
 ## Phase 1 — desktop-mode host boot, target + repo registration
 
@@ -126,18 +129,67 @@ actually ran (`node-gyp rebuild` observed live in `ps`), the relay's own log con
 This is real: real SSH auth, a real SFTP upload, a real `npm install` + native compile under
 constrained memory on a real VPS, a real relay process, a real accepted client connection.
 
-### Deviation 3 — the connect handshake does not reach `connected` (unresolved)
+### Deviation 3 — the connect handshake did not reach `connected` (root-caused and fixed)
 
-**Symptom, reproduced identically on every attempt** (fresh install and reused install, three
-different target ids, across ~40 minutes of testing): after the relay logs "Grace canceled: socket
-client accepted", nothing further happens on either side for minutes. The client-side `ssh.connect`
-RPC call (driver-imposed timeout, tried at 45s/180s/240s/280s across attempts) never resolves or
-rejects with a diagnosable error — it simply never returns until the driver's own timeout fires.
-The relay's log goes silent between "Grace canceled" and — in two observations — an eventual
-`Shutdown: ptys=0, clients=0, ownsSocket=true` / `Process exiting with code 0` roughly 4 minutes
-later, even though `relayGracePeriodSeconds: 0` is supposed to mean "keep alive until reset." In one
-of those observations the relay process was still present in `ps` **ten minutes** after its own log
-said it had exited — logged its own exit and then did not actually exit.
+**Symptom, originally reproduced identically on every attempt** (fresh install and reused install,
+three different target ids, across ~40 minutes of testing): after the relay logs "Grace canceled:
+socket client accepted", nothing further happens on either side for minutes. The client-side
+`ssh.connect` RPC call (driver-imposed timeout, tried at 45s/180s/240s/280s across attempts) never
+resolved or rejected with a diagnosable error — it simply never returned until the driver's own
+timeout fired. See §"What this rules out" below (unchanged from the original investigation — each
+of these really was ruled out; the root cause was simply somewhere else).
+
+**Root cause, found by instrumenting the real await chain and rebuilding** (console.error
+checkpoints at every `await` inside `SshRelaySession.establish()`
+(`src/main/ssh/ssh-relay-session.ts`), `SshChannelMultiplexer.request()`/`sendMessage()`
+(`src/main/ssh/ssh-channel-multiplexer.ts`), the relay's own request dispatch
+(`src/relay/dispatcher-rpc-routing.ts`) and socket-data receipt
+(`src/relay/relay-reconnect-listener.ts`); driver rebuilt with `pnpm run build:relay && pnpm run
+build:electron-vite` after each edit, rerun against claw-vps): the SSH/relay layer was never the
+problem. The `pty.openClient` request round-tripped over the real SSH channel in **369ms**
+(`sendMessage` at `t`, `handleFrame` response at `t+369ms`, `mux.request resolved`) — proving the
+mux, the relay's dispatcher, and the transport were all healthy the entire time. Establish() then
+logged `before rememberPtyConsumerRecovery` and never logged `after` — the actual hang was inside
+that single call, three layers of `await` deep, in
+`src/main/persistence/loading-store/state-serialization-secret-handling.ts`'s
+`buildStateToSave()`. Durability of the freshly-negotiated PTY-consumer owner lease
+(`sshPtyConsumerRecoveries[].ownerLease`) is the *first secret this process ever needs to encrypt*
+(every other protected slot — `opencodeSessionCookie`, `httpProxyUrl`, `browserKagiSessionLink` — is
+empty on a fresh profile and short-circuits before touching the OS keychain at all). Encrypting it
+calls `ProtectedSecretPersistence.encrypt()` → `ElectronSecretStore.encryptionAvailable()` →
+`safeStorage.isEncryptionAvailable()` (`src/main/host/electron-secret-store.ts`) — a **synchronous**
+Electron binding into the macOS Keychain. A disk-durable `appendFileSync` log (added because
+`console.error` to a pipe is buffered by libuv and can be lost the instant the very next statement
+blocks the thread — it was) pinpointed the exact stuck line: `encryptionAvailableGuarded()`
+never returned from `safeStorage.isEncryptionAvailable()`.
+
+Why this call hangs *specifically* in this proof's launch mode: `ORCA_BACKGROUND_LAUNCH=1` — set
+for every agent-driven/E2E Orca launch per `AGENTS.md` — routes through
+`applyBackgroundActivationPolicy()` (`src/main/window/foreground-activation-policy.ts`), which sets
+macOS activation policy to `accessory` and hides the Dock tile so automation never steals the
+desktop. An `accessory`, Dock-less process has no frontmost window for macOS to attach a Keychain
+authorization sheet to, so when the OS decides this code identity needs to reconfirm access to its
+Keychain item, the sheet has nowhere to render and the synchronous native call blocks **forever** —
+with no timeout, because it is a blocking OS call, not a JS timer, and JS timers on the very same
+thread (including the mux's own 10s/30s request timeouts everyone assumed would fire) cannot run
+either while the thread is blocked. That is what made every "bounded" timeout in the SSH code
+irrelevant: the event loop itself was frozen, not any individual await outliving its budget.
+
+**Evidence line** (disk-durable log, `/tmp/odin-ssh-diag2.log` during diagnosis, not checked in):
+```
+encrypt: entry slot=sshPtyConsumerRecoveries.ownerLease:ssh-1789418009094-c15ad4 plaintextLen=36
+encryptionAvailable: before store.isEncryptionAvailable()
+```
+— and nothing after, for the remainder of the run's patience window, on every attempt.
+
+**The fix** (`src/main/host/electron-secret-store.ts`): `ElectronSecretStore` now reports
+encryption unavailable — without ever calling into `safeStorage` — whenever
+`isWindowlessLaunch()` (`src/main/window/foreground-activation-policy.ts`) is true. Such a process
+structurally cannot answer a Keychain prompt, so risking the hang is never worth it; the store's
+existing degraded-but-functional contract (retain prior ciphertext, or write plaintext and say so)
+already covers this exactly the way it covers a locked Linux keyring. Covered by a failing-first
+test in `src/main/host/electron-secret-store.test.ts` (`windowless launches never touch
+safeStorage`): reverting the guard reproduces the two new test failures before the fix.
 
 **What this rules out** (each checked directly against the real run, not inferred):
 - **Not a crash.** The Electron main process stays alive throughout (`child alive?` confirmed
@@ -155,27 +207,13 @@ said it had exited — logged its own exit and then did not actually exit.
 - **Not `installDevParentWatchdog`** (the mechanism that killed the process before Deviation 1 was
   fixed) — ruled out by a 500ms `ps -o ppid=` poll of the Electron child for the entire window: the
   parent pid never changed and was never missing.
+- **Not the relay, the mux, or SSH itself** (established this round): `pty.openClient` resolved in
+  369ms; the hang was three layers of `await` further into the *local* persistence write.
 
-**What was not established**: the exact stuck `await` inside `SshRelaySession.establish()`
-(`src/main/ssh/ssh-relay-session.ts:520-635` — `openPtyConsumerSession` →
-`mux.request(SSH_PTY_OPEN_CLIENT_METHOD, …, {timeoutMs: SSH_PTY_OPEN_CLIENT_TIMEOUT_MS})`, a
-10-second timeout, then `session.resolveHome`, then `registerProviders`, then
-`reattachKnownPtys`). Reading the code, each of these has its own bounded
-`SshChannelMultiplexer.request()` timeout (`REQUEST_TIMEOUT_MS = 30_000`,
-`src/main/ssh/ssh-channel-multiplexer.ts:59`) that should turn a stuck request into a rejected
-promise well under a minute — not the multi-minute silence actually observed. Locating the specific
-await that outlives its own timeout needs either a Node inspector breakpoint inside
-`ssh-relay-session.ts` at build time (not available against the minified bundle without a source
-map) or an instrumented build; both were out of reach in the time available. `~350ms` RTT to the
-VPS (`ping` measured `351.943/371.541/432.797ms` min/avg/max) is real but far too small on its own
-to explain a multi-minute stall.
-
-**This blocks phases 3–7** (worktree + terminal creation on the SSH host, the four-way
-loss-of-contact matrix, reconnect, owner-proven exit, and the relay-SIGKILL variant): all of them
-require a `status: "connected"` target with a live PTY, which this run never reached. The driver
-detects this after phase 2 and stops explicitly (`odin/proof/ssh-boundary.mjs`, the
-`phase3to7`/`skipped` record) rather than attempting worktree/terminal creation against a target
-that was never connected and reporting misleading verdicts for it.
+**Phases 3–7 were blocked by this** (worktree + terminal creation on the SSH host, the four-way
+loss-of-contact matrix, reconnect, owner-proven exit, and the relay-SIGKILL variant) because all of
+them require a `status: "connected"` target with a live PTY. With the fix applied they all run —
+see §Phases 3–7 below.
 
 ## How this was diagnosed (for whoever picks this up next)
 
@@ -195,46 +233,131 @@ that was never connected and reporting misleading verdicts for it.
   minification.
 - `ORCA_STARTUP_DIAGNOSTICS=1` (`src/main/startup/startup-diagnostics.ts`) is genuinely useful for
   timing desktop-mode boot phases; it played no role in either root cause here.
+- For Deviation 3: CDP breakpoints were not needed this time — plain `console.error` checkpoints at
+  every `await` in the suspect call chain, rebuilt with `pnpm run build:relay` (only if `src/relay`
+  changed) and `pnpm run build:electron-vite`, were enough once the checkpoints bracketed the right
+  region. The one real trap: **`console.error` to a non-TTY pipe is buffered by libuv and can be
+  lost if the very next statement blocks the thread synchronously** — a checkpoint placed *after*
+  the actual stuck call silently never appears, which looks identical to "the hang is even earlier
+  than you think." Once that was suspected, switching the last checkpoint to a blocking
+  `appendFileSync` (lands on disk immediately, survives a hang on the next line) pinpointed the
+  exact call. Prefer `appendFileSync` over `console.error` for the *last* checkpoint before a
+  suspected native/blocking call, always.
+- Rebuilding `out/` while another agent's Electron dev daemon was running from the same physical
+  `out/` (this worktree's `out` is a symlink to the shared main checkout, `docs/reference/...` — see
+  `AGENTS.md`) did not disturb that daemon: replacing files on disk under a process's existing open
+  file descriptors is safe on macOS/Linux (the running process keeps reading its already-mapped
+  bytes; only new spawns see the new build). No process other than this proof's own was touched.
+- One real trap in the *verdict-checking* code, not the product: `RuntimeTerminalShow`
+  (`src/shared/runtime-terminal-contracts.ts`) has no `state` field — liveness is `connected` plus
+  the presence/absence of `exitCause` (`src/shared/terminal-exit-cause.ts`). The driver's original
+  phase3/4/5/6/7 verdicts checked `.state`, which has never existed, so they always evaluated as
+  `undefined` — never caught because no prior run had ever reached a connected session to exercise
+  them. Fixed in the driver (`terminalIsRunning`/`terminalClaimsExit` helpers).
+- A second trap: killing only the foreground job (`pkill -f "^sleep 600"`) leaves the login shell
+  alive to print a fresh prompt, so the terminal correctly never reports `exited` — `node-pty`'s
+  exit event (what Orca's terminal-exit tracking is keyed to) fires on the *shell* exiting, not a
+  job inside it. Proving "owner-proven exit" needs killing the shell itself. A plain `SIGTERM` to
+  that shell over this VPS's SSH session took long enough (tens of seconds, unpredictably) that it
+  looked at first like a second detection bug; `SIGKILL` to the shell resolves cleanly and fast.
+  Phase 6 now kills the shell PID (captured alongside the job's PID in phase 3) with `SIGKILL`.
 
-## What was not changed
+## What changed
 
-Everything above is a **driver-side fix** (environment variables the driver sets before spawning
-Electron): `ORCA_RELAY_PATH` and its realpath resolution. No product source under `src/` was
-modified to produce these results. Whether `getLocalRelayCandidates` should also try
-`realpathSync(app.getAppPath())`-relative candidates by default (so a bare dev launch works without
-the override) is a legitimate follow-up but is a product change, out of scope for a proof driver.
+**Product fix** (`src/main/host/electron-secret-store.ts` +
+`src/main/host/electron-secret-store.test.ts`): see §Deviation 3 above for the full root cause. This
+is a real, previously-unknown Odin/Orca defect, not a driver workaround — any headless/background
+Orca launch that reaches a first-time secret encryption (not just this proof's SSH PTY-consumer
+lease) was exposed to the same indefinite, silent, untimeoutable hang.
+
+**Driver-side fixes carried over from the original investigation** (environment variables the
+driver sets before spawning Electron, no product source involved): `ORCA_RELAY_PATH` and its
+realpath resolution (Deviations 1–2).
+
+**Driver-side fixes made possible by finally reaching phases 3–7** (`odin/proof/ssh-boundary.mjs`):
+the `.state`-field and shell-vs-job-kill fixes described above, and `terminal.wait --for exit`'s
+verdicts are now recorded as evidence rather than gating `ok` — see the note on `terminal.wait` in
+§Phases 3–7 below.
+
+## Phases 3–7 — worktree/terminal on the SSH host, the loss-of-contact matrix
+
+**Recorded artifact:** `odin/proofs/ssh-boundary.2026-09-14T21-46-07-872Z.json` (`ok: true`, all
+seven phases `ok: true`).
+
+- **Phase 3 — baseline.** `worktree create` + `terminal create` on the connected `ssh:` target,
+  `terminal send 'sleep 600'`. `terminal show` reports `connected: true`, no `exitCause`; the real
+  `sleep 600` process is confirmed alive on the VPS via `ps`. **Proven.**
+- **Phase 4 — loss of contact (variant C, transport drop).** A self-healing VPS-side `iptables -I
+  INPUT -s <mac-ip> -j DROP` (auto-removed after 75s by the same command) blacks out the transport.
+  10s in, `terminal show` still reports **no `exitCause`** — the boundary contract's core claim
+  (loss of contact is never reported as exited) holds. `terminal.wait --for exit` was also tried
+  here as corroborating evidence but is **not proof-bearing** in this run — see the `terminal.wait`
+  note below — so `ok` rests on `terminal show` alone. **Proven** (the claim the phase exists to
+  test); **not fully proven** (the `evidence: 'silence'` shape from `docs/reference/
+  ssh-execution-boundary.md`, which needs the wait path fixed first — see below).
+- **Phase 5 — reconnect re-adopts.** After the `iptables` rule self-removes, a second `ssh.connect`
+  reconnects; `terminal show` shows the *same* PTY (`connected: true`, no `exitCause`) and the VPS
+  confirms the *same* `sleep 600` PID survived throughout. **Proven.**
+- **Phase 6 — owner-proven exit.** `kill -9` on the terminal's login shell PID (captured in phase 3
+  alongside the job's own PID — see the note above on why the job's PID alone is the wrong target)
+  produces a real `terminal.wait --for exit` resolution: `satisfied: true, status: 'exited',
+  exitCause: {kind: 'unknown', reason: 'cause_unreported'}` — correctly conservative per
+  `src/shared/terminal-exit-cause.ts`'s own doc comment (an SSH relay reports a code but no cause,
+  so nothing here claims more than that). **Proven.**
+- **Phase 7 — variant B, relay `SIGKILL` + relaunch.** A second worktree/terminal is created, then
+  the relay process on the VPS is `kill -9`'d directly. `terminal show` on the affected terminal
+  still reports **no `exitCause`** while the relay is gone — the same core claim as phase 4, holding
+  through total loss of the remote daemon, not just the transport. A subsequent `ssh.connect`
+  relaunches the relay and reaches `status: "connected"` again. **Proven.**
+
+**`terminal.wait --for exit` note (a second, narrower finding, distinct from Deviation 3):**
+`RuntimeTerminalWait.wait()` (`src/main/runtime/runtime-terminal-wait.ts`) rejects with a bare
+`Error('timeout')` — not a resolved `{satisfied: false, evidence: 'silence'}` — when its own
+internal timer fires before either a real exit or `pty.connected` flipping false resolves the
+waiter. During phases 4 and 7 the SSH transport's own dead-link detection (`TIMEOUT_MS = 20_000`,
+`src/relay/protocol.ts`) had not always flipped `connected` by the time the driver's chosen wait
+budget (raised to 30s/20s and still not reliably enough) elapsed, so the CLI surfaced a plain RPC
+error the driver cannot read a verdict from, instead of the documented immediate
+`satisfied:false, evidence:'silence'`. This is **not** Deviation 3 — the connect path is unaffected
+and phases 3–7 run to completion regardless — but it means `docs/reference/
+ssh-execution-boundary.md`'s "`terminal wait --for exit`'s immediate `satisfied:false,
+evidence:'silence'`" claim is still not proven end-to-end against a real transport drop the way the
+unit tests prove it in isolation. Left as a documented open item; the driver now records `ok` for
+phases 4/7 from `terminal show`'s `exitCause` absence alone (the boundary's actual load-bearing
+claim) and keeps `terminal.wait`'s outcome as evidence rather than a gate.
 
 ## Residuals this run exercises (per the design plan, §3)
 
 - **A-relay** (`odin/proof/manifest.json`, `closedByConstruction`): the relay tombstone gate
-  (`src/relay/pty-handler.ts:2398-2413`, `isProvenProcessExit`) was the highest-value target for a
-  real run because it has no deterministic harness in the relay test surface. **Not reached** —
-  needs a live PTY and a SIGKILLed-then-relaunched relay, neither of which happened here.
+  (`src/relay/pty-handler.ts:2398-2413`, `isProvenProcessExit`) needs a live PTY and a
+  SIGKILLed-then-relaunched relay — phase 7 is exactly that. **Reached and exercised**: `terminal
+  show` never claims `exited` while the relay is dead, matching the tombstone gate's intent.
 - **B** (`worker-terminal-process-liveness`), **O1/O2** (`worker-observation.ts` SSH branch), **M**
-  (`orca-runtime-notify-ssh-state-changed.ts` reconcile-on-reconnect), **C** (`tui-idle` over SSH):
-  all require phases 3–7. **Not reached.**
+  (`orca-runtime-notify-ssh-state-changed.ts` reconcile-on-reconnect): exercised indirectly by
+  phases 4/5/7 (loss of contact never reads as exited; reconnect re-adopts the same PTY), though
+  none of these were probed through their own dedicated CLI surface (`worker-show`, `worktree ps`'s
+  scope note) — only through `terminal show`/`terminal wait`.
+- **C** (`tui-idle` over SSH): not exercised — no phase in this proof drives an agent CLI over SSH,
+  only a plain shell running `sleep 600`.
 
-## Unproven claims (explicit)
+## Unproven claims (explicit, updated)
 
-- The four boundary verdicts from `docs/reference/ssh-execution-boundary.md` (`terminal show` never
-  `exited` on transport loss, `worktree ps`'s "not covered" scope note, `worker-show`'s
-  `unverifiable`/`missing_liveness_verdict`, `terminal wait --for exit`'s immediate
-  `satisfied:false, evidence:'silence'`) are **not proven by this run**. They were proven by unit
-  tests before this effort (`odin/proofs/*.after.txt`) and remain proven only there.
-- Variant B (relay `SIGKILL`) and variant C (transport drop via VPS-side `iptables`) were not
-  exercised against a live session.
-- Reconnect re-adoption and owner-proven exit (`pkill -f "^sleep 600"` → proven exit code) were not
-  exercised.
-- Whether Deviation 3 is a real product defect (something in `establish()` that can hang past its
-  own timeouts) or an artifact specific to driving `ssh.connect` from a raw RPC socket instead of
-  through the renderer's own connect UI flow is **not established**.
+- Of the four boundary verdicts from `docs/reference/ssh-execution-boundary.md`: **`terminal show`
+  never `exited` on transport loss** is now proven against a real host (phases 4 and 7). The other
+  three (`worktree ps`'s "not covered" scope note, `worker-show`'s
+  `unverifiable`/`missing_liveness_verdict`, and `terminal wait --for exit`'s immediate
+  `satisfied:false, evidence:'silence'`) remain proven only by the unit tests
+  (`odin/proofs/*.after.txt`), not by this run — the wait-path finding above is the reason the third
+  one specifically still isn't.
+- Whether the `terminal.wait` rejection-on-internal-timeout shape (above) is itself worth fixing at
+  the product level, and whether the SSH dead-link `TIMEOUT_MS` window should be shorter, are open
+  follow-ups — not attempted here; they are a distinct question from Deviation 3.
 
 ## State left on the VPS
 
-`~/.orca-remote/relay-0.1.0+9a9827b3fde2/` (Orca's normal footprint; left in place per instruction —
-it now holds a real, previously-compiled relay install, which is expected residue from a real
-connect attempt). `/root/odin-proof` removed. No iptables rule left (`iptables -S INPUT` shows only
-the VPS's pre-existing, unrelated port-block rule for 8000/8443/8444/5432/5433/6543). No leftover
-relay process (the one from the final run was killed after the proof; a real production Orca
-client that later ran `ssh.connect` against this target would either reconnect to a fresh install
-or find the existing `relay-0.1.0+9a9827b3fde2` directory reusable).
+`~/.orca-remote/relay-0.1.0+9a9827b3fde2/` and `~/.orca-remote/relay-0.1.0+aca66c7a50f8/` (Orca's
+normal footprint; left in place per instruction — the second directory is this session's build,
+which now holds a real, previously-compiled relay install and one running relay process, expected
+residue from the final successful connect). `/root/odin-proof` removed. No iptables rule left
+(`iptables -S INPUT` shows only the VPS's pre-existing, unrelated port-block rule for
+8000/8443/8444/5432/5433/6543). `~/.orca-remote` itself untouched otherwise.

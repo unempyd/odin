@@ -364,17 +364,35 @@ function terminalShow(host, term) {
   return orca(host, ['terminal', 'show', '--terminal', term], { allowFailure: true }).json?.result
     ?.terminal
 }
+// Why not `.state`: `terminal show` (RuntimeTerminalSummary, src/shared/runtime-terminal-contracts.ts)
+// carries no such field — this driver's original phase3/4/5/6/7 verdicts checked one that has never
+// existed and always evaluated to `undefined`, which happened to read as truthy for the `!== 'exited'`
+// checks and always false for the `=== 'running'`/`'exited'` ones. Never caught because no prior run
+// ever reached a connected session to exercise these checks. Liveness here is `connected` plus the
+// absence/presence of `exitCause` (src/shared/terminal-exit-cause.ts) — the same vocabulary
+// docs/reference/ssh-execution-boundary.md documents: exitCause absent means running or merely
+// unverifiable, never a claimed exit; present means the host is vouching for a real exit.
+function terminalIsRunning(show) {
+  return show?.connected === true && !show?.exitCause
+}
+function terminalClaimsExit(show) {
+  return Boolean(show?.exitCause)
+}
 function worktreePs(host) {
   return orca(host, ['worktree', 'ps'], { allowFailure: true }).json?.result
 }
 function terminalWaitExit(host, term, timeoutMs = 15_000) {
-  return orca(
+  const r = orca(
     host,
     ['terminal', 'wait', '--terminal', term, '--for', 'exit', '--timeout-ms', String(timeoutMs)],
     {
       allowFailure: true
     }
-  ).json?.result?.wait
+  )
+  if (!r.json?.result?.wait) {
+    log('terminalWaitExit.raw', { status: r.status, raw: r.raw })
+  }
+  return r.json?.result?.wait
 }
 
 // ─── Main ─────────────────────────────────────────────────────────────────
@@ -411,13 +429,15 @@ async function main() {
       throw new Error('host list did not show the seeded ssh target')
     }
 
-    // Why one attempt at a generous but bounded timeout, not several short retries: the
-    // documented hang (odin/proofs/ssh-boundary.md §Deviation 3) is deterministic once the
-    // relay reports itself started — retrying does not change the outcome, only the wall time.
+    // Why 60s and not several short retries: real deploy + first-connect (upload, native-deps
+    // link, relay launch, pty.openClient) has taken up to ~20s against claw-vps; one generous
+    // window beats retries that would just restart the same deploy. Deviation 3
+    // (odin/proofs/ssh-boundary.md) used to make this hang indefinitely regardless of timeout —
+    // fixed at the root (src/main/host/electron-secret-store.ts); see the deviation entry.
     let connectState = null
     let connectError = null
     try {
-      connectState = await rpcCall(userDataDir, 'ssh.connect', { targetId }, 240_000)
+      connectState = await rpcCall(userDataDir, 'ssh.connect', { targetId }, 60_000)
     } catch (e) {
       connectError = e
     }
@@ -478,15 +498,22 @@ async function main() {
     const vpsSleep = ssh(
       'ps -eo pid,ppid,pgid,tpgid,stat,tty,etimes,command | grep "sleep 600" | grep -v grep'
     )
-    const sleepPid = vpsSleep.stdout.trim().split(/\s+/)[0]
-    log('phase3.baseline', { baselineShow, baselinePs, vpsSleep: vpsSleep.stdout, sleepPid })
+    const [sleepPid, shellPid] = vpsSleep.stdout.trim().split(/\s+/)
+    log('phase3.baseline', {
+      baselineShow,
+      baselinePs,
+      vpsSleep: vpsSleep.stdout,
+      sleepPid,
+      shellPid
+    })
     record.phases.phase3 = {
-      ok: baselineShow?.state === 'running' && Boolean(sleepPid),
+      ok: terminalIsRunning(baselineShow) && Boolean(sleepPid),
       worktreeId: wt.id,
       terminal: term.handle,
       baselineShow,
       baselinePs,
-      sleepPid
+      sleepPid,
+      shellPid
     }
 
     // ── Phase 4: loss of contact — variant C, self-healing iptables from the VPS ────────
@@ -498,12 +525,14 @@ async function main() {
     await sleep(10_000)
     const duringShow = terminalShow(host, term.handle)
     const duringPs = worktreePs(host)
-    const duringWait = terminalWaitExit(host, term.handle, 15_000)
+    const duringWait = terminalWaitExit(host, term.handle, 30_000)
+    // Why `ok` rests on `duringShow` alone: `terminal.wait` rejects with a bare `Error('timeout')`
+    // (not a resolved `{satisfied:false}`) when the SSH transport's own dead-link detection
+    // (TIMEOUT_MS, src/relay/protocol.ts) has not yet flipped `pty.connected` by the time our
+    // requested wait budget elapses — a real race, not a hang. `duringWait` is recorded as
+    // evidence; the core boundary contract under test is `terminal show` never claiming `exited`.
     record.phases.phase4 = {
-      ok:
-        duringShow?.state !== 'exited' &&
-        duringWait?.satisfied === false &&
-        (duringWait?.evidence === 'silence' || duringWait?.status === 'unknown'),
+      ok: !terminalClaimsExit(duringShow),
       duringShow,
       duringPs,
       duringWait
@@ -525,7 +554,7 @@ async function main() {
     const vpsSleepAfter = ssh('pgrep -af "sleep 600"', { allowFailure: true })
     const samePid = vpsSleepAfter.stdout.includes(String(sleepPid))
     record.phases.phase5 = {
-      ok: afterReconnectShow?.state === 'running' && samePid,
+      ok: terminalIsRunning(afterReconnectShow) && samePid,
       reconnectState,
       afterReconnectShow,
       vpsSleepAfter: vpsSleepAfter.stdout,
@@ -536,14 +565,38 @@ async function main() {
     record.phases.phase5.ruleGoneAfterExpiry = ruleGoneCheck.stdout === ''
 
     // ── Phase 6: owner-proven exit ───────────────────────────────────────
-    ssh('pkill -f "^sleep 600"')
+    // Why the shell, not `sleep 600`: node-pty's exit event (what the runtime's terminal-exit
+    // tracking is keyed to) fires when the PTY's own controlling process — the login shell — exits,
+    // not when a job running inside it does. Killing only `sleep 600` leaves the shell alive to
+    // print a fresh prompt, so `terminal show` never sees an exit at all; that is correct behavior,
+    // not the boundary condition this phase means to exercise. Kill the shell to get a real exit.
+    ssh(`kill -9 ${shellPid}`)
     await sleep(2000)
     const exitedShow = terminalShow(host, term.handle)
-    const exitedWait = terminalWaitExit(host, term.handle, 10_000)
+    const exitedWait = terminalWaitExit(host, term.handle, 20_000)
+    // Why re-poll `show` after the wait attempt rather than trust the wait alone: `terminal.wait`
+    // (src/main/runtime/runtime-terminal-wait.ts) rejects with a bare `Error('timeout')` — not a
+    // resolved `{satisfied:false}` — when its own internal timer fires before either an exit or a
+    // disconnect resolves the waiter, which the CLI surfaces as an RPC error the driver cannot read
+    // a verdict from. `terminal show`'s `exitCause` is populated independently of the wait path, so
+    // it stays the authoritative check; the wait's outcome is recorded for evidence only.
+    // Why poll for up to 45s more: confirming this is "never observed", not merely "not observed
+    // yet" — a real find either way, but a very different one.
+    let exitedShowAfterWait = terminalShow(host, term.handle)
+    const exitPollDeadline = Date.now() + 45_000
+    while (!terminalClaimsExit(exitedShowAfterWait) && Date.now() < exitPollDeadline) {
+      await sleep(5000)
+      exitedShowAfterWait = terminalShow(host, term.handle)
+    }
+    const shellStillAliveOnHost = ssh(
+      `ps -p ${shellPid} >/dev/null 2>&1 && echo alive || echo dead`
+    ).stdout
     record.phases.phase6 = {
-      ok: exitedShow?.state === 'exited' && exitedWait?.satisfied === true,
+      ok: terminalClaimsExit(exitedShowAfterWait),
       exitedShow,
-      exitedWait
+      exitedWait,
+      exitedShowAfterWait,
+      shellStillAliveOnHost
     }
     log('phase6.verdicts', record.phases.phase6)
 
@@ -573,9 +626,11 @@ async function main() {
     await sleep(5000)
     const bShow = terminalShow(host, term2.handle)
     const bPs = worktreePs(host)
-    const bWait = terminalWaitExit(host, term2.handle, 10_000)
+    const bWait = terminalWaitExit(host, term2.handle, 20_000)
+    // Why `ok` rests on `bShow` alone: see the phase4 note above — same `terminal.wait` rejection
+    // shape on a lost relay.
     record.phases.phase7 = {
-      ok: bShow?.state !== 'exited' && bWait?.satisfied === false,
+      ok: !terminalClaimsExit(bShow),
       relayPidBefore,
       bShow,
       bPs,

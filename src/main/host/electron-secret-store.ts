@@ -1,5 +1,6 @@
 import { safeStorage } from 'electron'
 import type { SecretStore } from '../../shared/secret-store'
+import { isWindowlessLaunch } from '../window/foreground-activation-policy'
 
 /**
  * Electron-backed SecretStore for the desktop app: a pass-through to
@@ -7,7 +8,7 @@ import type { SecretStore } from '../../shared/secret-store'
  */
 export class ElectronSecretStore implements SecretStore {
   isEncryptionAvailable(): boolean {
-    return safeStorage.isEncryptionAvailable()
+    return encryptionAvailableGuarded()
   }
 
   encryptString(plainText: string): Buffer {
@@ -19,7 +20,7 @@ export class ElectronSecretStore implements SecretStore {
   }
 
   describeProtectionGap(): string | null {
-    if (!safeStorage.isEncryptionAvailable()) {
+    if (!encryptionAvailableGuarded()) {
       // Why platform-specific: the fix differs, and "encryption unavailable" alone
       // sends users looking in the wrong place.
       return process.platform === 'linux'
@@ -33,6 +34,23 @@ export class ElectronSecretStore implements SecretStore {
     // But it protects nothing, and reporting it as sealed is the actual lie.
     return describeLinuxBackendGap()
   }
+}
+
+// Why: safeStorage.isEncryptionAvailable() (and, transitively, encryptString/decryptString, which
+// ProtectedSecretPersistence never calls without checking this first) can synchronously block the
+// whole main process waiting for an OS keychain authorization prompt on first touch. A windowless
+// launch (ORCA_BACKGROUND_LAUNCH — every agent-driven/E2E run per AGENTS.md) sets `accessory`
+// activation policy and hides the Dock tile (foreground-activation-policy.ts), so macOS has no
+// frontmost window to attach that prompt to and the call never returns — freezing ssh.connect (and
+// everything else on the event loop) forever with no timeout and no diagnosable error. Such a run
+// cannot answer a prompt anyway, so report unavailable up front rather than risk the hang; the
+// store's existing degraded-but-functional contract (retain prior ciphertext, or write plaintext)
+// already covers this.
+function encryptionAvailableGuarded(): boolean {
+  if (isWindowlessLaunch()) {
+    return false
+  }
+  return safeStorage.isEncryptionAvailable()
 }
 
 // Electron omits getSelectedStorageBackend at runtime outside Linux despite its type declaration.

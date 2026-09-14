@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 const safeStorageMock = vi.hoisted(() => ({
   isEncryptionAvailable: vi.fn(() => true),
@@ -130,6 +130,36 @@ describe('ElectronSecretStore', () => {
     expect(store.isEncryptionAvailable()).toBe(true)
     safeStorageMock.isEncryptionAvailable.mockReturnValue(false)
     expect(store.isEncryptionAvailable()).toBe(false)
+  })
+
+  // Why: a windowless launch (ORCA_BACKGROUND_LAUNCH — every agent-driven/E2E run per AGENTS.md)
+  // runs with no frontmost window (foreground-activation-policy.ts sets `accessory` + hides the
+  // Dock), so it can never answer a macOS Keychain authorization prompt. Touching safeStorage
+  // there risks a hang with no timeout (found via a real SSH-connect proof against a live host,
+  // where it froze the whole main process — odin/proofs/ssh-boundary.md). Report unavailable
+  // up front instead of ever calling through.
+  describe('windowless launches never touch safeStorage', () => {
+    const originalBackgroundLaunch = process.env.ORCA_BACKGROUND_LAUNCH
+
+    afterEach(() => {
+      if (originalBackgroundLaunch === undefined) {
+        delete process.env.ORCA_BACKGROUND_LAUNCH
+      } else {
+        process.env.ORCA_BACKGROUND_LAUNCH = originalBackgroundLaunch
+      }
+    })
+
+    it('reports unavailable without calling safeStorage.isEncryptionAvailable', () => {
+      process.env.ORCA_BACKGROUND_LAUNCH = '1'
+      expect(new ElectronSecretStore().isEncryptionAvailable()).toBe(false)
+      expect(safeStorageMock.isEncryptionAvailable).not.toHaveBeenCalled()
+    })
+
+    it('describeProtectionGap also short-circuits instead of calling safeStorage', () => {
+      process.env.ORCA_BACKGROUND_LAUNCH = '1'
+      expect(new ElectronSecretStore().describeProtectionGap()).toMatch(/unencrypted/)
+      expect(safeStorageMock.isEncryptionAvailable).not.toHaveBeenCalled()
+    })
   })
 
   it('has no reason to give while sealing works', () => {
