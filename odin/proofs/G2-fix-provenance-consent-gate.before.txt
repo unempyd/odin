@@ -1,0 +1,54 @@
+
+ RUN  v4.1.11 /Users/briankeeny/Desktop/odin-wt-fix2
+
+ ❯ src/main/codex-accounts/codex-credential-mirror-consent-revocation.test.ts (1 test | 1 failed) 14ms
+     × removes the credential copy stored in shared-runtime-auth-provenance.json 11ms
+ ❯ src/main/codex-accounts/runtime-home-retained-pane-sync-consent-gate.test.ts (1 test | 1 failed) 673ms
+     × writes no runtime auth.json when a retained pane sync detects a system-default change without consent 671ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/main/codex-accounts/codex-credential-mirror-consent-revocation.test.ts > clearMirroredCodexCredentials provenance scrub (G2) > removes the credential copy stored in shared-runtime-auth-provenance.json
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ src/main/codex-accounts/codex-credential-mirror-consent-revocation.test.ts:44:40
+     42|     clearMirroredCodexCredentials()
+     43|
+     44|     expect(existsSync(provenancePath)).toBe(false)
+       |                                        ^
+     45|   })
+     46| })
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  src/main/codex-accounts/runtime-home-retained-pane-sync-consent-gate.test.ts > CodexRuntimeHomeService retained-pane sync consent gate (G2) > writes no runtime auth.json when a retained pane sync detects a system-default change without consent
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ src/main/codex-accounts/runtime-home-retained-pane-sync-consent-gate.test.ts:66:41
+     64|     ;(service as unknown as SyncLegacySharedAccessible).syncLegacyShar…
+     65|
+     66|     expect(existsSync(runtimeAuthPath)).toBe(false)
+       |                                         ^
+     67|   })
+     68| })
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  2 failed (2)
+      Tests  2 failed (2)
+   Start at  00:48:54
+   Duration  1.28s (transform 871ms, setup 135ms, import 415ms, tests 687ms, environment 0ms)
+

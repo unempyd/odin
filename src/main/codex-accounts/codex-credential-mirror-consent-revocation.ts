@@ -8,4 +8,9 @@ export function clearMirroredCodexCredentials(): void {
   rmSync(join(getOrcaUserDataPath(), 'codex-runtime-home', 'system-default-auth.json'), {
     force: true
   })
+  // Why: shared-runtime-auth-provenance.json also stores a full credential copy (authJson /
+  // runtimeAuthJson); a revoked consent must not leave it behind either (G2).
+  rmSync(join(getOrcaUserDataPath(), 'codex-runtime-home', 'shared-runtime-auth-provenance.json'), {
+    force: true
+  })
 }

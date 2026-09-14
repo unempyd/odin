@@ -245,6 +245,9 @@ describe('CodexRuntimeHomeService', () => {
     )
     writeFileSync(getSystemCodexAuthPath(), systemAuth, 'utf-8')
     const settings = createSettings({
+      // Why: the later retained-pane resync must actually copy the refreshed system-default
+      // auth into the shared runtime home, which now requires explicit mirror consent (G2).
+      codexCredentialMirrorConsent: true,
       codexManagedAccounts: [
         {
           id: 'account-1',
@@ -438,7 +441,11 @@ describe('CodexRuntimeHomeService', () => {
     const systemAuth = createCodexAuthJson('system@example.com', 'acct-system', 'old-token')
     const reloginAuth = createCodexAuthJson('system@example.com', 'acct-system', 'relogin-token')
     writeFileSync(getSystemCodexAuthPath(), systemAuth, 'utf-8')
-    const store = createStore(createSettings({ shellStartupEnvProbeSupported: false }))
+    // Why: the re-login branch below must actually recreate shared auth from ~/.codex, which now
+    // requires explicit mirror consent (G2).
+    const store = createStore(
+      createSettings({ shellStartupEnvProbeSupported: false, codexCredentialMirrorConsent: true })
+    )
     const { CodexRuntimeHomeService } = await import('./runtime-home-service')
     new CodexRuntimeHomeService(store as never)
 
