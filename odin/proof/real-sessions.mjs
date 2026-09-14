@@ -25,238 +25,35 @@
  * the one this script writes into the throwaway profile under `settings.agentDefaultArgs`, and it
  * prints that record so the proof is auditable.
  */
-import { spawn, spawnSync } from 'node:child_process'
-import { existsSync, mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSync } from 'node:fs'
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
-import { join, resolve } from 'node:path'
-import { randomBytes, randomUUID } from 'node:crypto'
-import { createServer } from 'node:net'
+import { join } from 'node:path'
+import { randomUUID } from 'node:crypto'
 import process from 'node:process'
+import {
+  AGENTS,
+  BYPASS_GRANTS,
+  DEFAULT_BLOCK_WINDOW_MS,
+  Host,
+  PHASES,
+  SPEC,
+  WORKER_DONE_TIMEOUT_MS,
+  cliEntry,
+  events,
+  freePort,
+  grantClaudeTrust,
+  log,
+  orca,
+  orcaAsync,
+  planWorkspace,
+  projectDir,
+  revokeClaudeTrust,
+  serveEntry,
+  writeProfile
+} from './real-session-host.mjs'
 
-const projectDir = resolve(import.meta.dirname, '../..')
-const serveEntry = join(projectDir, 'out', 'main', 'index.js')
-const cliEntry = join(projectDir, 'out', 'cli', 'index.js')
-const READY_TIMEOUT_MS = 120_000
-const WORKER_DONE_TIMEOUT_MS = Number(process.env.ODIN_WORKER_DONE_TIMEOUT_MS ?? 420_000)
-const DEFAULT_BLOCK_WINDOW_MS = Number(process.env.ODIN_DEFAULT_BLOCK_WINDOW_MS ?? 90_000)
-const SHUTDOWN_TIMEOUT_MS = 15_000
-
-const argv = process.argv.slice(2)
-const flag = (name, fallback) => {
-  const i = argv.indexOf(`--${name}`)
-  return i === -1 ? fallback : argv[i + 1]
-}
-const AGENTS = flag('agents', 'claude,codex,grok').split(',').filter(Boolean)
-const PHASES = flag('phase', 'default-blocks,settle,crash,concurrent').split(',')
-// The explicit grants. This is the consent record: it is written into the throwaway profile and
-// printed. Nothing in Odin/Orca adds these on its own (odin(H)).
-const BYPASS_GRANTS = {
-  claude: '--dangerously-skip-permissions',
-  codex: '--dangerously-bypass-approvals-and-sandbox',
-  grok: '--permission-mode bypassPermissions'
-}
-const SPEC =
-  'Reply with the single word READY. Then, exactly as the instructions above describe, send worker_done with --outcome succeeded. Do nothing else.'
-
-const events = []
-function log(type, data = {}) {
-  const row = { at: new Date().toISOString(), type, ...data }
-  events.push(row)
-  process.stdout.write(`${JSON.stringify(row)}\n`)
-}
-
-async function freePort() {
-  const probe = createServer()
-  await new Promise((res, rej) => {
-    probe.once('error', rej)
-    probe.listen(0, '127.0.0.1', res)
-  })
-  const port = probe.address().port
-  await new Promise((res) => probe.close(res))
-  return port
-}
-
-function seedGitRepo() {
-  const dir = mkdtempSync(join(tmpdir(), 'odin-real-repo-'))
-  writeFileSync(join(dir, 'README.md'), '# odin real-session proof\n')
-  const git = (...args) => {
-    const r = spawnSync('git', args, { cwd: dir, encoding: 'utf8' })
-    if (r.status !== 0) {
-      throw new Error(`git ${args.join(' ')}: ${r.stderr || r.stdout}`)
-    }
-  }
-  git('init', '-b', 'main')
-  git('config', 'user.email', 'odin@proof.local')
-  git('config', 'user.name', 'Odin Proof')
-  git('add', '-A')
-  git('commit', '-q', '-m', 'seed')
-  return dir
-}
-
-function writeProfile(userDataDir, { grants }) {
-  const profile = {
-    settings: {
-      telemetry: { optedIn: false, installId: randomUUID(), existedBeforeTelemetryRelease: false },
-      agentStatusHooksEnabled: false,
-      ...(grants ? { agentDefaultArgs: grants, agentYoloDefaultsMigrated: true } : {})
-    },
-    onboarding: { flowVersion: 4, closedAt: 1, outcome: 'completed', lastCompletedStep: 5 }
-  }
-  writeFileSync(join(userDataDir, 'orca-data.json'), `${JSON.stringify(profile, null, 2)}\n`)
-  log('profile', { userDataDir, consentRecord: grants ?? null })
-}
-
-class Host {
-  constructor(userDataDir, port) {
-    this.userDataDir = userDataDir
-    this.port = port
-    this.child = null
-  }
-  async start() {
-    const electron = join(projectDir, 'node_modules', '.bin', 'electron')
-    // Why an isolated HOME: the dev build ignores --user-data-dir and the E2E user-data variable
-    // refuses to start unless HOME is the disposable home beside it (main-process-preflight). The
-    // agent CLIs must still find their logins, so their own state dirs are linked in read-through;
-    // the seeded profile turns managed hook installation off so nothing is written through them.
-    const realHome = process.env.HOME
-    const isolatedHome = join(this.userDataDir, 'home')
-    mkdirSync(isolatedHome, { recursive: true, mode: 0o700 })
-    for (const entry of [
-      '.claude',
-      '.claude.json',
-      '.codex',
-      '.grok',
-      '.config',
-      '.gitconfig',
-      '.local',
-      '.nvm',
-      '.npmrc'
-    ]) {
-      const from = join(realHome, entry)
-      if (existsSync(from) && !existsSync(join(isolatedHome, entry))) {
-        symlinkSync(from, join(isolatedHome, entry))
-      }
-    }
-    const hostEnv = {
-      ...process.env,
-      HOME: isolatedHome,
-      ORCA_E2E_HOME_DIR: isolatedHome,
-      ORCA_E2E_USER_DATA_DIR: this.userDataDir,
-      ORCA_BACKGROUND_LAUNCH: '1',
-      ORCA_E2E_HEADLESS: '1',
-      ELECTRON_RUN_AS_NODE: undefined
-    }
-    this.child = spawn(
-      electron,
-      [
-        serveEntry,
-        '--serve',
-        '--serve-json',
-        '--serve-port',
-        String(this.port),
-        '--serve-pairing-address',
-        '127.0.0.1'
-      ],
-      { stdio: ['ignore', 'pipe', 'pipe'], env: hostEnv }
-    )
-    const ready = await new Promise((res, rej) => {
-      let buf = ''
-      const timer = setTimeout(
-        () => rej(new Error('serve host never reported ready')),
-        READY_TIMEOUT_MS
-      )
-      this.child.stdout.on('data', (d) => {
-        buf += String(d)
-        for (const line of buf.split('\n')) {
-          if (!line.startsWith('{')) {
-            continue
-          }
-          try {
-            const p = JSON.parse(line)
-            if (p.type === 'orca_server_ready') {
-              clearTimeout(timer)
-              res(p)
-            }
-          } catch {}
-        }
-      })
-      this.child.stderr.on('data', (d) => {
-        const s = String(d)
-        if (/error/i.test(s)) {
-          log('host.stderr', { text: s.slice(0, 400) })
-        }
-      })
-      this.child.on('exit', (code, signal) => log('host.exit', { code, signal }))
-    })
-    log('host.ready', { endpoint: ready.advertisedEndpoint, pid: this.child.pid })
-  }
-  kill(signal = 'SIGKILL') {
-    if (this.child && this.child.exitCode === null) {
-      this.child.kill(signal)
-    }
-  }
-  async stop() {
-    if (!this.child || this.child.exitCode !== null) {
-      return
-    }
-    this.child.kill('SIGTERM')
-    const exited = await Promise.race([
-      new Promise((r) => this.child.on('exit', () => r(true))),
-      new Promise((r) => setTimeout(() => r(false), SHUTDOWN_TIMEOUT_MS))
-    ])
-    if (!exited) {
-      this.child.kill('SIGKILL')
-    }
-  }
-}
-
-/** The CLI pretty-prints one JSON document; parse the whole stream, then fall back to the last object line. */
-function parseCliJson(text) {
-  const trimmed = text.trim()
-  try {
-    return JSON.parse(trimmed.slice(trimmed.indexOf('{')))
-  } catch {}
-  try {
-    return JSON.parse(trimmed.split('\n').findLast((l) => l.startsWith('{')) ?? 'null')
-  } catch {
-    return null
-  }
-}
-
-/** Runs the built CLI against the host's local runtime (unix socket + token from the profile). */
-function orca(host, args, { allowFailure = false } = {}) {
-  const r = spawnSync(process.execPath, [cliEntry, ...args, '--json'], {
-    encoding: 'utf8',
-    env: { ...process.env, ORCA_USER_DATA_PATH: host.userDataDir },
-    timeout: WORKER_DONE_TIMEOUT_MS + 60_000
-  })
-  let parsed = null
-  parsed = parseCliJson(r.stdout)
-  if (r.status !== 0 && !allowFailure) {
-    throw new Error(
-      `orca ${args.slice(0, 3).join(' ')} exit ${r.status}: ${(r.stderr || r.stdout).slice(0, 600)}`
-    )
-  }
-  return { status: r.status, json: parsed, raw: (r.stdout + r.stderr).slice(-1500) }
-}
-
-async function orcaAsync(host, args) {
-  return new Promise((res) => {
-    const child = spawn(process.execPath, [cliEntry, ...args, '--json'], {
-      env: { ...process.env, ORCA_USER_DATA_PATH: host.userDataDir }
-    })
-    let out = '',
-      err = ''
-    child.stdout.on('data', (d) => (out += d))
-    child.stderr.on('data', (d) => (err += d))
-    child.on('exit', (status) => {
-      res({ status, json: parseCliJson(out), raw: (out + err).slice(-1500) })
-    })
-  })
-}
-
-function setupWorkspace(host) {
-  const repoPath = seedGitRepo()
+function setupWorkspace(host, plan) {
+  const { repoPath, wtName } = plan
   const repo = orca(host, ['repo', 'add', '--path', repoPath]).json?.result?.repo
   if (!repo?.id) {
     throw new Error('repo add returned no id')
@@ -267,7 +64,7 @@ function setupWorkspace(host) {
     '--repo',
     `id:${repo.id}`,
     '--name',
-    `odin-${randomBytes(3).toString('hex')}`,
+    wtName,
     '--setup',
     'skip'
   ]).json?.result?.worktree
@@ -330,33 +127,56 @@ function summarizeDispatch(host, dispatchId) {
   }
 }
 
-function waitWorkerDone(host, ws, timeoutMs) {
-  return orca(
-    host,
-    [
-      'orchestration',
-      'check',
-      '--run',
-      ws.runId,
-      '--types',
-      'worker_done',
-      '--wait',
-      '--timeout-ms',
-      String(timeoutMs),
-      '--from',
-      ws.coordinator
-    ],
-    { allowFailure: true }
-  )
+/**
+ * Poll for the worker_done report of one dispatch. `check --wait` returns the oldest
+ * unacknowledged batch whatever its type, so a blocking wait wakes on heartbeats; a
+ * non-consuming `--all --types worker_done` read plus the dispatch row is unambiguous.
+ * Resolves { message, dispatch } once the report lands or the dispatch row settles.
+ */
+async function waitWorkerDone(host, ws, dispatchId, timeoutMs) {
+  const deadline = Date.now() + timeoutMs
+  let dispatch = null
+  while (Date.now() < deadline) {
+    const check = orca(
+      host,
+      [
+        'orchestration',
+        'check',
+        '--terminal',
+        ws.coordinator,
+        '--run',
+        ws.runId,
+        '--all',
+        '--types',
+        'worker_done'
+      ],
+      { allowFailure: true }
+    )
+    if (check.status !== 0) {
+      log('check.error', { exit: check.status, raw: check.raw.slice(0, 300) })
+    }
+    const messages = check.json?.result?.messages ?? check.json?.result?.delivery?.messages ?? []
+    const message = messages.find(
+      (m) => m.type === 'worker_done' && (m.payload?.dispatchId ?? m.dispatchId) === dispatchId
+    )
+    dispatch = summarizeDispatch(host, dispatchId)
+    if (message || ['completed', 'failed', 'circuit_broken'].includes(dispatch.status)) {
+      return { message: message ?? null, dispatch }
+    }
+    await new Promise((r) => setTimeout(r, 5000))
+  }
+  return { message: null, dispatch, timedOut: true }
 }
 
 async function phaseDefaultBlocks(agent) {
-  const userDataDir = mkdtempSync(join(tmpdir(), 'odin-real-default-'))
+  const userDataDir = mkdtempSync(join(tmpdir(), 'odin-orca-dev-default-'))
   writeProfile(userDataDir, { grants: null })
+  const plan = planWorkspace(userDataDir)
+  const trusted = grantClaudeTrust(plan.trustPaths)
   const host = new Host(userDataDir, await freePort())
   await host.start()
   try {
-    const ws = setupWorkspace(host)
+    const ws = setupWorkspace(host, plan)
     const started = orca(host, workerStartArgs(ws, agent), { allowFailure: true })
     const dispatchId =
       started.json?.result?.dispatchId ?? started.json?.result?.dispatch?.id ?? null
@@ -366,11 +186,11 @@ async function phaseDefaultBlocks(agent) {
       state: started.json?.result?.state ?? null,
       dispatchId
     })
-    const done = dispatchId ? waitWorkerDone(host, ws, DEFAULT_BLOCK_WINDOW_MS) : null
-    const settledAsDone = Boolean(
-      done?.json?.result?.messages?.some?.((m) => m.type === 'worker_done')
-    )
-    const summary = dispatchId ? summarizeDispatch(host, dispatchId) : null
+    const done = dispatchId
+      ? await waitWorkerDone(host, ws, dispatchId, DEFAULT_BLOCK_WINDOW_MS)
+      : null
+    const settledAsDone = Boolean(done?.message)
+    const summary = done?.dispatch ?? null
     const ok = !settledAsDone && summary?.status !== 'completed'
     log('default-blocks.result', {
       agent,
@@ -388,7 +208,9 @@ async function phaseDefaultBlocks(agent) {
     return ok
   } finally {
     await host.stop()
+    revokeClaudeTrust(trusted)
     rmSync(userDataDir, { recursive: true, force: true })
+    rmSync(plan.repoPath, { recursive: true, force: true })
   }
 }
 
@@ -437,16 +259,30 @@ async function phaseSettle(host, ws, agent) {
     })
     return false
   }
-  const done = waitWorkerDone(host, ws, WORKER_DONE_TIMEOUT_MS)
-  const msgs = done.json?.result?.messages ?? []
-  const mine =
-    msgs.find(
-      (m) =>
-        m.type === 'worker_done' &&
-        (m.payload?.dispatchId === dispatchId || m.dispatchId === dispatchId)
-    ) ?? msgs.find((m) => m.type === 'worker_done')
-  const summary = summarizeDispatch(host, dispatchId)
+  const done = await waitWorkerDone(host, ws, dispatchId, WORKER_DONE_TIMEOUT_MS)
+  const mine = done.message
+  const summary = done.dispatch
   const ok = Boolean(mine) && summary.status === 'completed'
+  if (!ok) {
+    const read = orca(
+      host,
+      [
+        'orchestration',
+        'worker-read',
+        '--dispatch',
+        dispatchId,
+        '--source',
+        'auto',
+        '--limit',
+        '80'
+      ],
+      { allowFailure: true }
+    ).json?.result
+    const tail = (read?.terminal?.tail ?? read?.lines ?? [])
+      .map((l) => String(l).trim())
+      .filter(Boolean)
+    log('settle.tail', { agent, source: read?.source ?? null, tail: tail.slice(-40) })
+  }
   log('settle.result', {
     agent,
     ok,
@@ -468,12 +304,14 @@ async function phaseSettle(host, ws, agent) {
 }
 
 async function phaseCrash(agent) {
-  const userDataDir = mkdtempSync(join(tmpdir(), 'odin-real-crash-'))
+  const userDataDir = mkdtempSync(join(tmpdir(), 'odin-orca-dev-crash-'))
   writeProfile(userDataDir, { grants: BYPASS_GRANTS })
   const port = await freePort()
+  const plan = planWorkspace(userDataDir)
+  const trusted = grantClaudeTrust(plan.trustPaths)
   let host = new Host(userDataDir, port)
   await host.start()
-  const ws = setupWorkspace(host)
+  const ws = setupWorkspace(host, plan)
   const retryRequest = randomUUID()
   // Start the worker (the send is journaled and delivered), then kill the host mid-flight.
   const started = orca(host, workerStartArgs(ws, agent, ['--retry-request', retryRequest]), {
@@ -507,9 +345,9 @@ async function phaseCrash(agent) {
     const summary = dispatchId ? summarizeDispatch(host, dispatchId) : null
     const falseCompletion = summary?.status === 'completed'
     // Give a re-adopted worker the chance to finish honestly; a proven worker_done after re-adoption is fine.
-    const done = dispatchId ? waitWorkerDone(host, ws, 120_000) : null
-    const reported = Boolean(done?.json?.result?.messages?.some?.((m) => m.type === 'worker_done'))
-    const after = dispatchId ? summarizeDispatch(host, dispatchId) : null
+    const done = dispatchId ? await waitWorkerDone(host, ws, dispatchId, 120_000) : null
+    const reported = Boolean(done?.message)
+    const after = done?.dispatch ?? null
     const ok =
       refused && rows.length <= 1 && !falseCompletion && (after?.status !== 'completed' || reported)
     log('crash.result', {
@@ -541,6 +379,7 @@ async function phaseCrash(agent) {
     return ok
   } finally {
     await host.stop()
+    revokeClaudeTrust(trusted)
     rmSync(userDataDir, { recursive: true, force: true })
     rmSync(ws.repoPath, { recursive: true, force: true })
   }
@@ -552,21 +391,13 @@ async function phaseConcurrent(host, ws, agents) {
   )
   const ids = starts.map((s) => s.json?.result?.dispatchId ?? s.json?.result?.dispatch?.id ?? null)
   log('concurrent.started', { agents, exits: starts.map((s) => s.status), dispatchIds: ids })
-  const deadline = Date.now() + WORKER_DONE_TIMEOUT_MS
-  const settled = new Set()
-  while (Date.now() < deadline && settled.size < ids.filter(Boolean).length) {
-    const done = waitWorkerDone(host, ws, 60_000)
-    for (const m of done.json?.result?.messages ?? []) {
-      if (m.type === 'worker_done') {
-        settled.add(m.payload?.dispatchId ?? m.dispatchId ?? m.id)
-      }
-    }
-    for (const id of ids) {
-      if (id && summarizeDispatch(host, id).status === 'completed') {
-        settled.add(id)
-      }
-    }
-  }
+  const waits = await Promise.all(
+    ids.map((id) => (id ? waitWorkerDone(host, ws, id, WORKER_DONE_TIMEOUT_MS) : null))
+  )
+  log('concurrent.reports', {
+    reported: waits.map((w) => Boolean(w?.message)),
+    timedOut: waits.map((w) => Boolean(w?.timedOut))
+  })
   const summaries = ids.map((id) =>
     id ? { id, ...summarizeDispatch(host, id), raw: undefined } : null
   )
@@ -598,12 +429,14 @@ async function main() {
     }
   }
   if (PHASES.includes('settle') || PHASES.includes('concurrent')) {
-    const userDataDir = mkdtempSync(join(tmpdir(), 'odin-real-grant-'))
+    const userDataDir = mkdtempSync(join(tmpdir(), 'odin-orca-dev-grant-'))
     writeProfile(userDataDir, { grants: BYPASS_GRANTS })
+    const plan = planWorkspace(userDataDir)
+    const trusted = grantClaudeTrust(plan.trustPaths)
     const host = new Host(userDataDir, await freePort())
     await host.start()
     try {
-      const ws = setupWorkspace(host)
+      const ws = setupWorkspace(host, plan)
       if (PHASES.includes('settle')) {
         for (const agent of AGENTS) {
           results[`settle:${agent}`] = await phaseSettle(host, ws, agent)
@@ -615,6 +448,7 @@ async function main() {
       rmSync(ws.repoPath, { recursive: true, force: true })
     } finally {
       await host.stop()
+      revokeClaudeTrust(trusted)
       rmSync(userDataDir, { recursive: true, force: true })
     }
   }

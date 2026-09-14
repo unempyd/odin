@@ -63,6 +63,39 @@
         "src/main/runtime/tui-idle-evidence.test.ts",
         "src/main/runtime/terminal-wait-name-only-idle.test.ts"
       ]
+    },
+    {
+      "id": "H",
+      "title": "Shipped launch defaults never bypass agent permissions; migration never injects bypass",
+      "commit": "854b5956ba",
+      "tests": [
+        "src/shared/constants.test.ts",
+        "src/main/persistence/applying-settings/terminal-settings-migrations.test.ts"
+      ]
+    },
+    {
+      "id": "E",
+      "title": "Managed hooks into other tools' configs require explicit opt-in (fail-closed)",
+      "commit": "29624f65b9",
+      "tests": ["src/main/agent-hooks/managed-agent-hook-controls.test.ts"]
+    },
+    {
+      "id": "F",
+      "title": "Fresh installs are opted out of telemetry by default",
+      "commit": "aacecbdaf4",
+      "tests": ["src/main/persistence-cohort-and-identity-migration.test.ts"]
+    },
+    {
+      "id": "G",
+      "title": "Mirroring ~/.codex/auth.json into a runtime home requires consent; revocation clears it",
+      "commit": "f14f8249f9",
+      "tests": ["src/main/codex-accounts/runtime-home-system-default-mirror-readback.test.ts"]
+    },
+    {
+      "id": "D",
+      "title": "Runtime WS listener stays on loopback unless a live consent record exists; revocation re-closes",
+      "commit": "6d10576a71",
+      "tests": ["src/main/runtime/runtime-rpc-websocket-bind-host.test.ts"]
     }
   ]
 }
