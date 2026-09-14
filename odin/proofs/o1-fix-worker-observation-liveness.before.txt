@@ -1,0 +1,85 @@
+
+ RUN  v4.1.11 /Users/briankeeny/Desktop/odin-wt-fix-settlement
+
+ ❯ src/main/runtime/rpc/methods/orchestration/worker/worker-observation.test.ts (10 tests | 3 failed) 24ms
+     × reports a disconnected local worker with no liveness verdict as unverifiable 9ms
+     × classifies an unclassified showTerminal failure as unverifiable, not missing 2ms
+     × classifies a request timeout as unverifiable, not missing 1ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/main/runtime/rpc/methods/orchestration/worker/worker-observation.test.ts > inspectWorkerTerminal missing liveness verdict > reports a disconnected local worker with no liveness verdict as unverifiable
+AssertionError: expected { terminal: { …(2) }, …(3) } to match object { exact: true, status: 'unverifiable' }
+(4 matching properties omitted from actual)
+
+- Expected
++ Received
+
+  {
+    "exact": true,
+-   "status": "unverifiable",
++   "status": "exited",
+  }
+
+ ❯ src/main/runtime/rpc/methods/orchestration/worker/worker-observation.test.ts:56:66
+     54|     })
+     55|
+     56|     await expect(inspectWorkerTerminal(runtime, db, DISPATCH_ID)).reso…
+       |                                                                  ^
+     57|       exact: true,
+     58|       status: 'unverifiable'
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  src/main/runtime/rpc/methods/orchestration/worker/worker-observation.test.ts > inspectWorkerTerminal showTerminal failure classification > classifies an unclassified showTerminal failure as unverifiable, not missing
+AssertionError: expected { terminal: null, exact: false, …(1) } to match object { Object (exact, status) }
+(1 matching property omitted from actual)
+
+- Expected
++ Received
+
+  {
+    "exact": false,
+-   "status": "unverifiable",
++   "status": "missing",
+  }
+
+ ❯ src/main/runtime/rpc/methods/orchestration/worker/worker-observation.test.ts:102:66
+    100|     )
+    101|
+    102|     await expect(inspectWorkerTerminal(runtime, db, DISPATCH_ID)).reso…
+       |                                                                  ^
+    103|       exact: false,
+    104|       status: 'unverifiable'
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+ FAIL  src/main/runtime/rpc/methods/orchestration/worker/worker-observation.test.ts > inspectWorkerTerminal showTerminal failure classification > classifies a request timeout as unverifiable, not missing
+AssertionError: expected { terminal: null, exact: false, …(1) } to match object { Object (exact, status) }
+(1 matching property omitted from actual)
+
+- Expected
++ Received
+
+  {
+    "exact": false,
+-   "status": "unverifiable",
++   "status": "missing",
+  }
+
+ ❯ src/main/runtime/rpc/methods/orchestration/worker/worker-observation.test.ts:113:66
+    111|     )
+    112|
+    113|     await expect(inspectWorkerTerminal(runtime, db, DISPATCH_ID)).reso…
+       |                                                                  ^
+    114|       exact: false,
+    115|       status: 'unverifiable'
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  3 failed | 7 passed (10)
+   Start at  23:24:50
+   Duration  1.60s (transform 1.00s, setup 71ms, import 1.27s, tests 24ms, environment 0ms)
+
