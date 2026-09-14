@@ -1,0 +1,56 @@
+Scope: all 2 workspace projects
+✓ Lockfile passes supply-chain policies (verified 12m ago)
+Lockfile is up to date, resolution step is skipped
+Already up to date
+native/windows-registry install$ node-gyp rebuild
+native/windows-registry install: gyp info it worked if it ends with ok
+native/windows-registry install: gyp info using node-gyp@12.3.0
+native/windows-registry install: gyp info using node@24.21.0 | darwin | x64
+native/windows-registry install: gyp info find Python using Python version 3.14.0 found at "/usr/local/opt/python@3.14/bin/python3.14"
+native/windows-registry install: 
+native/windows-registry install: gyp info spawn /usr/local/opt/python@3.14/bin/python3.14
+native/windows-registry install: gyp info spawn args [
+native/windows-registry install: gyp info spawn args '/Users/briankeeny/Desktop/odin-fork/node_modules/.pnpm/node-gyp@12.3.0/node_modules/node-gyp/gyp/gyp_main.py',
+native/windows-registry install: gyp info spawn args 'binding.gyp',
+native/windows-registry install: gyp info spawn args '-f',
+native/windows-registry install: gyp info spawn args 'make',
+native/windows-registry install: gyp info spawn args '-I',
+native/windows-registry install: gyp info spawn args '/Users/briankeeny/Desktop/odin-wt-status/native/windows-registry/build/config.gypi',
+native/windows-registry install: gyp info spawn args '-I',
+native/windows-registry install: gyp info spawn args '/Users/briankeeny/Desktop/odin-fork/node_modules/.pnpm/node-gyp@12.3.0/node_modules/node-gyp/addon.gypi',
+native/windows-registry install: gyp info spawn args '-I',
+native/windows-registry install: gyp info spawn args '/Users/briankeeny/Library/Caches/node-gyp/24.21.0/include/node/common.gypi',
+native/windows-registry install: gyp info spawn args '-Dlibrary=shared_library',
+native/windows-registry install: gyp info spawn args '-Dvisibility=default',
+native/windows-registry install: gyp info spawn args '-Dnode_root_dir=/Users/briankeeny/Library/Caches/node-gyp/24.21.0',
+native/windows-registry install: gyp info spawn args '-Dnode_gyp_dir=/Users/briankeeny/Desktop/odin-fork/node_modules/.pnpm/node-gyp@12.3.0/node_modules/node-gyp',
+native/windows-registry install: gyp info spawn args '-Dnode_lib_file=/Users/briankeeny/Library/Caches/node-gyp/24.21.0/<(target_arch)/node.lib',
+native/windows-registry install: gyp info spawn args '-Dmodule_root_dir=/Users/briankeeny/Desktop/odin-wt-status/native/windows-registry',
+native/windows-registry install: gyp info spawn args '-Dnode_engine=v8',
+native/windows-registry install: gyp info spawn args '--depth=.',
+native/windows-registry install: gyp info spawn args '--no-parallel',
+native/windows-registry install: gyp info spawn args '--generator-output',
+native/windows-registry install: gyp info spawn args 'build',
+native/windows-registry install: gyp info spawn args '-Goutput_dir=.'
+native/windows-registry install: gyp info spawn args ]
+native/windows-registry install: gyp info spawn make
+native/windows-registry install: gyp info spawn args [ 'BUILDTYPE=Release', '-C', 'build' ]
+native/windows-registry install:   TOUCH Release/obj.target/orca_windows_registry.stamp
+native/windows-registry install: gyp info ok 
+native/windows-registry install: Done
+. postinstall$ node config/scripts/rebuild-native-deps.mjs
+. postinstall: [rebuild] Skipping optional Electron rebuild modules: cpu-features
+. postinstall: [rebuild] Native modules already load in Electron; skipping rebuild.
+. postinstall: Done
+. prepare$ husky
+. prepare: Done
+Done in 4.5s using pnpm v12.0.0
+
+ RUN  v4.1.11 /Users/briankeeny/Desktop/odin-wt-status
+
+
+ Test Files  6 passed (6)
+      Tests  40 passed (40)
+   Start at  18:24:57
+   Duration  9.25s (transform 28.73s, setup 564ms, import 45.80s, tests 865ms, environment 1ms)
+
