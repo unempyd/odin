@@ -1,0 +1,47 @@
+
+ RUN  v4.1.11 /Users/briankeeny/Desktop/odin-wt-fix-settlement
+
+ ❯ src/main/runtime/tui-idle-evidence.test.ts (10 tests | 2 failed) 37ms
+     × still holds a name-only carve-out agent to the quiescence window while it is still streaming 14ms
+     × never promotes a name-only carve-out agent with no output clock at all 2ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/main/runtime/tui-idle-evidence.test.ts > resolveTuiIdleVerdict > still holds a name-only carve-out agent to the quiescence window while it is still streaming
+AssertionError: expected 'observed-idle' to be 'not-idle' // Object.is equality
+
+Expected: "not-idle"
+Received: "observed-idle"
+
+ ❯ src/main/runtime/tui-idle-evidence.test.ts:97:42
+     95|       agent: 'grok'
+     96|     })
+     97|     expect(resolveTuiIdleVerdict(input)).toBe('not-idle')
+       |                                          ^
+     98|   })
+     99|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  src/main/runtime/tui-idle-evidence.test.ts > resolveTuiIdleVerdict > never promotes a name-only carve-out agent with no output clock at all
+AssertionError: expected 'observed-idle' to be 'not-idle' // Object.is equality
+
+Expected: "not-idle"
+Received: "observed-idle"
+
+ ❯ src/main/runtime/tui-idle-evidence.test.ts:105:42
+    103|       agent: 'grok'
+    104|     })
+    105|     expect(resolveTuiIdleVerdict(input)).toBe('not-idle')
+       |                                          ^
+    106|   })
+    107| })
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 8 passed (10)
+   Start at  22:45:07
+   Duration  5.63s (transform 2.27s, setup 913ms, import 1.61s, tests 37ms, environment 1ms)
+

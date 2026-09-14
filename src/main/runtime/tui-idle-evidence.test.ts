@@ -85,6 +85,25 @@ describe('resolveTuiIdleVerdict', () => {
     })
     expect(resolveTuiIdleVerdict(input)).toBe('observed-idle')
   })
+
+  // C4: the name-only carve-out promoted straight to observed-idle off the title alone, with no
+  // quiescence check at all — "no stronger signal will ever arrive" earns a better verdict once
+  // settled, never an immediate one.
+  it('still holds a name-only carve-out agent to the quiescence window while it is still streaming', () => {
+    const input = baseInput({
+      record: { lastAgentStatus: 'idle', lastOutputAt: Date.now(), lastOscTitle: 'grok' },
+      agent: 'grok'
+    })
+    expect(resolveTuiIdleVerdict(input)).toBe('not-idle')
+  })
+
+  it('never promotes a name-only carve-out agent with no output clock at all', () => {
+    const input = baseInput({
+      record: { lastAgentStatus: 'idle', lastOutputAt: null, lastOscTitle: 'grok' },
+      agent: 'grok'
+    })
+    expect(resolveTuiIdleVerdict(input)).toBe('not-idle')
+  })
 })
 
 describe('resolveTuiIdleVerdict as a satisfaction guard', () => {

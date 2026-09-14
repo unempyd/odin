@@ -1,0 +1,19 @@
+
+ RUN  v4.1.11 /Users/briankeeny/Desktop/odin-wt-fix-settlement
+
+
+ Test Files  5 passed (5)
+      Tests  72 passed (72)
+   Start at  23:14:09
+   Duration  20.02s (transform 12.24s, setup 401ms, import 15.67s, tests 4.66s, environment 1ms)
+
+--- known pre-existing environment flake, unrelated to this change: tui-idle-name-only-real-pty.integration.test.ts > does not satisfy while the real process streams under a name-only title. Fails even on an unmodified checkout in this sandbox (real node-pty subprocess spawn + 500ms fixed wait for its first OSC title byte; the other two tests in the same file, which exercise the C4 code path itself, pass) ---
+
+ RUN  v4.1.11 /Users/briankeeny/Desktop/odin-wt-fix-settlement
+
+
+ Test Files  1 passed (1)
+      Tests  3 passed (3)
+   Start at  23:14:30
+   Duration  34.73s (transform 12.39s, setup 104ms, import 16.15s, tests 18.16s, environment 0ms)
+

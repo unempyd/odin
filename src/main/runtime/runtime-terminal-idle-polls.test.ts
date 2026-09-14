@@ -81,7 +81,14 @@ describe('RuntimeTerminalIdlePolls timer budget', () => {
       const waiter = makeWaiter(`handle-${index}`)
       // Already idle: an independent interval would have resolved this on its own
       // first tick at exactly intervalMs, and so must the shared sweep.
-      polls.startPty(waiter, makePty(`pty-${index}`, { lastAgentStatus: 'idle' }))
+      // C4: no agent and no title means this pty falls into the name-only carve-out lane, which
+      // still has to clear the quiescence window (never "immediately") — a real lastOutputAt
+      // makes that window elapse by the first tick (intervalMs > quiescenceMs here) instead of
+      // relying on a bypass that no longer exists.
+      polls.startPty(
+        waiter,
+        makePty(`pty-${index}`, { lastAgentStatus: 'idle', lastOutputAt: Date.now() })
+      )
       return waiter
     })
 

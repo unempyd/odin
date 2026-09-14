@@ -163,12 +163,19 @@ describe('tui-idle evidence ranking', () => {
   // timeout — a total loss of tui-idle for that provider. Carve-out unchanged by residual C:
   // resolveTuiIdleVerdict still promotes this case to 'observed-idle', not 'silence', because
   // no stronger signal will ever arrive for Grok.
-  it('settles immediately for an agent that never emits anything but its name', async () => {
+  // C4: was pinned "immediately" — the carve-out minted observed-idle off the title alone with
+  // no quiescence check, so a Grok pane still mid-turn (its banner repaints constantly) settled
+  // in ~0s too. "No stronger signal is coming" now only buys a better verdict once quiesced.
+  it('settles once quiesced for an agent that never emits anything but its name', async () => {
     const pty = makeTuiIdlePty({ lastAgentStatus: 'idle', lastOscTitle: 'grok' })
     const { wait } = createWait({ pty, agent: 'grok' })
-    await expect(
-      wait.wait(HANDLE, { condition: 'tui-idle', timeoutMs: 60_000 })
-    ).resolves.toMatchObject({ satisfied: true })
+    const settled = watch(wait.wait(HANDLE, { condition: 'tui-idle', timeoutMs: 60_000 }))
+
+    expect(settled).not.toHaveBeenCalled()
+    await vi.advanceTimersByTimeAsync(QUIESCENCE_MS + POLL_INTERVAL_MS)
+    expect(settled).toHaveBeenCalledWith({
+      ok: expect.objectContaining({ satisfied: true, evidence: 'observed-idle' })
+    })
   })
 
   it('falls back to the title when the pane carries no launch metadata', async () => {
@@ -295,12 +302,15 @@ describe('tui-idle over the live OSC title pipeline', () => {
 
   // Carve-out unchanged by residual C: Grok's name-only title is the only rest signal it ever
   // emits, so resolveTuiIdleVerdict promotes it to 'observed-idle', not 'silence'.
-  it('still settles for an agent whose only rest signal is its name', async () => {
+  // C4: was pinned to settle inside 2s with no quiescence at all; now needs real wall-clock time
+  // to pass the production quiescence window (TUI_IDLE_QUIESCENCE_MS) plus a poll tick to observe
+  // it, so the timeout budget grows to match instead of racing the fix.
+  it('still settles for an agent whose only rest signal is its name, once quiesced', async () => {
     const { runtime, handle } = await makeRuntime('grok')
     runtime.onPtyData(E2E_PTY_ID, `${oscTitle('grok')}banner\n`, Date.now())
 
     await expect(
-      runtime.waitForTerminal(handle, { condition: 'tui-idle', timeoutMs: 2_000 })
+      runtime.waitForTerminal(handle, { condition: 'tui-idle', timeoutMs: 8_000 })
     ).resolves.toMatchObject({ condition: 'tui-idle', satisfied: true })
-  })
+  }, 15_000)
 })
