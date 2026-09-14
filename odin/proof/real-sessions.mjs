@@ -171,11 +171,16 @@ async function waitWorkerDone(host, ws, dispatchId, timeoutMs) {
   return { message: null, dispatch, timedOut: true }
 }
 
+/** The agent name is an operator argument; escape it so it can only ever match itself. */
+function agentArgvPattern(agent) {
+  return new RegExp(`(^|/)${agent.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(\\s|$)`)
+}
+
 /** Full command lines of every live process whose executable is the agent; never truncated. */
 function liveAgentArgv(agent) {
   return spawnSync('ps', ['-axo', 'command'], { encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 })
     .stdout.split('\n')
-    .filter((l) => new RegExp(`(^|/)${agent}(\\s|$)`).test(l) && !l.includes('real-sessions'))
+    .filter((l) => agentArgvPattern(agent).test(l) && !l.includes('real-sessions'))
     .map((l) => l.trim())
 }
 
