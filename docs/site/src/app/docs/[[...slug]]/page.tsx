@@ -6,7 +6,7 @@ import { findNeighbour } from 'fumadocs-core/page-tree'
 import { Prose } from '@/components/docs/prose'
 import { source } from '@/lib/source'
 
-const siteUrl = 'https://www.onorca.dev'
+const siteUrl = 'https://odin.unempyd.com'
 
 export function generateStaticParams() {
   return source.generateParams()
@@ -23,31 +23,33 @@ export async function generateMetadata({
     return {}
   }
   const { title, description, keywords } = page.data
-  const ogImagePath = slug && slug.length > 0 ? `/docs/og/${slug.join('/')}` : '/docs/og'
+  // Matches the flat, single-segment naming in the `/docs/og/[slug]` route
+  // (see that route's comment for why it can't mirror multi-segment slugs).
+  const ogImagePath = `/docs/og/${slug && slug.length > 0 ? slug.join('-') : 'index'}`
   return {
-    title: `${title} — Orca Docs`,
-    description: description ?? `${title} — Orca documentation.`,
+    title: `${title} — Odin Docs`,
+    description: description ?? `${title} — Odin documentation.`,
     keywords,
     alternates: { canonical: `${siteUrl}${page.url}` },
     openGraph: {
       type: 'article',
-      title: `${title} — Orca Docs`,
-      description: description ?? `${title} — Orca documentation.`,
+      title: `${title} — Odin Docs`,
+      description: description ?? `${title} — Odin documentation.`,
       url: `${siteUrl}${page.url}`,
-      siteName: 'Orca',
+      siteName: 'Odin',
       images: [
         {
           url: ogImagePath,
           width: 1200,
           height: 630,
-          alt: `${title} — Orca Docs`
+          alt: `${title} — Odin Docs`
         }
       ]
     },
     twitter: {
       card: 'summary_large_image',
-      title: `${title} — Orca Docs`,
-      description: description ?? `${title} — Orca documentation.`,
+      title: `${title} — Odin Docs`,
+      description: description ?? `${title} — Odin documentation.`,
       images: [ogImagePath]
     }
   }
