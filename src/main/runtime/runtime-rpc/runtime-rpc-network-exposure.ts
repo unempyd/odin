@@ -101,6 +101,19 @@ export class RuntimeRpcNetworkExposure extends RuntimeRpcLifecycle {
     if (this.pinnedBindHost) {
       return
     }
+    if (this.networkExposurePromise) {
+      // Why: an in-flight widen can still be stopping the loopback listener when consent is
+      // revoked -- wsBoundHost and activeTransports have not been updated to the wide state yet,
+      // so reading them now would see "already loopback" and return without narrowing, letting
+      // the gated widen complete wide anyway. Wait for it to settle first, then re-evaluate
+      // against the state it actually left behind (D1).
+      await this.networkExposurePromise.catch(() => {})
+    }
+    if (this.networkExposureConsent()) {
+      // Why: consent may have been re-granted while we were waiting above -- a stale revocation
+      // must not tear down a listener a newer widen just (re)established.
+      return
+    }
     const current = this.activeTransports.find(
       (transport): transport is WebSocketTransport => transport instanceof WebSocketTransport
     )
