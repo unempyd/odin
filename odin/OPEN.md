@@ -58,3 +58,10 @@ reconstruct status by pattern-matching terminal titles instead of reading the
 store. `tui-idle` evidence is already de-authorized from that lane — see the
 tier ranking in `src/main/runtime/tui-idle-evidence.ts` (tier 1/2 vs. the
 tier-3 name-only-title hold-out at `:62-96`).
+
+Additional renderer writer the Claude review located (2026-09-15), unchanged by Odin and not in the four above:
+`src/renderer/src/components/terminal-pane/pty-connection/title-spawn-bell.ts:105-189` computes `working`/`done`
+status from renderer-observed PTY title bytes for the `command-code` pseudo-agent and writes it with `setAgentStatus`.
+A full enumeration is `grep -rn "setAgentStatus(" src/renderer --include='*.ts' --include='*.tsx' | grep -v test`;
+only `hooks/ipc-events/agent-status-event-applicator.ts` is store-derived. The closing plan above applies to every
+site in that list.
