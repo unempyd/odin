@@ -6,6 +6,22 @@
       "title": "Agent status: host rows are never outranked by a client wall clock",
       "commit": "f6ce5d565f",
       "tests": ["src/renderer/src/runtime/web-session-tabs-sync-host-authority.test.ts"]
+    },
+    {
+      "id": "N",
+      "title": "Per-attempt accounting: dispatched_at at the dispatch edge, exit_code recorded, wallclock derivable",
+      "commit": "07184d77d6",
+      "tests": [
+        "src/main/runtime/orchestration/db/worker-dispatch/worker-dispatch-accounting.test.ts"
+      ]
+    },
+    {
+      "id": "M",
+      "title": "Injected (unsupervised) dispatches are reconciled on restart, never left live",
+      "commit": "a2c27936ee",
+      "tests": [
+        "src/main/runtime/orchestration/orchestration-unsupervised-dispatch-recovery.test.ts"
+      ]
     }
   ]
 }
