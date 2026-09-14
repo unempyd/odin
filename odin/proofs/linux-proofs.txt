@@ -83,3 +83,9 @@ ALL PROOFS: reproduced upstream, closed on Odin
  Test Files  6 passed (6)
       Tests  35 passed (35)
 docker exit=0
+
+# Linux process-ownership run — 2026-09-14T17:52:59Z — node:24-bookworm + procps, linux/x86_64, real ps and /proc
+# files: posix-pty-process-groups.integration, posix-pty-process-groups, posix-pty-foreground-group, agent-foreground-process-batch, agent-foreground-process, agent-foreground-process-real-rows, posix-pane-foreground-fingerprint, process-table-snapshot, cheap-process-table-snapshot, terminal-host-session-reaping-leak, terminal-host-process-inspection, worker-terminal-process-liveness
+node v24.21.0 Linux x86_64 ps=/usr/bin/ps
+ Test Files  12 passed (12)
+      Tests  151 passed (151)
