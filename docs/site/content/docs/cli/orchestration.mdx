@@ -46,6 +46,22 @@ orca orchestration worker-start --task <taskId> --worktree current --agent claud
 
 `--model` accepts opaque provider model IDs for Claude, Codex, and Cursor. `--effort` requires `--model` and only applies when that agent/model supports the level. Neither flag can combine with `--terminal` (reuse an existing pane). Overrides apply to that launch only and show under `launch.requested` / `launch.effective` in the start receipt. Federated starts need a worker host that advertises launch-preference support.
 
+<Callout title="Odin: launch.effective carries a source, and is never a silent copy">
+  Orca upstream's `launch.effective` was a structural copy of `launch.requested`,
+  validated only against a table compiled into the binary — never against the
+  installed CLI. On Odin, `launch.effective` also carries a `source`: for
+  Claude it comes from the installed CLI's own `list_models` answer
+  (`source: 'probe'`), with the CLI's own reason on refusal, or
+  `effective: null, source: 'unverified'` when the probe itself cannot run.
+  Codex has no live probe and is labelled `source: 'catalog'`. A federated
+  worker whose host never answered gets `effective: null`, never a copy of
+  `requested`; a remote or command-overridden placement skips the local
+  probe and is `unverified`. Membership in the CLI's model list proves
+  advertised support, not what the launched session actually applied. See
+  [Odin's residual table, contract I](/docs/odin/residuals) (commit
+  `cc23f1c460`).
+</Callout>
+
 Wait for completions (process every message in a Delivery, then ack):
 
 ```bash
@@ -85,6 +101,17 @@ orca orchestration worker-start --task <taskId> --retry-of <dispatchId> --worktr
 ```
 
 Do not leave completed worker terminals open just to re-read output — use `worker-read` after `worker-release`. Do not substitute a broad `terminal close` when release returns `release_pending` or `release_unknown`; follow the receipt's recovery action.
+
+<Callout title="Odin: worker-show reports real per-attempt accounting">
+  Orca upstream stamped `dispatch_contexts.dispatched_at` at row creation — a
+  dead duplicate of `created_at` — and dropped the observed exit code before
+  recording failure, so nothing exposed real per-attempt wallclock. On Odin,
+  `dispatched_at` is written on the pending→dispatched edge, `exit_code` is a
+  real column, and `orca orchestration worker-show --json` reports
+  `dispatchedAt`, `completedAt`, `wallclockMs`, `exitCode`, and
+  `terminationReason`. See [Odin's residual table, contract
+  N](/docs/odin/residuals) (commit `07184d77d6`).
+</Callout>
 
 ## Federated workers (optional)
 

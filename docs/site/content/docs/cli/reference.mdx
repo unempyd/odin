@@ -146,6 +146,21 @@ close returns a failing `unverifiable` result rather than claiming the processes
 
 `terminal list` reports each terminal's `executionHostId` when Orca can verify it, plus a result-level `hostScope` with covered and omitted host IDs. Treat a missing host identity or scope as **unverifiable**, not local. A missing terminal is evidence that it exited only when its execution host is listed in `hostScope.hostIds`.
 
+<Callout title="Odin: terminal wait --for tui-idle reports its evidence">
+  Orca upstream's tier-3 "sustained title idle" check returned the same
+  `true` as positive evidence of readiness — a silent worker could be
+  declared ready or an automation run declared completed on nothing but
+  absence. On Odin, `terminal wait --for tui-idle` resolves a three-valued
+  verdict (`observed-idle` / `silence` / `not-idle`); the JSON result carries
+  an `evidence` field describing what was actually observed, and `satisfied`
+  is never `true` on silence alone. Two tier-1 exceptions still count as
+  positive evidence: an explicit idle marker or ready prompt the agent
+  itself paints, and — because it is their only rest signal — the
+  quiescence window for agents named `grok`, `copilot`, `aider`, `mimo`,
+  `agy`, and `opencode`. See [Odin's residual table, contract
+  C](/docs/odin/residuals) (commit `07522244e6`).
+</Callout>
+
 By default, `terminal read` returns the accumulated output stream with terminal escapes stripped. Programs that redraw lines can therefore appear as stacked fragments. Use `--screen` when you need the currently rendered frame; the response's `source` identifies `stream`, `screen`, or `screen-unavailable`. Screen reads have no history to page, so `--screen` and `--cursor` are mutually exclusive.
 
 For long output, use cursor reads. Save `nextCursor` from one stream read, then pass it back with `--cursor` to fetch only new output.
