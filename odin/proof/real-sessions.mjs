@@ -171,6 +171,13 @@ async function waitWorkerDone(host, ws, dispatchId, timeoutMs) {
   return { message: null, dispatch, timedOut: true }
 }
 
+function liveAgentArgv(agent) {
+  return spawnSync('ps', ['-axo', 'command'], { encoding: 'utf8' })
+    .stdout.split('\n')
+    .filter((l) => new RegExp(`(^|/)${agent}(\\s|$)`).test(l) && !l.includes('real-sessions'))
+    .map((l) => l.trim().slice(0, 200))
+}
+
 async function phaseDefaultBlocks(agent) {
   const userDataDir = mkdtempSync(join(tmpdir(), 'odin-orca-dev-default-'))
   writeProfile(userDataDir, { grants: null })
@@ -192,10 +199,7 @@ async function phaseDefaultBlocks(agent) {
     // The contract under test is the launch argv, not the agent's own permission policy: an
     // operator whose Claude config auto-approves will still complete the task. Record the live
     // process argv so the proof shows what Odin launched.
-    const argv = spawnSync('ps', ['-axo', 'command'], { encoding: 'utf8' })
-      .stdout.split('\n')
-      .filter((l) => new RegExp(`(^|/)${agent}(\\s|$)`).test(l) && !l.includes('real-sessions'))
-      .map((l) => l.trim().slice(0, 200))
+    const argv = liveAgentArgv(agent)
     const bypassInArgv = argv.some((l) =>
       /dangerously|--yolo|bypass|auto-approve|trust-all-tools|unrestricted|allow-all/i.test(l)
     )
@@ -237,7 +241,9 @@ async function phaseSettle(host, ws, agent) {
     exit: started.status,
     state: started.json?.result?.state ?? null,
     dispatchId,
-    launch: started.json?.result?.launch ?? started.json?.result?.receipt ?? null
+    launch: started.json?.result?.launch ?? started.json?.result?.receipt ?? null,
+    // The live argv shows the grant the profile recorded actually reached the launch.
+    argv: liveAgentArgv(agent)
   })
   if (started.status !== 0 || !dispatchId) {
     const r = started.json?.result ?? {}

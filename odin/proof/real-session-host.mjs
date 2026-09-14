@@ -92,7 +92,15 @@ export function writeProfile(userDataDir, { grants }) {
       telemetry: { optedIn: false, installId: randomUUID(), existedBeforeTelemetryRelease: false },
       agentStatusHooksEnabled: false,
       agentDefaultEnv,
-      ...(grants ? { agentDefaultArgs: grants, agentYoloDefaultsMigrated: true } : {})
+      // agentBypassDefaultsReviewed: these grants are the operator's explicit record, so Odin's
+      // one-shot review migration (fix-h1) must not clear them as inherited Orca defaults.
+      ...(grants
+        ? {
+            agentDefaultArgs: grants,
+            agentYoloDefaultsMigrated: true,
+            agentBypassDefaultsReviewed: true
+          }
+        : {})
     },
     onboarding: { flowVersion: 4, closedAt: 1, outcome: 'completed', lastCompletedStep: 5 }
   }
