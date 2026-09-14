@@ -1,4 +1,6 @@
 name: Golden E2E Experiment
+permissions:
+  contents: read
 
 on:
   workflow_dispatch:

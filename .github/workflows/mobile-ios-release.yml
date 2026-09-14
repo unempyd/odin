@@ -1,4 +1,6 @@
 name: Mobile iOS Release
+permissions:
+  contents: read
 
 # Why a separate workflow from Android: iOS releases go through App Store
 # review, which can take days. Decoupling the triggers lets an Android release
