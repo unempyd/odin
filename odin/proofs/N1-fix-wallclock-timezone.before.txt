@@ -1,0 +1,46 @@
+
+ RUN  v4.1.11 /Users/briankeeny/Desktop/odin-wt-fix-consent
+
+ ❯ src/main/runtime/orchestration/db/dispatch-row-writer-claim-timezone.test.ts (2 tests | 2 failed) 766ms
+     × writes the claim-path dispatched_at as ISO, not SQLite space-format text 515ms
+     × computes wallclockMs from the true UTC gap, not skewed by a non-UTC process timezone 243ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/main/runtime/orchestration/db/dispatch-row-writer-claim-timezone.test.ts > dispatch claim timestamp timezone (N1) > writes the claim-path dispatched_at as ISO, not SQLite space-format text
+AssertionError: expected 34200533 to be less than 5000
+ ❯ src/main/runtime/orchestration/db/dispatch-row-writer-claim-timezone.test.ts:51:43
+     49|     const parsed = Date.parse(dispatch.dispatched_at as string)
+     50|     expect(Number.isNaN(parsed)).toBe(false)
+     51|     expect(Math.abs(Date.now() - parsed)).toBeLessThan(5000)
+       |                                           ^
+     52|   })
+     53|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  src/main/runtime/orchestration/db/dispatch-row-writer-claim-timezone.test.ts > dispatch claim timestamp timezone (N1) > computes wallclockMs from the true UTC gap, not skewed by a non-UTC process timezone
+AssertionError: expected 34201000 to be 1000 // Object.is equality
+
+- Expected
++ Received
+
+- 1000
++ 34201000
+
+ ❯ src/main/runtime/orchestration/db/dispatch-row-writer-claim-timezone.test.ts:69:33
+     67|     const exposed = exposeDispatchContext(reloaded!)
+     68|
+     69|     expect(exposed.wallclockMs).toBe(1000)
+       |                                 ^
+     70|   })
+     71| })
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed (2)
+   Start at  22:43:24
+   Duration  25.82s (transform 18.11s, setup 599ms, import 21.55s, tests 766ms, environment 0ms)
+
