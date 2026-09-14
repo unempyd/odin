@@ -1,0 +1,361 @@
+
+ RUN  v4.1.11 /Users/briankeeny/Desktop/odin-wt-rend-ab
+
+ ❯ src/main/agent-hooks/server-ingest-structured-status.test.ts (14 tests | 3 failed) 120ms
+     × projects agent-kind background tasks as subagents, and stamps sessionBoundary false 27ms
+     × omits subagents entirely when no agent-kind background task is reported 5ms
+     × sends the renderer a pane clear when the host stops holding the session 4ms
+ ❯ src/main/ipc/agent-hooks.test.ts (19 tests | 1 failed) 7950ms
+     × includes structured rows alongside hook rows 21ms
+ ❯ src/main/startup/main-window-structured-status-filter.test.ts (2 tests | 2 failed) 33ms
+     × forwards both a hook row and a structured one 23ms
+     × carries structuredHost on the forwarded event 6ms
+stderr | src/renderer/src/hooks/ipc-events/agent-status-event-applicator-structured-host.test.ts > agentStatus:set applying a structured (native chat) row > applies immediately instead of queueing as unattributed
+[telemetry] IPC track threw synchronously ReferenceError: window is not defined
+    at track (/Users/briankeeny/Desktop/odin-wt-rend-ab/src/renderer/src/lib/telemetry.ts:32:5)
+    at applyAgentStatus (/Users/briankeeny/Desktop/odin-wt-rend-ab/src/renderer/src/hooks/ipc-events/agent-status-event-applicator.ts:107:9)
+    at /Users/briankeeny/Desktop/odin-wt-rend-ab/src/renderer/src/hooks/ipc-events/agent-status-event-applicator-structured-host.test.ts:88:20
+    at processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at file:///Users/briankeeny/Desktop/odin-fork/node_modules/.pnpm/@vitest+runner@4.1.11/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20
+
+stderr | src/renderer/src/hooks/ipc-events/agent-status-event-applicator-structured-host.test.ts > agentStatus:set applying a structured (native chat) row > maps a held (non-owning) host to no structuredHostOwned flag, still resume-ineligible
+[telemetry] IPC track threw synchronously ReferenceError: window is not defined
+    at track (/Users/briankeeny/Desktop/odin-wt-rend-ab/src/renderer/src/lib/telemetry.ts:32:5)
+    at applyAgentStatus (/Users/briankeeny/Desktop/odin-wt-rend-ab/src/renderer/src/hooks/ipc-events/agent-status-event-applicator.ts:107:9)
+    at /Users/briankeeny/Desktop/odin-wt-rend-ab/src/renderer/src/hooks/ipc-events/agent-status-event-applicator-structured-host.test.ts:107:5
+    at processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at file:///Users/briankeeny/Desktop/odin-fork/node_modules/.pnpm/@vitest+runner@4.1.11/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20
+
+ ❯ src/renderer/src/hooks/ipc-events/agent-status-event-applicator-structured-host.test.ts (2 tests | 2 failed) 330ms
+     × applies immediately instead of queueing as unattributed 290ms
+     × maps a held (non-owning) host to no structuredHostOwned flag, still resume-ineligible 34ms
+ ❯ src/renderer/src/hooks/ipc-events/agent-status-pane-routing-index.test.ts (6 tests | 1 failed) 233ms
+     × resolves an existing structured tab without a tabsByWorktree entry 17ms
+ ❯ src/renderer/src/components/native-chat/StructuredAgentSessionStatusBridge.test.tsx (20 tests | 2 failed) 1296ms
+     × never writes the store from the host status feed 20ms
+     × does not clear the row on unmount, leaving main as the pane key’s only writer 16ms
+
+⎯⎯⎯⎯⎯⎯ Failed Tests 11 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/main/agent-hooks/server-ingest-structured-status.test.ts > AgentHookServer ingestStructuredStatus > projects agent-kind background tasks as subagents, and stamps sessionBoundary false
+AssertionError: expected [ { …(16) } ] to deeply equal [ ObjectContaining{…} ]
+
+- Expected
++ Received
+
+  [
+    {
+-     "sessionBoundary": false,
+-     "subagents": [
+-       {
+-         "agentType": "deep_review",
+-         "description": "Review the diff",
+-         "id": "child-1",
+-         "startedAt": 500,
++     "agentType": "codex",
++     "connectionId": null,
++     "evidenceObservedAt": 1757030400000,
++     "lastAssistantMessage": "on it",
++     "model": "gpt-6-astra",
++     "observation": {
++       "authorityId": "main-agent-hooks:18367f20-6ee1-45b4-844c-660fb4cf745b",
++       "incarnation": 0,
++       "kind": "transition",
++       "observedAt": 1757030400000,
++       "origin": "structured",
++       "revision": 1,
++     },
++     "paneKey": "structured-agent-session-a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d:53cc8fd7-29d5-43ec-a00a-36ab6c273ace",
++     "prompt": "ship the thing",
++     "receivedAt": 1789410552927,
+      "state": "working",
+-       },
+-     ],
++     "stateStartedAt": 1757030400000,
++     "structuredHost": "owned",
++     "tabId": "structured-agent-session-a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d",
++     "toolInput": "sleep 30",
++     "toolName": "shell",
++     "worktreeId": "repo-1::/workspace/app",
+    },
+  ]
+
+ ❯ src/main/agent-hooks/server-ingest-structured-status.test.ts:116:40
+    114|     )
+    115|
+    116|     expect(server.getStatusSnapshot()).toEqual([
+       |                                        ^
+    117|       expect.objectContaining({
+    118|         sessionBoundary: false,
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/11]⎯
+
+ FAIL  src/main/agent-hooks/server-ingest-structured-status.test.ts > AgentHookServer ingestStructuredStatus > omits subagents entirely when no agent-kind background task is reported
+AssertionError: expected undefined to be false // Object.is equality
+
+- Expected:
+false
+
++ Received:
+undefined
+
+ ❯ src/main/agent-hooks/server-ingest-structured-status.test.ts:136:60
+    134|     server.ingestStructuredStatus(summary())
+    135|     expect(server.getStatusSnapshot()[0]).not.toHaveProperty('subagent…
+    136|     expect(server.getStatusSnapshot()[0]?.sessionBoundary).toBe(false)
+       |                                                            ^
+    137|   })
+    138|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/11]⎯
+
+ FAIL  src/main/agent-hooks/server-ingest-structured-status.test.ts > AgentHookServer ingestStructuredStatus > sends the renderer a pane clear when the host stops holding the session
+AssertionError: expected [] to deeply equal [ Array(1) ]
+
+- Expected
++ Received
+
+- [
+-   {
+-     "paneKey": "structured-agent-session-a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d:53cc8fd7-29d5-43ec-a00a-36ab6c273ace",
+-   },
+- ]
++ []
+
+ ❯ src/main/agent-hooks/server-ingest-structured-status.test.ts:209:21
+    207|
+    208|     expect(server.getStatusSnapshot()).toEqual([])
+    209|     expect(cleared).toEqual([{ paneKey: STRUCTURED_PANE }])
+       |                     ^
+    210|     // `subscribeStatusDrop` is a separate tap `clearPaneState` does n…
+    211|     // the synthetic-title spinner stop, never applies to a structured…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/11]⎯
+
+ FAIL  src/main/ipc/agent-hooks.test.ts > agentStatus:getSnapshot IPC > includes structured rows alongside hook rows
+AssertionError: expected [ Array(1) ] to deeply equal [ …(2) ]
+
+- Expected
++ Received
+
+  [
+    "tab-1:11111111-1111-4111-8111-111111111111",
+-   "tab-2:22222222-2222-4222-8222-222222222222",
+  ]
+
+ ❯ src/main/ipc/agent-hooks.test.ts:184:44
+    182|
+    183|     const rows = handleHandlers.get('agentStatus:getSnapshot')!({}) as…
+    184|     expect(rows.map((row) => row.paneKey)).toEqual([PANE_KEY, CHILD_PA…
+       |                                            ^
+    185|   })
+    186|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/11]⎯
+
+ FAIL  src/main/startup/main-window-structured-status-filter.test.ts > the main-window agent-status listener > forwards both a hook row and a structured one
+AssertionError: expected [ 'agentStatus:set:hook-pane' ] to deeply equal [ 'agentStatus:set:hook-pane', …(1) ]
+
+- Expected
++ Received
+
+  [
+    "agentStatus:set:hook-pane",
+-   "agentStatus:set:structured-agent-session-s1:leaf",
+  ]
+
+ ❯ src/main/startup/main-window-structured-status-filter.test.ts:85:76
+     83|     )
+     84|
+     85|     expect(sent.map((entry) => `${entry.channel}:${entry.event.paneKey…
+       |                                                                            ^
+     86|       'agentStatus:set:hook-pane',
+     87|       'agentStatus:set:structured-agent-session-s1:leaf'
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/11]⎯
+
+ FAIL  src/main/startup/main-window-structured-status-filter.test.ts > the main-window agent-status listener > carries structuredHost on the forwarded event
+AssertionError: expected undefined to match object { structuredHost: 'owned' }
+
+- Expected:
+{
+  "structuredHost": "owned",
+}
+
++ Received:
+undefined
+
+ ❯ src/main/startup/main-window-structured-status-filter.test.ts:99:28
+     97|     )
+     98|
+     99|     expect(sent[0]?.event).toMatchObject({ structuredHost: 'owned' })
+       |                            ^
+    100|   })
+    101| })
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/11]⎯
+
+ FAIL  src/renderer/src/hooks/ipc-events/agent-status-event-applicator-structured-host.test.ts > agentStatus:set applying a structured (native chat) row > applies immediately instead of queueing as unattributed
+AssertionError: expected 'pending' to be 'applied' // Object.is equality
+
+Expected: "applied"
+Received: "pending"
+
+ ❯ src/renderer/src/hooks/ipc-events/agent-status-event-applicator-structured-host.test.ts:90:20
+     88|     const result = applyAgentStatus(structuredEvent())
+     89|
+     90|     expect(result).toBe('applied')
+       |                    ^
+     91|     expect(enqueuePendingAgentStatus).not.toHaveBeenCalled()
+     92|     const entry = store.getState().agentStatusByPaneKey[PANE_KEY]
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/11]⎯
+
+ FAIL  src/renderer/src/hooks/ipc-events/agent-status-event-applicator-structured-host.test.ts > agentStatus:set applying a structured (native chat) row > maps a held (non-owning) host to no structuredHostOwned flag, still resume-ineligible
+AssertionError: expected undefined to be false // Object.is equality
+
+- Expected:
+false
+
++ Received:
+undefined
+
+ ❯ src/renderer/src/hooks/ipc-events/agent-status-event-applicator-structured-host.test.ts:111:43
+    109|     const entry = store.getState().agentStatusByPaneKey[PANE_KEY]
+    110|     expect(entry?.structuredHostOwned).toBeUndefined()
+    111|     expect(entry?.terminalResumeEligible).toBe(false)
+       |                                           ^
+    112|   })
+    113| })
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/11]⎯
+
+ FAIL  src/renderer/src/hooks/ipc-events/agent-status-pane-routing-index.test.ts > agent-status pane routing for a structured (native chat) tab > resolves an existing structured tab without a tabsByWorktree entry
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ src/renderer/src/hooks/ipc-events/agent-status-pane-routing-index.test.ts:243:29
+    241|     const resolved = resolvePaneKeyFromRoutingIndex(index, paneKey)
+    242|
+    243|     expect(resolved.exists).toBe(true)
+       |                             ^
+    244|     expect(resolved.owningWorktreeId).toBe('wt-1')
+    245|     expect(resolved.repoConnectionResolved).toBe(true)
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[9/11]⎯
+
+ FAIL  src/renderer/src/components/native-chat/StructuredAgentSessionStatusBridge.test.tsx > StructuredAgentSessionStatusBridge on a local worktree > never writes the store from the host status feed
+AssertionError: expected "vi.fn()" to not be called at all, but actually been called 2 times
+
+Received:
+
+  1st vi.fn() call:
+
+    Array [
+      "structured-tab-1:84097828-fc31-48c8-a292-10df48901a85",
+      Object {
+        "agentType": "codex",
+        "prompt": "hello",
+        "sessionBoundary": false,
+        "state": "working",
+      },
+      "Codex Chat",
+      Object {
+        "allowOlderTimestamp": true,
+        "evidenceObservedAt": 1,
+        "stateStartedAt": 1,
+        "updatedAt": 1,
+      },
+      Object {
+        "tabId": "structured-tab-1",
+        "worktreeId": "wt-1",
+      },
+      Object {
+        "providerSession": Object {
+          "id": "01a002e9-9a1c-7d42-a642-e481f64446f1",
+          "key": "session_id",
+        },
+        "structuredHostOwned": true,
+        "terminalResumeEligible": false,
+      },
+    ]
+
+  2nd vi.fn() call:
+
+    Array [
+      "structured-tab-1:84097828-fc31-48c8-a292-10df48901a85",
+      Object {
+        "agentType": "codex",
+        "prompt": "hello",
+        "sessionBoundary": false,
+        "state": "done",
+      },
+      "Codex Chat",
+      Object {
+        "allowOlderTimestamp": true,
+        "evidenceObservedAt": 2,
+        "stateStartedAt": 2,
+        "updatedAt": 2,
+      },
+      Object {
+        "tabId": "structured-tab-1",
+        "worktreeId": "wt-1",
+      },
+      Object {
+        "providerSession": Object {
+          "id": "01a002e9-9a1c-7d42-a642-e481f64446f1",
+          "key": "session_id",
+        },
+        "structuredHostOwned": true,
+        "terminalResumeEligible": false,
+      },
+    ]
+
+
+Number of calls: 2
+
+ ❯ src/renderer/src/components/native-chat/StructuredAgentSessionStatusBridge.test.tsx:604:38
+    602|     act(() => feed().emit({ type: 'status', session: summary({ status:…
+    603|
+    604|     expect(mocks.setAgentStatus).not.toHaveBeenCalled()
+       |                                      ^
+    605|     expect(mocks.removeAgentStatus).not.toHaveBeenCalled()
+    606|     expect(statuses()).toEqual([])
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[10/11]⎯
+
+ FAIL  src/renderer/src/components/native-chat/StructuredAgentSessionStatusBridge.test.tsx > StructuredAgentSessionStatusBridge on a local worktree > does not clear the row on unmount, leaving main as the pane key’s only writer
+AssertionError: expected "vi.fn()" to not be called at all, but actually been called 1 times
+
+Received:
+
+  1st vi.fn() call:
+
+    Array [
+      "structured-tab-1:84097828-fc31-48c8-a292-10df48901a85",
+    ]
+
+
+Number of calls: 1
+
+ ❯ src/renderer/src/components/native-chat/StructuredAgentSessionStatusBridge.test.tsx:615:41
+    613|     act(() => mocks.store?.setState({ unifiedTabsByWorktree: { 'wt-1':…
+    614|
+    615|     expect(mocks.removeAgentStatus).not.toHaveBeenCalled()
+       |                                         ^
+    616|   })
+    617| })
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[11/11]⎯
+
+
+ Test Files  6 failed (6)
+      Tests  11 failed | 52 passed (63)
+   Start at  03:59:03
+   Duration  29.69s (transform 82.81s, setup 1.27s, import 94.68s, tests 9.96s, environment 2.51s)
+

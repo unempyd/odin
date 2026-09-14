@@ -4,6 +4,8 @@
   "pages": [
     "---Start Here---",
     "index",
+    "---Odin---",
+    "odin",
     "install",
     "first-session",
     "model",

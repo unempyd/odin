@@ -5,6 +5,7 @@ import {
   structuredAgentSessionStatusState,
   structuredAgentSessionTabId
 } from '../../../shared/structured-agent-session-projection'
+import { subagentSnapshotsFromTasks } from '../../../shared/structured-agent-session-subagents'
 import { AgentHookServerIngestTerminal } from './server-ingest-terminal'
 
 /**
@@ -23,6 +24,7 @@ export abstract class AgentHookServerIngestStructured extends AgentHookServerIng
     if (this.getAgentStatusDisposition(paneKey) !== 'accept') {
       return
     }
+    const subagents = subagentSnapshotsFromTasks(summary.backgroundTasks)
     const payload: ParsedAgentStatusPayload = {
       state: structuredAgentSessionStatusState(summary.status),
       prompt: summary.latestPrompt,
@@ -32,7 +34,12 @@ export abstract class AgentHookServerIngestStructured extends AgentHookServerIng
       ...(summary.toolInput ? { toolInput: summary.toolInput } : {}),
       ...(summary.lastAssistantMessage
         ? { lastAssistantMessage: summary.lastAssistantMessage }
-        : {})
+        : {}),
+      ...(subagents ? { subagents } : {}),
+      // A structured session has no PTY session-start/clear boundary; every `done` here is a
+      // completed turn the sidebar and worktree ps must count, never the connect/resume no-op
+      // the PTY vocabulary uses `sessionBoundary` to suppress.
+      sessionBoundary: false
     }
     // The journal clock stamps the evidence so a restart's republish does not read as fresh work.
     this.applyNormalizedStatus(
@@ -52,10 +59,11 @@ export abstract class AgentHookServerIngestStructured extends AgentHookServerIng
   }
 
   /** The host no longer holds the session; its last projection is history the journal keeps.
-   *  `dropStatusEntry`, not `clearPaneState`: the renderer's own bridge still owns this pane key,
-   *  so a pane-status-clear would make main a second writer for it. */
+   *  `clearPaneState`, not `dropStatusEntry`: main is now this pane key's only writer, so the
+   *  renderer must receive an `agentStatus:clear` or the row would strand forever — a structured
+   *  session has no pane to resume into either, so the drop leaves no resume-identity remnant. */
   dropStructuredStatus(sessionId: string): void {
-    this.dropStatusEntry(structuredStatusPaneKey(sessionId), { preserveResumeIdentity: false })
+    this.clearPaneState(structuredStatusPaneKey(sessionId))
   }
 }
 

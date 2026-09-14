@@ -1,0 +1,62 @@
+
+ RUN  v4.1.11 /Users/briankeeny/Desktop/odin-wt-rend-ab
+
+ ❯ src/renderer/src/runtime/agent-status-host-osc-ingest-capability.test.ts (0 test)
+ ❯ src/shared/agent-status-host-osc-ingest-capability.test.ts (2 tests | 2 failed) 16ms
+     × is a stable, versioned capability string 10ms
+     × is advertised in the runtime capability list 3ms
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/renderer/src/runtime/agent-status-host-osc-ingest-capability.test.ts [ src/renderer/src/runtime/agent-status-host-osc-ingest-capability.test.ts ]
+Error: Cannot find module '/src/renderer/src/runtime/agent-status-host-osc-ingest-capability' imported from /Users/briankeeny/Desktop/odin-wt-rend-ab/src/renderer/src/runtime/agent-status-host-osc-ingest-capability.test.ts
+ ❯ src/renderer/src/runtime/agent-status-host-osc-ingest-capability.test.ts:10:39
+      8| }))
+      9|
+     10| const { hostOwnsRemoteAgentStatus } = await import('./agent-status-hos…
+       |                                       ^
+     11|
+     12| describe('hostOwnsRemoteAgentStatus', () => {
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/shared/agent-status-host-osc-ingest-capability.test.ts > agent-status.host-osc-ingest capability > is a stable, versioned capability string
+AssertionError: expected undefined to be 'agent-status.host-osc-ingest.v1' // Object.is equality
+
+- Expected:
+"agent-status.host-osc-ingest.v1"
+
++ Received:
+undefined
+
+ ❯ src/shared/agent-status-host-osc-ingest-capability.test.ts:9:61
+      7| describe('agent-status.host-osc-ingest capability', () => {
+      8|   it('is a stable, versioned capability string', () => {
+      9|     expect(AGENT_STATUS_HOST_OSC_INGEST_RUNTIME_CAPABILITY).toBe('agen…
+       |                                                             ^
+     10|   })
+     11|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+ FAIL  src/shared/agent-status-host-osc-ingest-capability.test.ts > agent-status.host-osc-ingest capability > is advertised in the runtime capability list
+AssertionError: expected [ 'files.pathsExist', …(77) ] to include undefined
+ ❯ src/shared/agent-status-host-osc-ingest-capability.test.ts:13:34
+     11|
+     12|   it('is advertised in the runtime capability list', () => {
+     13|     expect(RUNTIME_CAPABILITIES).toContain(AGENT_STATUS_HOST_OSC_INGES…
+       |                                  ^
+     14|   })
+     15| })
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
+
+
+ Test Files  2 failed (2)
+      Tests  2 failed (2)
+   Start at  04:01:28
+   Duration  1.33s (transform 386ms, setup 198ms, import 197ms, tests 16ms, environment 0ms)
+

@@ -1,0 +1,38 @@
+---
+title: Test status on this build
+description: The full Orca unit suite run on the merged tree, every failing file triaged against the upstream commit.
+---
+
+Orca's full unit suite was run on the merged tree — **8,751 files, 81,585
+tests** — and then every failing file was rerun both here and at the
+upstream commit (`539d4d1f32`) to separate what Odin changed from what was
+already broken.
+
+## Twenty files fail only on Odin
+
+All twenty are tests pinned to behaviour Odin deliberately changed: bypass
+flags in launch and resume commands, sub-agent row state, and liveness
+verdicts. Each was updated to the new contract with a reason recorded on
+the change; no production code changed to make a test pass.
+
+## Eight files fail identically at upstream
+
+These are environment-bound, not Odin- or Orca-specific:
+
+- a real signed-in Claude CLI is required and unavailable in this
+  environment;
+- real bash/PTY quirks that don't reproduce under the test harness;
+- network access;
+- a release-checkout download;
+- a missing optional package;
+- a stale upstream keepalive test.
+
+The full classification, file by file, with evidence for each row, is
+[`odin/proofs/full-suite-triage.md`](https://github.com/unempyd/odin/blob/main/odin/proofs/full-suite-triage.md)
+in the repository.
+
+## Typecheck
+
+Clean on `node`, `cli`, and `web` — `pnpm tc` (or the per-project
+`tc:node` / `tc:cli` / `tc:web`) passes with no errors introduced by Odin's
+patches.

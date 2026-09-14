@@ -1,7 +1,7 @@
 'use client'
 
 import { useDocsSearch } from 'fumadocs-core/search/client'
-import { GitBranch, MessageCircle, Search, X } from 'lucide-react'
+import { CircleAlert, GitBranch, Search, X } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { Fragment, useEffect, useMemo, useRef, useState } from 'react'
@@ -106,8 +106,8 @@ const POPULAR_SEARCHES: {
 
 export default function SearchDialog({ dialogId = 'docs-search-dialog', onClose }: Props) {
   const { search, setSearch, query } = useDocsSearch({
-    type: 'fetch',
-    api: '/docs/api/search'
+    type: 'static',
+    from: '/docs/api/search'
   })
   const [activeIndex, setActiveIndex] = useState(0)
   const inputRef = useRef<HTMLInputElement>(null)
@@ -251,7 +251,7 @@ export default function SearchDialog({ dialogId = 'docs-search-dialog', onClose 
               </div>
               <div className="flex flex-col gap-2 sm:flex-row">
                 <a
-                  href="https://github.com/stablyai/orca"
+                  href="https://github.com/unempyd/odin"
                   target="_blank"
                   rel="noopener noreferrer"
                   onClick={onClose}
@@ -268,18 +268,18 @@ export default function SearchDialog({ dialogId = 'docs-search-dialog', onClose 
                   </div>
                 </a>
                 <a
-                  href="https://discord.gg/fzjDKHxv8Q"
+                  href="https://github.com/unempyd/odin/issues"
                   target="_blank"
                   rel="noopener noreferrer"
                   onClick={onClose}
                   className="flex-1 rounded-md border border-border bg-card px-3 py-2.5 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
                 >
                   <div className="flex items-center gap-2.5 text-left">
-                    <MessageCircle className="size-4 shrink-0" aria-hidden="true" />
+                    <CircleAlert className="size-4 shrink-0" aria-hidden="true" />
                     <div className="min-w-0">
-                      <div className="font-medium">Join Discord</div>
+                      <div className="font-medium">Open an issue</div>
                       <div className="truncate text-[11px] text-muted-foreground">
-                        Ask the community
+                        Report a docs gap
                       </div>
                     </div>
                   </div>

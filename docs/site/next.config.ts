@@ -11,46 +11,64 @@ const crawlerGifPosterRewrites = [
   ['/docs/tab-split.gif', '/docs/posters/tab-split.jpg']
 ] as const
 
+// GitHub Pages static export has no Next.js server, so per-request rewrites
+// (crawler GIF->poster swap) and custom response headers (media caching) can't
+// run — both are request-time features `output: 'export'` drops. GitHub Pages
+// sets its own caching for static assets, and the swap is a bandwidth nicety,
+// not a correctness requirement, so both are skipped under STATIC_EXPORT
+// rather than left in to silently no-op.
+const staticExport = process.env.ODIN_DOCS_STATIC_EXPORT === '1'
+
 const nextConfig: NextConfig = {
-  // Keep this zone's Next assets separate from the marketing zone.
-  assetPrefix: '/docs-static',
+  ...(staticExport
+    ? { output: 'export' as const }
+    : {
+        // Keep this zone's Next assets separate from the marketing zone.
+        // Only meaningful for the Vercel same-domain-proxy deployment;
+        // the static export serves this app at the domain root instead.
+        assetPrefix: '/docs-static'
+      }),
   turbopack: {
     root: process.cwd()
   },
-  async rewrites() {
-    const crawlerUserAgent = [
-      {
-        type: 'header' as const,
-        key: 'user-agent',
-        value: crawlerUserAgentPattern
-      }
-    ]
+  ...(staticExport
+    ? {}
+    : {
+        async rewrites() {
+          const crawlerUserAgent = [
+            {
+              type: 'header' as const,
+              key: 'user-agent',
+              value: crawlerUserAgentPattern
+            }
+          ]
 
-    return {
-      beforeFiles: crawlerGifPosterRewrites.map(([source, destination]) => ({
-        source,
-        destination,
-        has: crawlerUserAgent
-      }))
-    }
-  },
-  async headers() {
-    const media = 'public, max-age=2592000, stale-while-revalidate=86400'
-    return [
-      {
-        source: '/docs/:all*(mp4|gif)',
-        headers: [{ key: 'Cache-Control', value: media }]
-      },
-      {
-        source: '/docs/posters/:path*',
-        headers: [{ key: 'Cache-Control', value: media }]
-      },
-      {
-        source: '/docs/videos/:path*',
-        headers: [{ key: 'Cache-Control', value: media }]
-      }
-    ]
-  }
+          return {
+            beforeFiles: crawlerGifPosterRewrites.map(([source, destination]) => ({
+              source,
+              destination,
+              has: crawlerUserAgent
+            }))
+          }
+        },
+        async headers() {
+          const media = 'public, max-age=2592000, stale-while-revalidate=86400'
+          return [
+            {
+              source: '/docs/:all*(mp4|gif)',
+              headers: [{ key: 'Cache-Control', value: media }]
+            },
+            {
+              source: '/docs/posters/:path*',
+              headers: [{ key: 'Cache-Control', value: media }]
+            },
+            {
+              source: '/docs/videos/:path*',
+              headers: [{ key: 'Cache-Control', value: media }]
+            }
+          ]
+        }
+      })
 }
 
 const withMDX = createMDX()

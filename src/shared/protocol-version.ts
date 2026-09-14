@@ -165,6 +165,13 @@ export const STRUCTURED_AGENT_SESSION_RESUME_HISTORY_RUNTIME_CAPABILITY =
 // advertising agent-session.structured.v1 may still answer it with method_not_found. Clients must
 // probe before subscribing or they reconnect forever and never show any status at all.
 export const AGENT_SESSION_STATUS_FEED_RUNTIME_CAPABILITY = 'agent-session.status-feed.v1' as const
+// Why: this host parses OSC 9999 out of its own PTY bytes and ingests the resulting row into its
+// hook store, publishing it back on `session.tabs` (see docs/reference/agent-status-store.md and
+// odin/OPEN.md), so a paired client may stop parsing the same bytes itself. A client that stopped
+// writing against a host that predates this would show blank remote-pane status forever — not yet
+// consumed by anything; see hostOwnsRemoteAgentStatus in src/renderer/src/runtime/agent-status-host-osc-ingest-capability.ts.
+export const AGENT_STATUS_HOST_OSC_INGEST_RUNTIME_CAPABILITY =
+  'agent-status.host-osc-ingest.v1' as const
 // The RPC is registered unconditionally; per-session rewind support is a separate check.
 export const AGENT_SESSION_REWIND_RUNTIME_CAPABILITY = 'agent-session.rewind.v1' as const
 // Readers must understand a monitoring roster with no available stop control.
@@ -292,6 +299,7 @@ export const RUNTIME_CAPABILITIES = [
   STRUCTURED_AGENT_SESSION_REVEAL_RUNTIME_CAPABILITY,
   STRUCTURED_AGENT_SESSION_RESUME_HISTORY_RUNTIME_CAPABILITY,
   AGENT_SESSION_STATUS_FEED_RUNTIME_CAPABILITY,
+  AGENT_STATUS_HOST_OSC_INGEST_RUNTIME_CAPABILITY,
   AGENT_SESSION_REWIND_RUNTIME_CAPABILITY,
   AGENT_SESSION_BACKGROUND_TASK_STOP_CAPABILITY,
   AGENT_SESSION_TURN_ITEM_CAPABILITY,

@@ -1,8 +1,7 @@
-// The renderer half of the half-migration seam.
-//
-// Until PR 2 retires `StructuredAgentSessionStatusBridge`, the renderer writes structured rows
-// itself. Main forwarding them too would give one pane key two writers, so the window listener
-// drops them — a filter nothing else asserts, which makes deleting it green everywhere.
+// Main is now the only writer of a structured row's pane key (the renderer's own feed bridge no
+// longer writes it — see StructuredAgentSessionStatusBridge.tsx). So a structured row must reach
+// the renderer over `agentStatus:set` exactly like any hook row; this used to be the seam where
+// the window listener dropped it (see git history), which is what this test now inverts.
 
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { EnrichedAgentHookEventPayload } from '../agent-hooks/server'
@@ -72,7 +71,7 @@ beforeEach(() => {
 })
 
 describe('the main-window agent-status listener', () => {
-  it('forwards a hook row but never a structured one', () => {
+  it('forwards both a hook row and a structured one', () => {
     expect(hooks.listener).not.toBeNull()
 
     hooks.listener!(statusPayload({ paneKey: 'hook-pane' }))
@@ -84,7 +83,19 @@ describe('the main-window agent-status listener', () => {
     )
 
     expect(sent.map((entry) => `${entry.channel}:${entry.event.paneKey}`)).toEqual([
-      'agentStatus:set:hook-pane'
+      'agentStatus:set:hook-pane',
+      'agentStatus:set:structured-agent-session-s1:leaf'
     ])
+  })
+
+  it('carries structuredHost on the forwarded event', () => {
+    hooks.listener!(
+      statusPayload({
+        paneKey: 'structured-agent-session-s1:leaf',
+        structuredHost: 'owned'
+      })
+    )
+
+    expect(sent[0]?.event).toMatchObject({ structuredHost: 'owned' })
   })
 })

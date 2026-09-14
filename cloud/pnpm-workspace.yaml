@@ -2,3 +2,6 @@ packages:
   - apps/*
   - packages/*
 
+overrides:
+  vite>postcss: 8.5.23
+

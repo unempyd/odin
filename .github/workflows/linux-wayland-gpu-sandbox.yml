@@ -1,4 +1,6 @@
 name: Linux Wayland GPU Sandbox
+permissions:
+  contents: read
 
 on:
   workflow_dispatch:

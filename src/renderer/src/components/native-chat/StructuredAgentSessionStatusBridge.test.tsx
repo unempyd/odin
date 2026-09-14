@@ -119,7 +119,11 @@ describe('StructuredAgentSessionStatusBridge', () => {
     mocks.supportsCapability.mockResolvedValue(true)
     mocks.store?.setState({
       agentStatusByPaneKey: {},
-      testRuntimeOwner: null,
+      // Remote by default: for a local worktree main ingests the same summary into the hook
+      // store and the applicator writes the row (see server-ingest-structured-status.test.ts and
+      // agent-status-event-applicator.test.ts) — writing it again here would be a second writer.
+      // The local no-op is its own describe block below.
+      testRuntimeOwner: 'env-1',
       unifiedTabsByWorktree: { 'wt-1': [structuredTab] }
     })
   })
@@ -160,7 +164,7 @@ describe('StructuredAgentSessionStatusBridge', () => {
   it('projects the host status feed without opening a transcript reader', async () => {
     render(<StructuredAgentSessionStatusBridge />)
     await waitFor(() => expect(mocks.subscribeStatus).toHaveBeenCalledOnce())
-    expect(feed().target).toEqual({ kind: 'local' })
+    expect(feed().target).toEqual({ kind: 'environment', environmentId: 'env-1' })
     expect(mocks.subscribeTranscript).not.toHaveBeenCalled()
 
     act(() => feed().emit({ type: 'snapshot', sessions: [summary()] }))
@@ -565,5 +569,49 @@ describe('StructuredAgentSessionStatusBridge', () => {
 
     expect(mocks.subscribeStatus).not.toHaveBeenCalled()
     expect(mocks.setAgentStatus).not.toHaveBeenCalled()
+  })
+})
+
+// A local worktree's structured row now arrives over `agentStatus:set` (main ingests the same
+// summary into the hook store — see server-ingest-structured-status.test.ts); this bridge must
+// not write it a second time, or the pane key would have two writers racing each other.
+describe('StructuredAgentSessionStatusBridge on a local worktree', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    resetStructuredAgentSessionStatusFeedsForTests()
+    mocks.subscribeStatus.mockResolvedValue({ unsubscribe: mocks.unsubscribe })
+    mocks.supportsCapability.mockResolvedValue(true)
+    mocks.store?.setState({
+      agentStatusByPaneKey: {},
+      testRuntimeOwner: null,
+      unifiedTabsByWorktree: { 'wt-1': [structuredTab] }
+    })
+  })
+
+  afterEach(() => {
+    cleanup()
+    resetStructuredAgentSessionStatusFeedsForTests()
+  })
+
+  it('never writes the store from the host status feed', async () => {
+    render(<StructuredAgentSessionStatusBridge />)
+    await waitFor(() => expect(mocks.subscribeStatus).toHaveBeenCalledOnce())
+    expect(feed().target).toEqual({ kind: 'local' })
+
+    act(() => feed().emit({ type: 'snapshot', sessions: [summary()] }))
+    act(() => feed().emit({ type: 'status', session: summary({ status: 'idle', updatedAt: 2 }) }))
+
+    expect(mocks.setAgentStatus).not.toHaveBeenCalled()
+    expect(mocks.removeAgentStatus).not.toHaveBeenCalled()
+    expect(statuses()).toEqual([])
+  })
+
+  it('does not clear the row on unmount, leaving main as the pane key’s only writer', async () => {
+    render(<StructuredAgentSessionStatusBridge />)
+    await waitFor(() => expect(mocks.subscribeStatus).toHaveBeenCalledOnce())
+
+    act(() => mocks.store?.setState({ unifiedTabsByWorktree: { 'wt-1': [] } }))
+
+    expect(mocks.removeAgentStatus).not.toHaveBeenCalled()
   })
 })

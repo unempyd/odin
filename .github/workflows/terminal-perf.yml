@@ -1,4 +1,6 @@
 name: Terminal Perf
+permissions:
+  contents: read
 
 on:
   workflow_dispatch:

@@ -152,10 +152,11 @@ async function spawnAndPublishSession(
     historySeedChunks: opts.historySeedChunks,
     ...(opts.startupIngress ? { startupIngress: opts.startupIngress } : {}),
     wslDistro,
-    // Why `session` and not `opts.sessionId` alone: by the time this fires, a create racing the
-    // exit could have already replaced the map entry — capturing the exiting Session itself keeps
-    // the tombstone bound to the process that actually exited.
-    onExit: () => deps.onSessionExit(opts.sessionId, opts.agentSessionGeneration, session),
+    // Why the Session comes from the callback, not this scope: a create racing the exit could have
+    // already replaced the map entry, and a child that died before listeners were installed fires
+    // this synchronously inside `new Session(...)`, before the `session` binding below exists.
+    onExit: (_code, exitedSession) =>
+      deps.onSessionExit(opts.sessionId, opts.agentSessionGeneration, exitedSession),
     ...(deps.reportReadinessEvent ? { reportReadinessEvent: deps.reportReadinessEvent } : {}),
     ...(opts.shellReadyTimeoutMs !== undefined
       ? { shellReadyTimeoutMs: opts.shellReadyTimeoutMs }

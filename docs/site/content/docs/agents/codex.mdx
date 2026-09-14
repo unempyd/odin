@@ -2,6 +2,8 @@
 title: Codex in Orca
 ---
 
+import { Callout } from '@/components/docs/prose'
+
 Codex is OpenAI's agentic CLI. Orca's Codex integration is one of the deepest in the app — usage, hot-swap, and restart all preserve account identity.
 
 ## Setup
@@ -9,6 +11,19 @@ Codex is OpenAI's agentic CLI. Orca's Codex integration is one of the deepest in
 1. Install Codex per OpenAI's docs.
 1. Log in from any terminal.
 1. Orca reads `~/.codex` for accounts and credentials.
+
+<Callout title="Odin: mirroring your real ~/.codex needs consent">
+  Extra Codex accounts get their own isolated home under Orca's account data
+  (see below) — reading and writing that copy is unaffected. Separately,
+  Orca upstream also copied `~/.codex/auth.json` — your **system default**
+  login — into an Orca-owned runtime home from the service constructor, on
+  every launch and account switch, with no setting or prompt. On Odin that
+  copy only happens with `codexCredentialMirrorConsent` set (default
+  `false`); an unreadable setting is treated as declined, and turning
+  consent off clears any runtime copy and its snapshot immediately. See
+  [Odin's residual table, contract G](/docs/odin/residuals) (commit
+  `f14f8249f9`).
+</Callout>
 
 ## Launching
 

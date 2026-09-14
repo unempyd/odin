@@ -7,8 +7,21 @@ import { Callout } from '@/components/docs/prose'
 
 Orca works with **any CLI agent** — the agent combobox just launches a process in a terminal. The following ship preconfigured in the built-in agent picker with one-click launch/setup; deeper hooks, status, usage tracking, and account switching are noted where supported.
 
+<Callout title="Odin: shipped defaults carry no bypass flag">
+  Orca upstream's shipped default for 26 agents *was* the bypass flag —
+  `DEFAULT_TUI_AGENT_ARGS = YOLO_TUI_AGENT_ARGS` — and force-migrated it into
+  profiles that never chose it. On Odin, shipped defaults carry no bypass
+  flag; the migration hydrates the same keys with empty values instead. A
+  one-shot review migration also clears any inherited grant that still
+  equals Orca's former automatic value verbatim (a user who explicitly chose
+  that same value can turn it back on once). The rest of this page describes
+  the **Yolo** permission mode itself, which is unchanged and still opt-in
+  per agent or globally — see [Odin's residual table, contract
+  H](/docs/odin/residuals) (commits `854b5956ba`, `74b234c61e`).
+</Callout>
+
 <Callout title="Permission safety">
-  The defaults below pass each agent's permission-bypass flag for new launches. A worktree is an
+  Choosing **Yolo** passes each agent's permission-bypass flag for new launches. A worktree is an
   isolated checkout, not a security sandbox: the agent can still access files and network resources
   available to its process. Choose **Manual** in **Settings → Agents → Agent Permissions** unless
   you intentionally trust the agent and the task.
@@ -16,7 +29,7 @@ Orca works with **any CLI agent** — the agent combobox just launches a process
 
 ## Permissions default
 
-For new launches, Orca pre-fills each supported CLI's permission-bypass flag — `--dangerously-skip-permissions` for Claude, `--dangerously-bypass-approvals-and-sandbox` for Codex, `--yolo` for Gemini / Cursor / Crush / Kimi / Rovo Dev / Hermes / GitHub Copilot / Command Code, plus the equivalent flag for every other agent that exposes one. These flags allow an agent to act without confirming every shell command; review the trust boundary before using them.
+Choosing **Yolo** in **Settings → Agents → Agent Permissions** fills in each supported CLI's permission-bypass flag for new launches — `--dangerously-skip-permissions` for Claude, `--dangerously-bypass-approvals-and-sandbox` for Codex, `--yolo` for Gemini / Cursor / Crush / Kimi / Rovo Dev / Hermes / GitHub Copilot / Command Code, plus the equivalent flag for every other agent that exposes one. These flags allow an agent to act without confirming every shell command; review the trust boundary before using them. **Manual** is the shipped default; the bypass flag exists only once you choose Yolo, globally or per agent.
 
 Use **Settings → Agents → Agent Permissions** when you want to switch all uncustomized agents between **Yolo** and **Manual** launches. If you already overrode a specific agent's launch arguments or environment, Orca leaves that agent alone so the global switch doesn't erase your custom command.
 

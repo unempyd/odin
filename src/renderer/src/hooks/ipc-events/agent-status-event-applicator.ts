@@ -15,6 +15,7 @@ import { observeAgentHookCompletionForNotification } from '../agent-hook-complet
 import { useAppStore } from '../../store'
 import {
   applyResolvedAgentTerminalTitleToTab,
+  buildAgentStatusUpdateMetadata,
   hasRuntimeBackedWorktreeAttribution,
   isAgentStatusForRecentlyClosedTab,
   resolveHookPayloadAgentType,
@@ -243,13 +244,7 @@ export function createAgentStatusEventApplicator(args: {
         terminalHandle: data.terminalHandle,
         ...(ownershipConnectionId !== undefined ? { connectionId: ownershipConnectionId } : {})
       },
-      metadata:
-        data.providerSession || data.launchToken
-          ? {
-              ...(data.providerSession ? { providerSession: data.providerSession } : {}),
-              ...(data.launchToken ? { launchToken: data.launchToken } : {})
-            }
-          : undefined
+      metadata: buildAgentStatusUpdateMetadata(data)
     }
     const applyPostCommitNotification = (): void => {
       if (statusWorktreeId && (options?.replay !== true || resolvedPayload.state === 'working')) {

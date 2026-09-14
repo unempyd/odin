@@ -1,4 +1,6 @@
 name: Skill update round trip
+permissions:
+  contents: read
 
 # Why the same paths on push as pull_request: GitHub evaluates each event's
 # filters independently. The PR already skipped README-only changes, but the
