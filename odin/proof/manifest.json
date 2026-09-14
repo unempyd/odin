@@ -36,6 +36,33 @@
       "tests": [
         "src/main/runtime/rpc/methods/orchestration/worker/worker-launch-preferences.test.ts"
       ]
+    },
+    {
+      "id": "B",
+      "title": "Worker liveness: an empty or non-enumerating host answer is unverifiable, never exited",
+      "commit": "cfc277f2b1",
+      "tests": ["src/main/runtime/orchestration/worker-terminal-process-liveness.test.ts"]
+    },
+    {
+      "id": "A",
+      "title": "Retired-incarnation tombstone never mints a proven exit from an absent status",
+      "commit": "731c49c558",
+      "tests": ["src/main/daemon/terminal-host-process-inspection.test.ts"]
+    },
+    {
+      "id": "A-relay",
+      "title": "Relay tombstone applies the same proof gate (record-torn-down is not a death)",
+      "commit": "013965c537",
+      "tests": ["src/shared/retired-pty-incarnations.test.ts"]
+    },
+    {
+      "id": "C",
+      "title": "tui-idle waits never settle on silence; evidence is carried on the wire",
+      "commit": "07522244e6",
+      "tests": [
+        "src/main/runtime/tui-idle-evidence.test.ts",
+        "src/main/runtime/terminal-wait-name-only-idle.test.ts"
+      ]
     }
   ]
 }
