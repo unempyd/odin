@@ -140,6 +140,10 @@ describe('getDefaultSettings', () => {
     expect(settings.agentDefaultEnv).toEqual({})
     expect(settings.agentYoloDefaultsMigrated).toBe(true)
   })
+
+  it('does not install managed agent hooks into other tools without explicit consent', () => {
+    expect(getDefaultSettings('/tmp').agentStatusHooksEnabled).toBe(false)
+  })
 })
 
 describe('getDefaultPrimarySelectionMiddleClickPaste', () => {

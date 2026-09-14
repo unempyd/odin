@@ -97,7 +97,7 @@ export class RuntimeClientSettingsController {
       agentCmdOverrides: settings.agentCmdOverrides ?? {},
       agentDefaultArgs: settings.agentDefaultArgs ?? {},
       agentDefaultEnv: settings.agentDefaultEnv ?? {},
-      agentStatusHooksEnabled: settings.agentStatusHooksEnabled !== false,
+      agentStatusHooksEnabled: settings.agentStatusHooksEnabled === true,
       // Why projected: mobile's terminal Copy honours this, and a host predating
       // the setting sends no key, which the client reads as on (#19770).
       terminalCopyTrimsGutter: settings.terminalCopyTrimsGutter !== false,

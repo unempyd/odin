@@ -1,0 +1,68 @@
+
+ RUN  v4.1.11 /Users/briankeeny/Desktop/odin-wt-consent
+
+ ❯ src/shared/constants.test.ts (32 tests | 1 failed) 181ms
+     × does not install managed agent hooks into other tools without explicit consent 27ms
+ ❯ src/main/agent-hooks/managed-agent-hook-controls.test.ts (20 tests | 2 failed) 452ms
+     × installs only when hooks are explicitly enabled 98ms
+     × skips startup install until the user has explicitly granted hook installation 15ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/main/agent-hooks/managed-agent-hook-controls.test.ts > startup managed hook reconciliation (STA-5679) > installs only when hooks are explicitly enabled
+AssertionError: expected 'install' to be 'skip' // Object.is equality
+
+Expected: "skip"
+Received: "install"
+
+ ❯ src/main/agent-hooks/managed-agent-hook-controls.test.ts:312:49
+    310|   it('installs only when hooks are explicitly enabled', () => {
+    311|     expect(resolveStartupManagedHookAction({ agentStatusHooksEnabled: …
+    312|     expect(resolveStartupManagedHookAction({})).toBe('skip')
+       |                                                 ^
+    313|     expect(resolveStartupManagedHookAction(null)).toBe('skip')
+    314|   })
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  src/main/agent-hooks/managed-agent-hook-controls.test.ts > startup managed hook reconciliation (STA-5679) > skips startup install until the user has explicitly granted hook installation
+AssertionError: expected 'install' to be 'skip' // Object.is equality
+
+Expected: "skip"
+Received: "install"
+
+ ❯ src/main/agent-hooks/managed-agent-hook-controls.test.ts:318:73
+    316|   it('skips startup install until the user has explicitly granted hook…
+    317|     // A fresh profile's real default settings, not a hand-rolled fixt…
+    318|     expect(resolveStartupManagedHookAction(getDefaultSettings('/tmp'))…
+       |                                                                         ^
+    319|   })
+    320|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+ FAIL  src/shared/constants.test.ts > getDefaultSettings > does not install managed agent hooks into other tools without explicit consent
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ src/shared/constants.test.ts:145:64
+    143|
+    144|   it('does not install managed agent hooks into other tools without ex…
+    145|     expect(getDefaultSettings('/tmp').agentStatusHooksEnabled).toBe(fa…
+       |                                                                ^
+    146|   })
+    147| })
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
+
+
+ Test Files  2 failed (2)
+      Tests  3 failed | 49 passed (52)
+   Start at  18:40:41
+   Duration  7.63s (transform 5.38s, setup 498ms, import 7.22s, tests 634ms, environment 2ms)
+
