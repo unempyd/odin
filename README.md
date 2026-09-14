@@ -1,4 +1,4 @@
-<p align="center"><img src="resources/odin-logo.svg" alt="Odin" width="120"></p>
+<p align="center"><img src="odin/odin-logo.svg" alt="Odin" width="120"></p>
 
 # Odin
 
