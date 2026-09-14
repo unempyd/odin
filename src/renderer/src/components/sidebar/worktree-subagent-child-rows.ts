@@ -53,12 +53,9 @@ export function buildSubagentChildRows(args: {
       worktreeId: args.parentEntry.worktreeId,
       tabId: args.parentEntry.tabId,
       stateHistory: [],
-      orchestration: {
-        taskId: `subagent:${subagent.id}`,
-        dispatchId: `subagent:${subagent.id}`,
-        displayName: subagent.description,
-        parentPaneKey: args.parentEntry.paneKey
-      }
+      // Why: this row is an in-process child, not a Task/Dispatch — never
+      // fabricate orchestration.taskId/dispatchId for it (issue #8251).
+      subagent: { id: subagent.id, parentPaneKey: args.parentEntry.paneKey }
     }
     return {
       paneKey,
