@@ -15,23 +15,30 @@ import { detectExplicitIdleStatusFromTitle } from './terminal-wait-detection'
  * stale spinner (#1437) — so a busy Codex/Devin pane is routinely titled idle, and
  * accepting it satisfied a wait in ~0s mid-turn (#6011).
  *
- *   1. POSITIVE — the agent states it is ready: an explicit idle marker in its own
+ * Evaluated in this order:
+ *   1. VETO — a fresh first-party agent status (OSC 9999) saying working/blocked/
+ *      waiting. The agent's own live account of an open turn outranks anything
+ *      inferred from the screen, including a title or ready-prompt body the agent
+ *      painted before this turn started — that pixel may simply not have caught up
+ *      yet (C5).
+ *   2. POSITIVE — the agent states it is ready: an explicit idle marker in its own
  *      title, or a known ready-prompt body.
- *   2. VETO — a fresh first-party agent status (OSC 9999) saying working/blocked/
- *      waiting. The agent's own account of itself outranks anything inferred.
  *   3. ABSENCE — a name-only title, or a quiet non-shell foreground process. A last
  *      resort, and only once sustained.
  *
- * C4 — two exceptions ride inside this ranking rather than earning their own tier: tier 1 settles
- * before tier 2's veto is ever consulted (an explicit idle title or ready-prompt body wins even
- * against a fresher first-party "still working" status, because a title/body the agent just
- * painted is closer to the truth than a status event that may simply not have arrived yet); and
- * the name-only carve-out (grok/copilot/aider/mimo/agy/opencode — see
- * `nameOnlyIdleNeedsCorroboration`) is promoted to tier 1's `observed-idle` rather than held at
+ * C4 — the name-only carve-out (grok/copilot/aider/mimo/agy/opencode — see
+ * `nameOnlyIdleNeedsCorroboration`) is promoted to tier 2's `observed-idle` rather than held at
  * tier 3's `silence`, because those agents never emit a second, corroborating rest signal and
- * holding them to `silence` forever is indistinguishable from never settling. Both still wait out
+ * holding them to `silence` forever is indistinguishable from never settling. It still waits out
  * the full quiescence window first — "no stronger signal is coming" buys a better verdict, never a
  * faster one.
+ *
+ * C5 — tier 1's veto used to be consulted only after tier 2 (then numbered tier 1) already
+ * settled, on the theory that a title/body the agent just painted is closer to the truth than a
+ * status event that may simply not have arrived yet. That let a retained ready title or
+ * ready-prompt body outrank a fresh first-party "still working" status — exactly backwards, since
+ * a live status report is stronger evidence than a screen that has not repainted since the last
+ * turn. The veto is now consulted first, unconditionally.
  *
  * Why derived here rather than stamped onto the record at write time: `syncWindowGraph`
  * rebuilds every leaf from an explicit field list, so a bespoke provenance field is
@@ -47,7 +54,7 @@ export type TuiIdleEvidenceRecord = {
 
 export type FirstPartyAgentStatus = { state: AgentStatusState; updatedAt: number } | null
 
-/** Tier 1: an idle marker the agent put in a title itself. */
+/** Tier 2: an idle marker the agent put in a title itself. */
 export function hasExplicitIdleTitle(
   record: TuiIdleEvidenceRecord,
   rendererTitle?: string | null
@@ -64,7 +71,7 @@ export function hasExplicitIdleTitle(
   return false
 }
 
-/** Tier 2: the agent's own status stream says this turn is still open. */
+/** Tier 1: the agent's own status stream says this turn is still open. */
 export function hasFreshWorkingFirstPartyStatus(status: FirstPartyAgentStatus): boolean {
   return isFreshNonDoneAgentStatus(status ?? undefined)
 }
@@ -139,10 +146,10 @@ export type TuiIdleSatisfactionInput = {
 
 /**
  * Residual C: `hasSustainedTitleIdle`'s tier-3 verdict was published as the same settlement as
- * tier 1 — a name-only title going quiet and an agent explicitly announcing readiness both read
+ * tier 2 — a name-only title going quiet and an agent explicitly announcing readiness both read
  * as `satisfied: true`. A pane that just stopped repainting is not proven idle; it went silent.
  *
- * `'observed-idle'`: the agent said so itself (tier 1), or it is one of the agents whose ONLY
+ * `'observed-idle'`: the agent said so itself (tier 2), or it is one of the agents whose ONLY
  * rest signal is its name going quiet (`nameOnlyIdleNeedsCorroboration` false) — there the
  * documented carve-out promotes sustained silence to a positive verdict because no stronger
  * signal will ever arrive.
@@ -154,13 +161,16 @@ export type TuiIdleVerdict = 'observed-idle' | 'silence' | 'not-idle'
 
 /** The one place the three tiers are combined; every satisfaction site routes here. */
 export function resolveTuiIdleVerdict(input: TuiIdleSatisfactionInput): TuiIdleVerdict {
-  // Why the title before the body: both are tier 1, so either settles, but the title is a
+  // C5: the veto is consulted first and unconditionally — a fresh first-party working/blocked/
+  // waiting status outranks a retained idle title or ready-prompt body regardless of what the
+  // screen still shows.
+  if (hasFreshWorkingFirstPartyStatus(input.firstPartyStatus)) {
+    return 'not-idle'
+  }
+  // Why the title before the body: both are tier 2, so either settles, but the title is a
   // memoized lookup and the body is a fresh multi-KB scan. Same verdict, cheaper order.
   if (hasExplicitIdleTitle(input.record, input.rendererTitle) || input.readPositiveBodyEvidence()) {
     return 'observed-idle'
-  }
-  if (hasFreshWorkingFirstPartyStatus(input.firstPartyStatus)) {
-    return 'not-idle'
   }
   if (!hasSustainedTitleIdle(input.record, input.quiescenceMs)) {
     return 'not-idle'

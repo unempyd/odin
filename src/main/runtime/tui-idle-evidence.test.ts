@@ -48,6 +48,27 @@ describe('resolveTuiIdleVerdict', () => {
     expect(resolveTuiIdleVerdict(input)).toBe('not-idle')
   })
 
+  // C5: a retained "ready" title or ready-prompt body must not outrank a fresh first-party
+  // working status. The screen can still show yesterday's ready title while a new turn is
+  // already open; the agent's own live account of that open turn is stronger evidence than a
+  // pixel that has not repainted yet.
+  it('is not-idle when a fresh first-party working status vetoes an explicit idle title (C5)', () => {
+    const input = baseInput({
+      record: { lastAgentStatus: 'idle', lastOutputAt: null, lastOscTitle: 'Codex ready' },
+      agent: 'codex',
+      firstPartyStatus: { state: 'working', updatedAt: Date.now() }
+    })
+    expect(resolveTuiIdleVerdict(input)).toBe('not-idle')
+  })
+
+  it('is not-idle when a fresh first-party working status vetoes positive body evidence (C5)', () => {
+    const input = baseInput({
+      readPositiveBodyEvidence: () => true,
+      firstPartyStatus: { state: 'working', updatedAt: Date.now() }
+    })
+    expect(resolveTuiIdleVerdict(input)).toBe('not-idle')
+  })
+
   it('is not-idle while a name-only title agent is still streaming', () => {
     const input = baseInput({
       record: { lastAgentStatus: 'idle', lastOutputAt: Date.now(), lastOscTitle: 'Codex' },
