@@ -20,11 +20,12 @@
     {
       "id": "M",
       "title": "Injected (unsupervised) dispatches are reconciled on restart, never left live",
-      "commit": "a2c27936ee",
+      "commit": "705005b5b3",
       "tests": [
-        "src/main/runtime/orchestration/orchestration-unsupervised-dispatch-recovery.test.ts"
+        "src/main/runtime/orca-runtime-reconcile-legacy-worker-terminals-unsupervised-dispatch.test.ts"
       ],
-      "reproduce": "listUnsupervisedActiveDispatches is not a function|was not found"
+      "reproduce": "expected 'dispatched' to be 'failed'",
+      "note": "Runtime-level: reconcileLegacyWorkerTerminals() (the method orca serve, orcad and the desktop path share) now also reconciles injected dispatches; at upstream the dispatch stays 'dispatched'."
     },
     {
       "id": "K",

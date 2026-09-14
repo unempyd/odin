@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { OrcaRuntimeService } from './orca-runtime'
 import { OrchestrationDb } from './orchestration/db'
 
@@ -21,8 +21,6 @@ describe('reconcileLegacyWorkerTerminals wires unsupervised dispatch recovery (r
     const task = d.createTask({ runId: 'run_legacy_local', spec: 'injected work' })
     return d.createDispatchContext({
       taskId: task.id,
-      // Why a handle nothing ever created: a bare runtime has no PTY provider, so showTerminal
-      // resolves this to "not found" -- an owner-proven absence, not loss of contact.
       assigneeHandle: 'term_never_created',
       creator: { kind: 'system' },
       maxDepth: Number.MAX_SAFE_INTEGER
@@ -34,10 +32,27 @@ describe('reconcileLegacyWorkerTerminals wires unsupervised dispatch recovery (r
     db = new OrchestrationDb(':memory:')
     runtime.setOrchestrationDb(db)
     const dispatch = createInjectedDispatch(db)
+    // Why stub the owner's answer: `terminal_not_found` is the runtime saying "no such terminal"
+    // (owner-proven absence). A bare runtime with no PTY provider answers `runtime_unavailable`
+    // instead, which is loss of contact and must never fail a dispatch (see the next case).
+    vi.spyOn(runtime, 'showTerminal').mockRejectedValue(new Error('terminal_not_found'))
 
     await runtime.reconcileLegacyWorkerTerminals()
 
     const after = db.getDispatchContextById(dispatch.id)
     expect(after?.status).toBe('failed')
+    expect(after?.termination_reason).toBe('unknown')
+  })
+
+  it('leaves an injected dispatch untouched when the host cannot be asked', async () => {
+    runtime = new OrcaRuntimeService()
+    db = new OrchestrationDb(':memory:')
+    runtime.setOrchestrationDb(db)
+    const dispatch = createInjectedDispatch(db)
+    vi.spyOn(runtime, 'showTerminal').mockRejectedValue(new Error('runtime_unavailable'))
+
+    await runtime.reconcileLegacyWorkerTerminals()
+
+    expect(db.getDispatchContextById(dispatch.id)?.status).toBe('dispatched')
   })
 })
