@@ -125,6 +125,59 @@ describe('resolveTuiIdleVerdict', () => {
     })
     expect(resolveTuiIdleVerdict(input)).toBe('not-idle')
   })
+
+  // Material deviation 1 (round-4 Opus review): the carve-out used to be "has no
+  // synthetic-title profile", which silently swept in every agent without a profile entry —
+  // not just the six that never corroborate rest. Claude and Gemini paint their own explicit
+  // idle marker (CLAUDE_IDLE/GEMINI_IDLE) over the first-party title channel, so a bare
+  // name-only title from either is still corroborated silence, never their own report.
+  it('is silence, not observed-idle, for claude gone quiet on its name alone', () => {
+    const input = baseInput({
+      record: {
+        lastAgentStatus: 'idle',
+        lastOutputAt: Date.now() - QUIESCENCE_MS * 2,
+        lastOscTitle: 'Claude Code'
+      },
+      agent: 'claude'
+    })
+    expect(resolveTuiIdleVerdict(input)).toBe('silence')
+  })
+
+  it('is silence, not observed-idle, for gemini gone quiet on its name alone', () => {
+    const input = baseInput({
+      record: {
+        lastAgentStatus: 'idle',
+        lastOutputAt: Date.now() - QUIESCENCE_MS * 2,
+        lastOscTitle: 'Gemini CLI'
+      },
+      agent: 'gemini'
+    })
+    expect(resolveTuiIdleVerdict(input)).toBe('silence')
+  })
+
+  it('is silence, not observed-idle, for a pane whose agent cannot be resolved at all', () => {
+    const input = baseInput({
+      record: {
+        lastAgentStatus: 'idle',
+        lastOutputAt: Date.now() - QUIESCENCE_MS * 2,
+        lastOscTitle: 'zsh'
+      },
+      agent: null
+    })
+    expect(resolveTuiIdleVerdict(input)).toBe('silence')
+  })
+
+  it('is silence, not observed-idle, when agent is explicitly null with no title at all', () => {
+    const input = baseInput({
+      record: {
+        lastAgentStatus: 'idle',
+        lastOutputAt: Date.now() - QUIESCENCE_MS * 2,
+        lastOscTitle: null
+      },
+      agent: null
+    })
+    expect(resolveTuiIdleVerdict(input)).toBe('silence')
+  })
 })
 
 describe('resolveTuiIdleVerdict as a satisfaction guard', () => {

@@ -1,0 +1,192 @@
+
+ RUN  v4.1.11 /private/var/folders/08/tsc21p4n41ndkvcxq1kl0htw0000gn/T/odin-upstream-zUGT1C
+
+ ❯ src/main/runtime/terminal-wait-name-only-idle.test.ts (16 tests | 5 failed) 621ms
+     × does not claim a quiesced name-only idle as satisfied 15ms
+     × settles once quiesced for an agent that never emits anything but its name 3ms
+     × does not settle a quiesced name-only idle for claude, which corroborates rest itself 2ms
+     × does not settle a quiesced name-only idle for gemini, which corroborates rest itself 2ms
+     × does not settle a quiesced name-only idle for a pane whose agent cannot be resolved 4ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 5 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/main/runtime/terminal-wait-name-only-idle.test.ts > tui-idle evidence ranking > does not claim a quiesced name-only idle as satisfied
+AssertionError: expected "vi.fn()" to be called with arguments: [ { ok: ObjectContaining{…} } ]
+
+Received:
+
+  1st vi.fn() call:
+
+  [
+    {
+-     "ok": ObjectContaining {
+-       "evidence": "silence",
+-       "satisfied": false,
++     "ok": {
++       "condition": "tui-idle",
++       "exitCode": null,
++       "handle": "terminal-1",
++       "satisfied": true,
++       "status": "running",
+      },
+    },
+  ]
+
+
+Number of calls: 1
+
+ ❯ src/main/runtime/terminal-wait-name-only-idle.test.ts:116:21
+    114|     expect(settled).not.toHaveBeenCalled()
+    115|     await vi.advanceTimersByTimeAsync(QUIESCENCE_MS + POLL_INTERVAL_MS)
+    116|     expect(settled).toHaveBeenCalledWith({
+       |                     ^
+    117|       ok: expect.objectContaining({ satisfied: false, evidence: 'silen…
+    118|     })
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/5]⎯
+
+ FAIL  src/main/runtime/terminal-wait-name-only-idle.test.ts > tui-idle evidence ranking > settles once quiesced for an agent that never emits anything but its name
+AssertionError: expected "vi.fn()" to be called with arguments: [ { ok: ObjectContaining{…} } ]
+
+Received:
+
+  1st vi.fn() call:
+
+  [
+    {
+-     "ok": ObjectContaining {
+-       "evidence": "observed-idle",
++     "ok": {
++       "condition": "tui-idle",
++       "exitCode": null,
++       "handle": "terminal-1",
+        "satisfied": true,
++       "status": "running",
+      },
+    },
+  ]
+
+
+Number of calls: 1
+
+ ❯ src/main/runtime/terminal-wait-name-only-idle.test.ts:176:21
+    174|     expect(settled).not.toHaveBeenCalled()
+    175|     await vi.advanceTimersByTimeAsync(QUIESCENCE_MS + POLL_INTERVAL_MS)
+    176|     expect(settled).toHaveBeenCalledWith({
+       |                     ^
+    177|       ok: expect.objectContaining({ satisfied: true, evidence: 'observ…
+    178|     })
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/5]⎯
+
+ FAIL  src/main/runtime/terminal-wait-name-only-idle.test.ts > tui-idle evidence ranking > does not settle a quiesced name-only idle for claude, which corroborates rest itself
+AssertionError: expected "vi.fn()" to be called with arguments: [ { ok: ObjectContaining{…} } ]
+
+Received:
+
+  1st vi.fn() call:
+
+  [
+    {
+-     "ok": ObjectContaining {
+-       "evidence": "silence",
+-       "satisfied": false,
++     "ok": {
++       "condition": "tui-idle",
++       "exitCode": null,
++       "handle": "terminal-1",
++       "satisfied": true,
++       "status": "running",
+      },
+    },
+  ]
+
+
+Number of calls: 1
+
+ ❯ src/main/runtime/terminal-wait-name-only-idle.test.ts:200:21
+    198|
+    199|     await vi.advanceTimersByTimeAsync(QUIESCENCE_MS + POLL_INTERVAL_MS)
+    200|     expect(settled).toHaveBeenCalledWith({
+       |                     ^
+    201|       ok: expect.objectContaining({ satisfied: false, evidence: 'silen…
+    202|     })
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/5]⎯
+
+ FAIL  src/main/runtime/terminal-wait-name-only-idle.test.ts > tui-idle evidence ranking > does not settle a quiesced name-only idle for gemini, which corroborates rest itself
+AssertionError: expected "vi.fn()" to be called with arguments: [ { ok: ObjectContaining{…} } ]
+
+Received:
+
+  1st vi.fn() call:
+
+  [
+    {
+-     "ok": ObjectContaining {
+-       "evidence": "silence",
+-       "satisfied": false,
++     "ok": {
++       "condition": "tui-idle",
++       "exitCode": null,
++       "handle": "terminal-1",
++       "satisfied": true,
++       "status": "running",
+      },
+    },
+  ]
+
+
+Number of calls: 1
+
+ ❯ src/main/runtime/terminal-wait-name-only-idle.test.ts:211:21
+    209|
+    210|     await vi.advanceTimersByTimeAsync(QUIESCENCE_MS + POLL_INTERVAL_MS)
+    211|     expect(settled).toHaveBeenCalledWith({
+       |                     ^
+    212|       ok: expect.objectContaining({ satisfied: false, evidence: 'silen…
+    213|     })
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/5]⎯
+
+ FAIL  src/main/runtime/terminal-wait-name-only-idle.test.ts > tui-idle evidence ranking > does not settle a quiesced name-only idle for a pane whose agent cannot be resolved
+AssertionError: expected "vi.fn()" to be called with arguments: [ { ok: ObjectContaining{…} } ]
+
+Received:
+
+  1st vi.fn() call:
+
+  [
+    {
+-     "ok": ObjectContaining {
+-       "evidence": "silence",
+-       "satisfied": false,
++     "ok": {
++       "condition": "tui-idle",
++       "exitCode": null,
++       "handle": "terminal-1",
++       "satisfied": true,
++       "status": "running",
+      },
+    },
+  ]
+
+
+Number of calls: 1
+
+ ❯ src/main/runtime/terminal-wait-name-only-idle.test.ts:222:21
+    220|
+    221|     await vi.advanceTimersByTimeAsync(QUIESCENCE_MS + POLL_INTERVAL_MS)
+    222|     expect(settled).toHaveBeenCalledWith({
+       |                     ^
+    223|       ok: expect.objectContaining({ satisfied: false, evidence: 'silen…
+    224|     })
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/5]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  5 failed | 11 passed (16)
+   Start at  20:46:12
+   Duration  16.78s (transform 11.98s, setup 77ms, import 15.83s, tests 621ms, environment 0ms)
+

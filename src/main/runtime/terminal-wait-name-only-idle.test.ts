@@ -186,6 +186,44 @@ describe('tui-idle evidence ranking', () => {
     expect(settled).not.toHaveBeenCalled()
   })
 
+  // Material deviation 1 (round-4 Opus review): the carve-out that promotes a quiesced
+  // name-only title straight to `satisfied: true` used to apply to any agent with no
+  // synthetic-title profile — sweeping in Claude, Gemini, and every unresolvable pane, none
+  // of which are agents whose ONLY rest signal is their bare name. A worker-start wait on a
+  // quiet "Claude Code" title must not settle satisfied off that alone.
+  it('does not settle a quiesced name-only idle for claude, which corroborates rest itself', async () => {
+    const pty = makeTuiIdlePty({ lastAgentStatus: 'idle', lastOscTitle: 'Claude Code' })
+    const { wait } = createWait({ pty, agent: 'claude' })
+    const settled = watch(wait.wait(HANDLE, { condition: 'tui-idle', timeoutMs: 60_000 }))
+
+    await vi.advanceTimersByTimeAsync(QUIESCENCE_MS + POLL_INTERVAL_MS)
+    expect(settled).toHaveBeenCalledWith({
+      ok: expect.objectContaining({ satisfied: false, evidence: 'silence' })
+    })
+  })
+
+  it('does not settle a quiesced name-only idle for gemini, which corroborates rest itself', async () => {
+    const pty = makeTuiIdlePty({ lastAgentStatus: 'idle', lastOscTitle: 'Gemini CLI' })
+    const { wait } = createWait({ pty, agent: 'gemini' })
+    const settled = watch(wait.wait(HANDLE, { condition: 'tui-idle', timeoutMs: 60_000 }))
+
+    await vi.advanceTimersByTimeAsync(QUIESCENCE_MS + POLL_INTERVAL_MS)
+    expect(settled).toHaveBeenCalledWith({
+      ok: expect.objectContaining({ satisfied: false, evidence: 'silence' })
+    })
+  })
+
+  it('does not settle a quiesced name-only idle for a pane whose agent cannot be resolved', async () => {
+    const pty = makeTuiIdlePty({ lastAgentStatus: 'idle', lastOscTitle: 'zsh' })
+    const { wait } = createWait({ pty, agent: null })
+    const settled = watch(wait.wait(HANDLE, { condition: 'tui-idle', timeoutMs: 60_000 }))
+
+    await vi.advanceTimersByTimeAsync(QUIESCENCE_MS + POLL_INTERVAL_MS)
+    expect(settled).toHaveBeenCalledWith({
+      ok: expect.objectContaining({ satisfied: false, evidence: 'silence' })
+    })
+  })
+
   // Why: `syncWindowGraph` rebuilds leaf records, so a poll that keeps reading the record it
   // captured sees a frozen `lastOutputAt`, and its quiescence gate passes while the real pane
   // is still streaming.
