@@ -23,3 +23,11 @@ None reference command-code, agent-status-event-applicator, automation-session-o
 background-agent-status-consumer, launch-agent-background-session, terminal-keydown-fit,
 parked-terminal-byte-watcher, or pty-connection-main-side-effect-authority — confirmed by grep.
 Pre-existing environment/symlink artifact, unrelated to status-D.
+
+--- Correction (2026-09-15) ---
+The "99 pre-existing errors" claim above was wrong: re-running `tsc -p config/tsconfig.tc.web.json`
+at current HEAD is clean, 0 errors. The 99-error count was a local node_modules symlink artifact
+of the worktree this proof ran in (a stale/duplicate @tiptap/core resolution specific to that
+checkout's install), not a real, reproducible baseline of this repository -- and it should not
+have been carried forward as one into status-C's proof. Left in place rather than rewritten, per
+this project's own rule against amending recorded proof history.
