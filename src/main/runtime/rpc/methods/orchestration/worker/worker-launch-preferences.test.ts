@@ -19,8 +19,10 @@ import { WorkerStartParams } from './worker-start-schema'
 /** A fresh function reference each call, matching how production tags one
  *  process-lifetime probe by executor identity (per agent) — each test gets its own,
  *  never sharing a cached result with another test's stub. */
+const PROBE_AGENT_LABELS = { claude: 'Claude', codex: 'Codex', cursor: 'Cursor' } as const
+
 function agentProbeAccepting(
-  agentId: 'claude' | 'codex',
+  agentId: 'claude' | 'codex' | 'cursor',
   models: { id: string; thinkingLevels?: string[] }[]
 ): AgentLaunchModelDiscovery {
   const capabilityModels = models.map((model) => ({
@@ -34,7 +36,7 @@ function agentProbeAccepting(
     success: true,
     capability: {
       id: agentId,
-      label: agentId === 'claude' ? 'Claude' : 'Codex',
+      label: PROBE_AGENT_LABELS[agentId],
       modelSource: 'dynamic',
       models: capabilityModels,
       defaultModelId: models[0]?.id ?? ''
@@ -55,6 +57,12 @@ function codexProbeAccepting(
   models: { id: string; thinkingLevels?: string[] }[]
 ): AgentLaunchModelDiscovery {
   return agentProbeAccepting('codex', models)
+}
+
+function cursorProbeAccepting(
+  models: { id: string; thinkingLevels?: string[] }[]
+): AgentLaunchModelDiscovery {
+  return agentProbeAccepting('cursor', models)
 }
 
 function agentProbeUnavailable(error: string): AgentLaunchModelDiscovery {
@@ -425,6 +433,89 @@ describe('orchestration worker launch preferences', () => {
           effective: null,
           source: 'unverified',
           unverifiedReason: expect.stringContaining('custom launch command')
+        }
+      })
+      expect(calls).toBe(0)
+    })
+  })
+
+  describe('Cursor worker launch preferences (I3)', () => {
+    // Why plain `await` + `toEqual`/`toThrow` here, unlike the Claude/Codex blocks above: at
+    // upstream 539d4d1f32b4 resolveWorkerLaunchPreferences is synchronous (no probe exists at
+    // all), and this vitest version's `expect(x).resolves`/`.rejects` throws
+    // "You must provide a Promise" for a plain return value instead of comparing it -- an
+    // infrastructure failure, not proof of the clone bug. Awaiting a non-Promise return is a
+    // no-op, so this style reproduces the real behavioural mismatch on both upstream and Odin.
+    it('verifies the requested Cursor model against the installed CLI, never a clone of requested', async () => {
+      // Why this reproduces residual I for Cursor: CURSOR_SESSION_OPTION_CATALOG sets
+      // supportsWorkerLaunchPreferences: true, so a cursor launch reaches this receipt code at
+      // all, but PROBEABLE_LAUNCH_AGENTS used to exclude cursor, falling to the bottom
+      // catalog-only branch (`createWorkerLaunchReceipt`'s `effective: { ...selection }`) -- a
+      // structural clone of requested, honestly labelled 'catalog' but never checked against the
+      // installed CLI. This asserts the same probe reuse Claude/Codex already earn.
+      const result = await resolveWorkerLaunchPreferences({
+        agent: 'cursor',
+        model: 'claude-opus-4-8',
+        effort: 'high',
+        discoverAgentModels: cursorProbeAccepting([{ id: 'claude-opus-4-8' }])
+      })
+      expect(result).toEqual({
+        preferences: { model: 'claude-opus-4-8', effort: 'high' },
+        receipt: {
+          requested: { agent: 'cursor', model: 'claude-opus-4-8', effort: 'high' },
+          effective: { agent: 'cursor', model: 'claude-opus-4-8', effort: 'high' },
+          source: 'probe',
+          effortSource: 'catalog'
+        }
+      })
+    })
+
+    it('rejects a model the installed Cursor CLI does not list, with the CLI-sourced reason', async () => {
+      await expect(async () => {
+        await resolveWorkerLaunchPreferences({
+          agent: 'cursor',
+          model: 'claude-opus-4-8',
+          discoverAgentModels: cursorProbeAccepting([{ id: 'gpt-5.3-codex' }])
+        })
+      }).rejects.toThrow('The installed Cursor CLI does not list model "claude-opus-4-8"')
+    })
+
+    it('falls back to unverified (not a clone) when the installed Cursor CLI cannot be asked', async () => {
+      const result = await resolveWorkerLaunchPreferences({
+        agent: 'cursor',
+        model: 'claude-opus-4-8',
+        discoverAgentModels: agentProbeUnavailable('cursor-agent not found on PATH.')
+      })
+      expect(result).toEqual({
+        preferences: { model: 'claude-opus-4-8' },
+        receipt: {
+          requested: { agent: 'cursor', model: 'claude-opus-4-8', effort: null },
+          effective: null,
+          source: 'unverified',
+          unverifiedReason: 'cursor-agent not found on PATH.'
+        }
+      })
+    })
+
+    it('never probes and reports unverified when the worker placement is remote (I1/I3)', async () => {
+      let calls = 0
+      const countingProbe: AgentLaunchModelDiscovery = async (...probeArgs) => {
+        calls++
+        return cursorProbeAccepting([{ id: 'claude-opus-4-8' }])(...probeArgs)
+      }
+      const result = await resolveWorkerLaunchPreferences({
+        agent: 'cursor',
+        model: 'claude-opus-4-8',
+        remotePlacement: true,
+        discoverAgentModels: countingProbe
+      })
+      expect(result).toEqual({
+        preferences: { model: 'claude-opus-4-8' },
+        receipt: {
+          requested: { agent: 'cursor', model: 'claude-opus-4-8', effort: null },
+          effective: null,
+          source: 'unverified',
+          unverifiedReason: expect.stringContaining('remote')
         }
       })
       expect(calls).toBe(0)
