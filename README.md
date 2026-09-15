@@ -4,7 +4,7 @@
 
 **Surgical derivative of [Orca](https://github.com/stablyai/orca). Same product surface. Residual orchestration and safety contracts closed.**
 
-Odin is Orca (upstream `stablyai/orca` at `539d4d1f32`, v1.4.197, MIT © Lovecast Inc.) with a small set of patches at the exact sites where Orca still synthesised a verdict from an absence of evidence, or acted on the operator's machine without a recorded grant. Nothing else changed: terminals, worktrees, SSH, mobile, the 36 supported agent CLIs and the UI are Orca's. Every patch is proven the same way: its test fails at the upstream commit and passes here.
+Odin is Orca (upstream `stablyai/orca` at `539d4d1f32`, v1.4.197, MIT © Lovecast Inc.) with a small set of patches at the exact sites where Orca still synthesised a verdict from an absence of evidence, or acted on the operator's machine without a recorded grant. Nothing in Odin's runtime behaviour changed beyond those patches: terminals, worktrees, SSH, mobile, the 36 supported agent CLIs and the UI behave exactly like Orca's. Every patch is proven the same way: its test fails at the upstream commit and passes here. Repository maintenance outside runtime code — CI hygiene, the public docs site, dependency-alert bumps — is listed, not hidden, in "Outside the contract" below.
 
 ```
 odin/proof/run-proofs.sh        # reruns every proof test at the upstream commit (must fail) and on Odin (must pass)
