@@ -46,7 +46,9 @@ export type OrchestrationWorkerLaunchReceipt = {
    *  reports per-model reasoning levels, but never advertises 'minimal', which the static
    *  catalog (agent-session-option-catalog-claude-codex.ts) offers as every model's floor —
    *  trusting the probe for effort would reject a selection the catalog calls valid. Model
-   *  is still fully probe-verified; only effort falls back to the catalog (I2). */
+   *  is still fully probe-verified; only effort falls back to the catalog (I2). Cursor is the
+   *  same: its probe's `thinkingLevels` heuristic doesn't cover every model that carries a real
+   *  `effort` option in CURSOR_SESSION_OPTION_CATALOG (I3). */
   effortSource?: 'catalog'
 }
 
@@ -163,15 +165,23 @@ async function verifyAgentLaunchSelection(
   return { outcome: 'accepted' }
 }
 
-/** Agents whose worker launch preferences are probed against the installed CLI (I / I2).
- *  Grok is deliberately absent: `GROK_SESSION_OPTION_CATALOG` has no
- *  `supportsWorkerLaunchPreferences`, so a grok `--model`/`--effort` worker-start is already
- *  rejected above (`does not support launch-time model selection`) before this function ever
- *  dispatches on the agent — there is no receipt here for grok's model-list probe to attach
- *  to. That probe is wired and tested at the discovery layer (`agent-model-probe-spec.ts`,
- *  `grok-model-list-probe.ts`) so it's ready the day grok's catalog opts in. */
-const PROBEABLE_LAUNCH_AGENTS: readonly TuiAgent[] = ['claude', 'codex']
+/** Agents whose worker launch preferences are probed against the installed CLI (I / I2 / I3).
+ *  Cursor reuses the same `getAgentModelProbeSpec('cursor')` entry
+ *  (`commit-message-agent-specs-secondary.ts`, `cursor-agent --list-models`) that already backs
+ *  commit-message generation — no parallel probe. Grok is deliberately absent:
+ *  `GROK_SESSION_OPTION_CATALOG` has no `supportsWorkerLaunchPreferences`, so a grok
+ *  `--model`/`--effort` worker-start is already rejected above (`does not support launch-time
+ *  model selection`) before this function ever dispatches on the agent — there is no receipt
+ *  here for grok's model-list probe to attach to. That probe is wired and tested at the
+ *  discovery layer (`agent-model-probe-spec.ts`, `grok-model-list-probe.ts`) so it's ready the
+ *  day grok's catalog opts in. */
+const PROBEABLE_LAUNCH_AGENTS: readonly TuiAgent[] = ['claude', 'codex', 'cursor']
 
+/** Cursor's probe (`parseCursorModels`) derives `thinkingLevels` from an id-pattern heuristic
+ *  (`/gpt-5|codex/`), which happens to cover `gpt-5.3-codex` but not `claude-opus-4-8` -- both
+ *  carry a real `effort` option in CURSOR_SESSION_OPTION_CATALOG. Trusting the probe here would
+ *  reject a catalog-valid effort on one of Cursor's two effort-capable models depending on which
+ *  one was requested. Same shape of gap as Codex's; effort stays catalog-validated. */
 const AGENTS_WITH_PROBED_EFFORT: readonly TuiAgent[] = ['claude']
 
 export async function resolveWorkerLaunchPreferences(args: {

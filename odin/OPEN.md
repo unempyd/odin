@@ -170,12 +170,41 @@ store. `tui-idle` evidence is already de-authorized from that lane — see the
 tier ranking in `src/main/runtime/tui-idle-evidence.ts` (tier 1/2 vs. the
 tier-3 name-only-title hold-out at `:62-96`).
 
-Additional renderer writer the Claude review located (2026-09-15), unchanged by Odin and not in the four above:
-`src/renderer/src/components/terminal-pane/pty-connection/title-spawn-bell.ts:105-189` computes `working`/`done`
-status from renderer-observed PTY title bytes for the `command-code` pseudo-agent and writes it with `setAgentStatus`.
-A full enumeration is `grep -rn "setAgentStatus(" src/renderer --include='*.ts' --include='*.tsx' | grep -v test`;
-only `hooks/ipc-events/agent-status-event-applicator.ts` is store-derived. The closing plan above applies to every
-site in that list.
+### Full writer enumeration (corrected 2026-09-15)
+
+An earlier version of this section said the grep below "applies to every site in that list"
+without actually naming every site, and mis-described one of the ranges it did name: it called
+`title-spawn-bell.ts:105-189` one command-code title-bytes writer, but that range is two unrelated
+functions and only one of them is command-code-specific. This section is the grep, run in full,
+with every hit classified — closed, gated, kept-with-reason, or store-derived — so the claim is
+true by construction instead of by assertion.
+
+`grep -rn "setAgentStatus(" src/renderer --include='*.ts' --include='*.tsx' | grep -v test` returns
+15 call sites in 10 files:
+
+| Site | Classification | Why |
+|---|---|---|
+| `agent-status-event-applicator.ts:284` | store-derived | The one sink the closing plan feeds: applies a host-published `agentStatus:set` IPC event to the app store. Not a producer. |
+| `agent-status-runtime.ts:108` | store-derived | `applyBatchedAgentStatusUpdate`'s internal call to the same store action while batching; not an independent producer. |
+| `StructuredAgentSessionStatusBridge.tsx:140` | closed (status-A) | Forwards a host-published structured row. `projectStatus` is a no-op for a locally-owned worktree; unchanged for a remote-owned one, since local IPC is that row's only channel. |
+| `direct-ssh-retry-status.ts:211,222` (`handleRendererOwnedAgentStatus`) | gated (status-C) | Writes only while `shouldOwnAgentStatusInRenderer` — `runtimeEnvironmentId !== null && !cachedHostOwnsRemoteAgentStatus(id)` — is true. A capable host's row makes this a no-op. |
+| `automation-session-observer.ts:42` | gated (status-D-fix) | Closed outright for local/SSH panes (main's unconditional OSC ingest already covers them); restores the write only for a remote-runtime pty whose bytes never transit local main, per `await hostOwnsRemoteAgentStatus`. |
+| `background-agent-status-consumer.ts:55` | gated (status-D-fix) | Same gate and reasoning as the row above. |
+| `title-spawn-bell.ts:148`, `:189` (`seedCommandCodeOutputWorkingStatus` and the done-settle callback) | kept-with-reason | Command-code output-scrape family. The only writer for a kill-switch-off local pane and for a remote-runtime pane (`direct-ssh-retry-status.ts`'s `commandCodeOutputStatusDetector`) — `odin(status-D)`'s judgement call #1, below. |
+| `parked-terminal-command-status.ts:126`, `:192` | kept-with-reason | The parked-pane equivalent of the pair above; same family, same reason. |
+| `title-spawn-bell.ts:105`, `:113` (`applyInitialAgentStatus`, called from `pane-pty-visibility-bind.ts:137`) | kept-with-reason | **Not** the command-code/title-bytes family above, despite sharing a file. Seeds a `working` row from the pane's own launch config (`session.paneStartup.initialAgentStatus`, `origin: 'launch'`) for *any* agent, the instant a pane gains its first PTY — before any host event exists to publish one. Same class as the two sites below; `odin(status-D)`'s judgement call #2 named only the seed-file counterpart of this pair, not this one. |
+| `command-code-prompt-status-seed.ts:37` | kept-with-reason | Launch-time seed for a Command Code prompt submitted after the TUI is ready — Command Code has no prompt-submit hook to seed from instead. |
+| `launch-agent-background-session.ts:256` | kept-with-reason | Launch-time seed for a hidden-prompt Command Code launch (`origin: 'launch'`, via `observeLaunchIngress()`). Same class as the two rows above. |
+
+**Honest statement this table makes true by construction: the store is not single-writer for local
+launch seeds.** Three sites — `title-spawn-bell.ts:105/113`, `command-code-prompt-status-seed.ts:37`,
+`launch-agent-background-session.ts:256` — write a `working` row from the renderer's own launch-time
+knowledge before any host observation exists, for local panes exactly as much as remote ones. This
+is not one of the four call sites the closing plan above covers (host-owned OSC/structured/hook
+ingest all require something to have already happened for the host to observe), and no status-A
+through status-D-fix increment touches it. Odin's contract is "the execution host owns status once
+it observes anything"; a pane's very first frame, before any observation exists, is necessarily
+renderer-local.
 
 Partially closed (status-D, this increment): the command-code writer above is now conditional, not deleted. Main's
 `orca-runtime-create-terminal-side-effect-command-code-detector.ts` ports the renderer's done-settle window
@@ -191,3 +220,19 @@ and the renderer's byte-parser fallback never both write the same pane. `agent-s
 `dropsCommandCodeAgentStatus` ownership filter (`agent-status-command-code-ownership-filter.ts`) so a command-code
 row main observed cannot overwrite a pane a different foreground/retained/launch agent owns — main has no visibility
 into that renderer-only state, so filtering stays client-side per §3.2(b) of the renderer-writer plan.
+
+## Agent status: a second cross-machine clock comparison survives residual S
+
+README's row S says a `stateStartedAt` comparison still guards provider-session retention and
+that this is written down here; it previously was not. `remapHostAgentStatus`'s caller in
+`web-session-tabs-sync/agent-status-patch.ts:105-109` computes
+`hostIdentityPredatesCurrentTurn` as `existing.stateStartedAt > entry.stateStartedAt` — the same
+shape of comparison residual S removed from the primary ownership decision
+(`existing.updatedAt > entry.updatedAt`, `agent-status-patch.ts`'s old wall-clock arm). This one
+was not in scope for that fix: it does not decide which row wins (that is `clientOwnsEntry`,
+fenced and ownership-gated per the table above); it only decides whether to keep `providerSession`
+and `lastAssistantMessage` from the pre-existing entry when the host's incoming row says `done`
+but the existing entry does not. A host and client clock disagreeing here does not misattribute
+status, only which turn's provider-session detail survives a remap — lower stakes than the
+ownership question residual S closed, but still a wall-clock comparison across machines that are
+not guaranteed to agree, and still open.

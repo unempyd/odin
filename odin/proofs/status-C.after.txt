@@ -27,3 +27,12 @@ Confirmed zero remaining errors reference any status-D/status-D-fix/status-C tou
 (grep across command-code-, agent-status-*, automation-session-observer, launch-agent-
 background-session, terminal-keydown-fit, parked-terminal-byte-watcher, direct-ssh-retry-
 status, pty-input-recovery — zero matches).
+
+--- Correction (2026-09-15) ---
+The "290 errors total, same family as the 99 baseline" claim above was wrong: re-running
+`tsc -p config/tsconfig.tc.web.json` at current HEAD is clean, 0 errors. The 290/99 counts were
+a local node_modules symlink artifact of the worktree this proof ran in (a stale/duplicate
+@tiptap/core resolution specific to that checkout's install), not a real, reproducible baseline
+of this repository. The one genuinely new, in-session-fixed error (the spread-into-zero-arg-mock
+TS2556 above) is unaffected by this correction. Left in place rather than rewritten, per this
+project's own rule against amending recorded proof history.

@@ -1,0 +1,118 @@
+{
+  "upstreamRef": "539d4d1f32b4",
+  "note": "Files changed on this branch relative to upstream that sit outside odin/, src/, docs/reference/, and README.md. None of these close a residual from DIRECTION.md or a manifest.json id -- see README's \"Outside the contract\" section. odin/outside-contract-scope.test.ts fails if a new file outside those roots appears here undeclared.",
+  "clusters": [
+    {
+      "name": "github-steward-agent-brief",
+      "purpose": "New .claude subagent brief for the operator's own repo triage/CI/security/release workflow. Never merges anything itself. No runtime code, no residual.",
+      "commits": ["bd256c7b6f"],
+      "files": [".claude/agents/github-steward.md"]
+    },
+    {
+      "name": "ci-hygiene-dependabot-and-workflow-permissions",
+      "purpose": "Dependabot coverage for the four pnpm roots and least-privilege `permissions: contents: read` on workflows a security scan flagged. Operator-directed hygiene on the public repo, not a residual fix.",
+      "commits": ["9e022c023d", "7fcebf6d95", "643e28ff98"],
+      "files": [
+        ".github/dependabot.yml",
+        ".github/workflows/computer-e2e.yml",
+        ".github/workflows/golden-e2e-experiment.yml",
+        ".github/workflows/linux-wayland-gpu-sandbox.yml",
+        ".github/workflows/mobile-ios-release.yml",
+        ".github/workflows/mobile.yml",
+        ".github/workflows/skill-update-roundtrip.yml",
+        ".github/workflows/terminal-perf.yml"
+      ]
+    },
+    {
+      "name": "docs-site-vercel-to-pages-migration",
+      "purpose": "stablyai/orca's Vercel project is not available to this fork; migrates the docs site to a GitHub Pages static export (new next.config.ts export mode, static search/OG routes, CNAME/.nojekyll, Odin branding in layout/header/footer) so the operator's own domain can host it.",
+      "commits": ["6c7b4c5b6e", "c345c99a3b", "911f713c8b"],
+      "files": [
+        "docs/site/next.config.ts",
+        "docs/site/package.json",
+        "docs/site/pnpm-lock.yaml",
+        "docs/site/public/.nojekyll",
+        "docs/site/public/CNAME",
+        "docs/site/public/docs/favicon.ico",
+        "docs/site/public/docs/logo.svg",
+        "docs/site/src/app/docs/[[...slug]]/page.tsx",
+        "docs/site/src/app/docs/api/search/route.ts",
+        "docs/site/src/app/docs/og/[[...slug]]/route.tsx",
+        "docs/site/src/app/docs/og/[slug]/route.tsx",
+        "docs/site/src/app/docs/sitemap.ts",
+        "docs/site/src/app/layout.tsx",
+        "docs/site/src/components/docs/SearchDialog.tsx",
+        "docs/site/src/components/layout/DocsFooter.tsx",
+        "docs/site/src/components/layout/DocsHeader.tsx",
+        "docs/site/src/lib/docs-og-image.tsx",
+        "docs/site/tests/docs-package.test.mjs",
+        ".github/workflows/docs-pages.yml"
+      ]
+    },
+    {
+      "name": "docs-site-content-branding-and-residual-docs",
+      "purpose": "Docs-site content: Odin branding of existing pages plus a new odin/ section mirroring README's residual table, real-session runs, and review verdict for the public docs site's readers. Documentation, not a code path.",
+      "commits": ["6c7b4c5b6e", "07ea051331", "829cc75ee7", "495f5ff97c"],
+      "files": [
+        "docs/site/content/docs/agents/codex.mdx",
+        "docs/site/content/docs/agents/hooks-memory.mdx",
+        "docs/site/content/docs/agents/supported.mdx",
+        "docs/site/content/docs/android-apk.mdx",
+        "docs/site/content/docs/cli/orchestration.mdx",
+        "docs/site/content/docs/cli/reference.mdx",
+        "docs/site/content/docs/index.mdx",
+        "docs/site/content/docs/install.mdx",
+        "docs/site/content/docs/meta.json",
+        "docs/site/content/docs/mobile.mdx",
+        "docs/site/content/docs/model/agents-sessions.mdx",
+        "docs/site/content/docs/odin/deviations.mdx",
+        "docs/site/content/docs/odin/independent-review.mdx",
+        "docs/site/content/docs/odin/index.mdx",
+        "docs/site/content/docs/odin/meta.json",
+        "docs/site/content/docs/odin/reading-proofs.mdx",
+        "docs/site/content/docs/odin/real-sessions.mdx",
+        "docs/site/content/docs/odin/residuals.mdx",
+        "docs/site/content/docs/odin/test-status.mdx",
+        "docs/site/content/docs/remote-servers.mdx",
+        "docs/site/content/docs/telemetry.mdx"
+      ]
+    },
+    {
+      "name": "cloud-mobile-dependency-alert-remediation",
+      "purpose": "Lockfile/workspace-override bumps in cloud/ and mobile/ resolving inherited Dependabot alerts. No source file in either tree changed.",
+      "commits": ["b3a1a0bc7b"],
+      "files": [
+        "cloud/apps/push/package.json",
+        "cloud/apps/relay-fence-broker/package.json",
+        "cloud/apps/relay-ops/package.json",
+        "cloud/apps/relay/package.json",
+        "cloud/package.json",
+        "cloud/packages/postgres-schema/package.json",
+        "cloud/packages/push-contract/package.json",
+        "cloud/packages/relay-contract/package.json",
+        "cloud/pnpm-lock.yaml",
+        "cloud/pnpm-workspace.yaml",
+        "mobile/pnpm-lock.yaml",
+        "mobile/pnpm-workspace.yaml"
+      ]
+    },
+    {
+      "name": "residual-b-test-fixture-outside-src-root",
+      "purpose": "Test-side accommodation of residual B/fix-o1/fix-o2 (a liveness verdict mock so the pre-existing retirement-resume fixture still exercises its exited-terminal path under Odin's stricter contract). Declared here only because tests/e2e/ sits outside src/, not because it is out-of-contract work.",
+      "commits": ["aeea413cdc"],
+      "files": ["tests/e2e/completed-worker-retirement-resume.unit.test.ts"]
+    },
+    {
+      "name": "outside-contract-guard-test-wiring",
+      "purpose": "vitest include glob extended so this file and odin/outside-contract-scope.test.ts run under the standard test runner. Added by the same commit that adds this file.",
+      "commits": ["(this commit -- see git log -1 -- config/vitest.config.ts)"],
+      "files": ["config/vitest.config.ts"]
+    },
+    {
+      "name": "proof-runner-log-hygiene",
+      "purpose": "run-proofs.sh's per-run debug logs (<id>.run.log/<id>.upstream.log) moved out of the tracked odin/proofs/ directory into odin/proofs/logs/, explicitly gitignored -- odin/ proof-runner infrastructure, not out-of-contract work.",
+      "commits": ["(this commit -- see git log -1 -- .gitignore)"],
+      "files": [".gitignore"]
+    }
+  ]
+}

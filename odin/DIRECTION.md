@@ -10,6 +10,12 @@ Everything else is out of scope.
 
 The end state is a complete, usable Odin that teams can run safely and securely because the known residual failure modes have been closed.
 
+Operator-directed repository maintenance (CI hygiene, dependency-alert remediation, hosting the
+public docs site) is permitted without being scope creep only when it is listed, with its purpose
+and commit range, in README's "Outside the contract" section, and it touches no runtime code path
+a residual in this document covers. It never substitutes for closing a residual and is never cited
+as proof of one.
+
 ## Residual failure modes that must be closed (only these)
 
 1. **Orchestration still relies on terminal scraping and heuristics**

@@ -1,0 +1,147 @@
+
+ RUN  v4.1.11 /Users/briankeeny/Desktop/odin-wt-fix3
+
+ ❯ src/main/runtime/rpc/methods/orchestration/worker/worker-launch-preferences.test.ts (40 tests | 4 failed) 1658ms
+       × verifies the requested Cursor model against the installed CLI, never a clone of requested 14ms
+       × rejects a model the installed Cursor CLI does not list, with the CLI-sourced reason 7ms
+       × falls back to unverified (not a clone) when the installed Cursor CLI cannot be asked 2ms
+       × never probes and reports unverified when the worker placement is remote (I1/I3) 1ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/main/runtime/rpc/methods/orchestration/worker/worker-launch-preferences.test.ts > orchestration worker launch preferences > Cursor worker launch preferences (I3) > verifies the requested Cursor model against the installed CLI, never a clone of requested
+AssertionError: expected { preferences: { …(2) }, …(1) } to deeply equal { preferences: { …(2) }, …(1) }
+
+- Expected
++ Received
+
+@@ -7,14 +7,13 @@
+      "effective": {
+        "agent": "cursor",
+        "effort": "high",
+        "model": "claude-opus-4-8",
+      },
+-     "effortSource": "catalog",
+      "requested": {
+        "agent": "cursor",
+        "effort": "high",
+        "model": "claude-opus-4-8",
+      },
+-     "source": "probe",
++     "source": "catalog",
+    },
+  }
+
+ ❯ src/main/runtime/rpc/methods/orchestration/worker/worker-launch-preferences.test.ts:462:22
+    460|         discoverAgentModels: cursorProbeAccepting([{ id: 'claude-opus-…
+    461|       })
+    462|       expect(result).toEqual({
+       |                      ^
+    463|         preferences: { model: 'claude-opus-4-8', effort: 'high' },
+    464|         receipt: {
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/4]⎯
+
+ FAIL  src/main/runtime/rpc/methods/orchestration/worker/worker-launch-preferences.test.ts > orchestration worker launch preferences > Cursor worker launch preferences (I3) > rejects a model the installed Cursor CLI does not list, with the CLI-sourced reason
+AssertionError: promise resolved "undefined" instead of rejecting
+
+- Expected:
+Error {
+  "message": "rejected promise",
+}
+
++ Received:
+undefined
+
+ ❯ src/main/runtime/rpc/methods/orchestration/worker/worker-launch-preferences.test.ts:480:9
+    478|           discoverAgentModels: cursorProbeAccepting([{ id: 'gpt-5.3-co…
+    479|         })
+    480|       }).rejects.toThrow('The installed Cursor CLI does not list model…
+       |         ^
+    481|     })
+    482|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/4]⎯
+
+ FAIL  src/main/runtime/rpc/methods/orchestration/worker/worker-launch-preferences.test.ts > orchestration worker launch preferences > Cursor worker launch preferences (I3) > falls back to unverified (not a clone) when the installed Cursor CLI cannot be asked
+AssertionError: expected { …(2) } to deeply equal { …(2) }
+
+- Expected
++ Received
+
+  {
+    "preferences": {
+      "model": "claude-opus-4-8",
+    },
+    "receipt": {
+-     "effective": null,
++     "effective": {
++       "agent": "cursor",
++       "effort": null,
++       "model": "claude-opus-4-8",
++     },
+      "requested": {
+        "agent": "cursor",
+        "effort": null,
+        "model": "claude-opus-4-8",
+      },
+-     "source": "unverified",
+-     "unverifiedReason": "cursor-agent not found on PATH.",
++     "source": "catalog",
+    },
+  }
+
+ ❯ src/main/runtime/rpc/methods/orchestration/worker/worker-launch-preferences.test.ts:489:22
+    487|         discoverAgentModels: agentProbeUnavailable('cursor-agent not f…
+    488|       })
+    489|       expect(result).toEqual({
+       |                      ^
+    490|         preferences: { model: 'claude-opus-4-8' },
+    491|         receipt: {
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/4]⎯
+
+ FAIL  src/main/runtime/rpc/methods/orchestration/worker/worker-launch-preferences.test.ts > orchestration worker launch preferences > Cursor worker launch preferences (I3) > never probes and reports unverified when the worker placement is remote (I1/I3)
+AssertionError: expected { …(2) } to deeply equal { …(2) }
+
+- Expected
++ Received
+
+  {
+    "preferences": {
+      "model": "claude-opus-4-8",
+    },
+    "receipt": {
+-     "effective": null,
++     "effective": {
++       "agent": "cursor",
++       "effort": null,
++       "model": "claude-opus-4-8",
++     },
+      "requested": {
+        "agent": "cursor",
+        "effort": null,
+        "model": "claude-opus-4-8",
+      },
+-     "source": "unverified",
+-     "unverifiedReason": StringContaining "remote",
++     "source": "catalog",
+    },
+  }
+
+ ❯ src/main/runtime/rpc/methods/orchestration/worker/worker-launch-preferences.test.ts:512:22
+    510|         discoverAgentModels: countingProbe
+    511|       })
+    512|       expect(result).toEqual({
+       |                      ^
+    513|         preferences: { model: 'claude-opus-4-8' },
+    514|         receipt: {
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/4]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  4 failed | 36 passed (40)
+   Start at  09:54:00
+   Duration  3.66s (transform 1.06s, setup 92ms, import 1.64s, tests 1.66s, environment 0ms)
+

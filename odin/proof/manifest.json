@@ -44,6 +44,16 @@
       "reproduce": "to deeply equal \\{ requested"
     },
     {
+      "id": "I3",
+      "title": "Launch receipt effective for Cursor also comes from the installed CLI, not the catalog-only clone",
+      "commit": "odin(I3) -- see git log --grep I3",
+      "tests": [
+        "src/main/runtime/rpc/methods/orchestration/worker/worker-launch-preferences.test.ts"
+      ],
+      "reproduce": "\"source\": \"probe\"",
+      "note": "Round-3 review finding: CURSOR_SESSION_OPTION_CATALOG sets supportsWorkerLaunchPreferences: true, but PROBEABLE_LAUNCH_AGENTS excluded cursor, so a cursor launch fell to the bottom catalog-only branch -- effective: {...selection}, honestly labelled source: 'catalog' but never checked against the installed CLI. At upstream this whole probe apparatus does not exist yet, so every agent's receipt is the unconditional clone; the reproduce regex pins the same 'source': 'catalog' (never 'probe') diff line the I entry's fix already closed for claude/codex."
+    },
+    {
       "id": "B",
       "title": "Worker liveness: an empty or non-enumerating host answer is unverifiable, never exited",
       "commit": "cfc277f2b1",
