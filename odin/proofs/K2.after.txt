@@ -1,0 +1,202 @@
+::error file=odin/proof/ssh-boundary.mjs,line=243,title=oxlint::Unused eslint-disable directive (no problems were reported).
+odin/proof/ssh-boundary.mjs:243 oxlint: Unused eslint-disable directive (no problems were reported).
+code quality: 1 new finding(s) across 236 changed file(s).
+::error file=src/main/runtime/runtime-legacy-worker-terminal-recovery-runner.test.ts,line=27,title=typescript(consistent-type-assertions)::Do not use any type assertions.
+src/main/runtime/runtime-legacy-worker-terminal-recovery-runner.test.ts:27 typescript(consistent-type-assertions): Do not use any type assertions.
+::error file=src/main/runtime/runtime-legacy-worker-terminal-recovery-runner.test.ts,line=27,title=typescript(consistent-type-assertions)::Do not use any type assertions.
+src/main/runtime/runtime-legacy-worker-terminal-recovery-runner.test.ts:27 typescript(consistent-type-assertions): Do not use any type assertions.
+::error file=src/main/runtime/rpc/methods/orchestration/worker/worker-observation.test.ts,line=78,title=typescript(consistent-type-assertions)::Do not use any type assertions.
+src/main/runtime/rpc/methods/orchestration/worker/worker-observation.test.ts:78 typescript(consistent-type-assertions): Do not use any type assertions.
+::error file=src/main/runtime/rpc/methods/orchestration/worker/worker-observation.test.ts,line=78,title=typescript(consistent-type-assertions)::Do not use any type assertions.
+src/main/runtime/rpc/methods/orchestration/worker/worker-observation.test.ts:78 typescript(consistent-type-assertions): Do not use any type assertions.
+::error file=src/main/runtime/rpc/methods/orchestration/worker/worker-observation.test.ts,line=85,title=typescript(consistent-type-assertions)::Do not use any type assertions.
+src/main/runtime/rpc/methods/orchestration/worker/worker-observation.test.ts:85 typescript(consistent-type-assertions): Do not use any type assertions.
+::error file=src/main/runtime/rpc/methods/orchestration/worker/worker-observation.test.ts,line=85,title=typescript(consistent-type-assertions)::Do not use any type assertions.
+src/main/runtime/rpc/methods/orchestration/worker/worker-observation.test.ts:85 typescript(consistent-type-assertions): Do not use any type assertions.
+::error file=src/main/ipc/pty-hidden-at-spawn-mark.test.ts,line=403,title=typescript(consistent-type-assertions)::Do not use any type assertions.
+src/main/ipc/pty-hidden-at-spawn-mark.test.ts:403 typescript(consistent-type-assertions): Do not use any type assertions.
+::error file=src/main/ipc/pty-hidden-at-spawn-mark.test.ts,line=403,title=typescript(consistent-type-assertions)::Do not use any type assertions.
+src/main/ipc/pty-hidden-at-spawn-mark.test.ts:403 typescript(consistent-type-assertions): Do not use any type assertions.
+::error file=src/main/ipc/pty-ipc-provider-fixtures.ts,line=265,title=typescript(consistent-type-assertions)::Do not use any type assertions.
+src/main/ipc/pty-ipc-provider-fixtures.ts:265 typescript(consistent-type-assertions): Do not use any type assertions.
+::error file=src/main/ipc/pty-ipc-provider-fixtures.ts,line=265,title=typescript(consistent-type-assertions)::Do not use any type assertions.
+src/main/ipc/pty-ipc-provider-fixtures.ts:265 typescript(consistent-type-assertions): Do not use any type assertions.
+::error file=src/main/ipc/pty-ipc-provider-fixtures.ts,line=265,title=typescript(consistent-type-assertions)::Do not use any type assertions.
+src/main/ipc/pty-ipc-provider-fixtures.ts:265 typescript(consistent-type-assertions): Do not use any type assertions.
+::error file=src/renderer/src/components/terminal-pane/pty-connection-remote-runtime-attach.test.ts,line=308,title=typescript(consistent-type-assertions)::Do not use any type assertions.
+src/renderer/src/components/terminal-pane/pty-connection-remote-runtime-attach.test.ts:308 typescript(consistent-type-assertions): Do not use any type assertions.
+::error file=src/renderer/src/components/terminal-pane/pty-connection-remote-runtime-attach.test.ts,line=421,title=typescript(consistent-type-assertions)::Do not use any type assertions.
+src/renderer/src/components/terminal-pane/pty-connection-remote-runtime-attach.test.ts:421 typescript(consistent-type-assertions): Do not use any type assertions.
+::error file=src/renderer/src/lib/launch-agent-background-session-remote.test.ts,line=106,title=typescript(consistent-type-assertions)::Do not use any type assertions.
+src/renderer/src/lib/launch-agent-background-session-remote.test.ts:106 typescript(consistent-type-assertions): Do not use any type assertions.
+::error file=src/renderer/src/lib/launch-agent-background-session-remote.test.ts,line=106,title=typescript(consistent-type-assertions)::Do not use any type assertions.
+src/renderer/src/lib/launch-agent-background-session-remote.test.ts:106 typescript(consistent-type-assertions): Do not use any type assertions.
+::error file=src/renderer/src/hooks/ipc-events/agent-status-command-code-ownership-filter.test.ts,line=47,title=typescript(consistent-type-assertions)::Do not use any type assertions.
+src/renderer/src/hooks/ipc-events/agent-status-command-code-ownership-filter.test.ts:47 typescript(consistent-type-assertions): Do not use any type assertions.
+::error file=src/renderer/src/hooks/ipc-events/agent-status-command-code-ownership-filter.test.ts,line=88,title=typescript(consistent-type-assertions)::Do not use any type assertions.
+src/renderer/src/hooks/ipc-events/agent-status-command-code-ownership-filter.test.ts:88 typescript(consistent-type-assertions): Do not use any type assertions.
+::error file=src/renderer/src/hooks/ipc-events/agent-status-command-code-ownership-filter.test.ts,line=89,title=typescript(consistent-type-assertions)::Do not use any type assertions.
+src/renderer/src/hooks/ipc-events/agent-status-command-code-ownership-filter.test.ts:89 typescript(consistent-type-assertions): Do not use any type assertions.
+::error file=src/main/ipc/pty-ipc-daemon-provider-fixtures.ts,line=137,title=typescript(consistent-type-assertions)::Do not use any type assertions.
+src/main/ipc/pty-ipc-daemon-provider-fixtures.ts:137 typescript(consistent-type-assertions): Do not use any type assertions.
+::error file=src/main/runtime/orchestration/db/dispatch-row-writer-claim-timezone.test.ts,line=9,title=typescript(consistent-type-assertions)::Do not use any type assertions.
+src/main/runtime/orchestration/db/dispatch-row-writer-claim-timezone.test.ts:9 typescript(consistent-type-assertions): Do not use any type assertions.
+::error file=src/main/runtime/orchestration/db/dispatch-row-writer-claim-timezone.test.ts,line=9,title=typescript(consistent-type-assertions)::Do not use any type assertions.
+src/main/runtime/orchestration/db/dispatch-row-writer-claim-timezone.test.ts:9 typescript(consistent-type-assertions): Do not use any type assertions.
+::error file=src/main/runtime/orchestration/db/dispatch-row-writer-claim-timezone.test.ts,line=49,title=typescript(consistent-type-assertions)::Do not use any type assertions.
+src/main/runtime/orchestration/db/dispatch-row-writer-claim-timezone.test.ts:49 typescript(consistent-type-assertions): Do not use any type assertions.
+::error file=src/renderer/src/lib/ai-vault-resume-command.resumable-agent.test.ts,line=25,title=typescript(consistent-type-assertions)::Do not use any type assertions.
+src/renderer/src/lib/ai-vault-resume-command.resumable-agent.test.ts:25 typescript(consistent-type-assertions): Do not use any type assertions.
+::error file=src/renderer/src/lib/ai-vault-resume-command.resumable-agent.test.ts,line=25,title=typescript(consistent-type-assertions)::Do not use any type assertions.
+src/renderer/src/lib/ai-vault-resume-command.resumable-agent.test.ts:25 typescript(consistent-type-assertions): Do not use any type assertions.
+::error file=src/main/codex-accounts/runtime-home-restore-consent-gate.test.ts,line=54,title=typescript(consistent-type-assertions)::Do not use any type assertions.
+src/main/codex-accounts/runtime-home-restore-consent-gate.test.ts:54 typescript(consistent-type-assertions): Do not use any type assertions.
+::error file=src/main/codex-accounts/runtime-home-restore-consent-gate.test.ts,line=54,title=typescript(consistent-type-assertions)::Do not use any type assertions.
+src/main/codex-accounts/runtime-home-restore-consent-gate.test.ts:54 typescript(consistent-type-assertions): Do not use any type assertions.
+::error file=src/main/codex-accounts/runtime-home-restore-consent-gate.test.ts,line=69,title=typescript(consistent-type-assertions)::Do not use any type assertions.
+src/main/codex-accounts/runtime-home-restore-consent-gate.test.ts:69 typescript(consistent-type-assertions): Do not use any type assertions.
+::error file=src/main/codex-accounts/runtime-home-restore-consent-gate.test.ts,line=69,title=typescript(consistent-type-assertions)::Do not use any type assertions.
+src/main/codex-accounts/runtime-home-restore-consent-gate.test.ts:69 typescript(consistent-type-assertions): Do not use any type assertions.
+::error file=src/main/codex-accounts/runtime-home-restore-consent-gate.test.ts,line=90,title=typescript(consistent-type-assertions)::Do not use any type assertions.
+src/main/codex-accounts/runtime-home-restore-consent-gate.test.ts:90 typescript(consistent-type-assertions): Do not use any type assertions.
+::error file=src/main/codex-accounts/runtime-home-restore-consent-gate.test.ts,line=90,title=typescript(consistent-type-assertions)::Do not use any type assertions.
+src/main/codex-accounts/runtime-home-restore-consent-gate.test.ts:90 typescript(consistent-type-assertions): Do not use any type assertions.
+::error file=src/renderer/src/components/terminal-pane/pty-connection-cold-restore-agent-resume.test.ts,line=161,title=typescript(consistent-type-assertions)::Do not use any type assertions.
+src/renderer/src/components/terminal-pane/pty-connection-cold-restore-agent-resume.test.ts:161 typescript(consistent-type-assertions): Do not use any type assertions.
+::error file=src/renderer/src/components/terminal-pane/pty-connection-cold-restore-agent-resume.test.ts,line=246,title=typescript(consistent-type-assertions)::Do not use any type assertions.
+src/renderer/src/components/terminal-pane/pty-connection-cold-restore-agent-resume.test.ts:246 typescript(consistent-type-assertions): Do not use any type assertions.
+::error file=src/renderer/src/components/terminal-pane/pty-connection-cold-restore-agent-resume.test.ts,line=338,title=typescript(consistent-type-assertions)::Do not use any type assertions.
+src/renderer/src/components/terminal-pane/pty-connection-cold-restore-agent-resume.test.ts:338 typescript(consistent-type-assertions): Do not use any type assertions.
+::error file=src/renderer/src/components/terminal-pane/pty-connection-cold-restore-agent-resume.test.ts,line=434,title=typescript(consistent-type-assertions)::Do not use any type assertions.
+src/renderer/src/components/terminal-pane/pty-connection-cold-restore-agent-resume.test.ts:434 typescript(consistent-type-assertions): Do not use any type assertions.
+::error file=src/renderer/src/components/terminal-pane/pty-connection-cold-restore-agent-resume.test.ts,line=493,title=typescript(consistent-type-assertions)::Do not use any type assertions.
+src/renderer/src/components/terminal-pane/pty-connection-cold-restore-agent-resume.test.ts:493 typescript(consistent-type-assertions): Do not use any type assertions.
+::error file=src/renderer/src/components/terminal-pane/pty-connection-cold-restore-agent-resume.test.ts,line=577,title=typescript(consistent-type-assertions)::Do not use any type assertions.
+src/renderer/src/components/terminal-pane/pty-connection-cold-restore-agent-resume.test.ts:577 typescript(consistent-type-assertions): Do not use any type assertions.
+::error file=src/renderer/src/hooks/ipc-events/agent-status-pane-routing-index.test.ts,line=220,title=typescript(consistent-type-assertions)::Do not use any type assertions.
+src/renderer/src/hooks/ipc-events/agent-status-pane-routing-index.test.ts:220 typescript(consistent-type-assertions): Do not use any type assertions.
+::error file=src/renderer/src/hooks/ipc-events/agent-status-pane-routing-index.test.ts,line=252,title=typescript(consistent-type-assertions)::Do not use any type assertions.
+src/renderer/src/hooks/ipc-events/agent-status-pane-routing-index.test.ts:252 typescript(consistent-type-assertions): Do not use any type assertions.
+::error file=src/renderer/src/hooks/ipc-events/agent-status-event-applicator-structured-host.test.ts,line=29,title=typescript(consistent-type-assertions)::Do not use any type assertions.
+src/renderer/src/hooks/ipc-events/agent-status-event-applicator-structured-host.test.ts:29 typescript(consistent-type-assertions): Do not use any type assertions.
+::error file=src/main/ipc/pty-listener-teardown-and-orphans.test.ts,line=75,title=typescript(consistent-type-assertions)::Do not use any type assertions.
+src/main/ipc/pty-listener-teardown-and-orphans.test.ts:75 typescript(consistent-type-assertions): Do not use any type assertions.
+::error file=src/main/ipc/pty-listener-teardown-and-orphans.test.ts,line=75,title=typescript(consistent-type-assertions)::Do not use any type assertions.
+src/main/ipc/pty-listener-teardown-and-orphans.test.ts:75 typescript(consistent-type-assertions): Do not use any type assertions.
+::error file=src/main/runtime/runtime-client-settings-agent-status-hooks-consent.test.ts,line=24,title=typescript(consistent-type-assertions)::Do not use any type assertions.
+src/main/runtime/runtime-client-settings-agent-status-hooks-consent.test.ts:24 typescript(consistent-type-assertions): Do not use any type assertions.
+::error file=src/main/runtime/runtime-client-settings-agent-status-hooks-consent.test.ts,line=32,title=typescript(consistent-type-assertions)::Do not use any type assertions.
+src/main/runtime/runtime-client-settings-agent-status-hooks-consent.test.ts:32 typescript(consistent-type-assertions): Do not use any type assertions.
+::error file=src/main/runtime/runtime-client-settings-agent-status-hooks-consent.test.ts,line=54,title=typescript(consistent-type-assertions)::Do not use any type assertions.
+src/main/runtime/runtime-client-settings-agent-status-hooks-consent.test.ts:54 typescript(consistent-type-assertions): Do not use any type assertions.
+::error file=src/main/ipc/pty-daemon-spawn-session-identity.test.ts,line=99,title=typescript(consistent-type-assertions)::Do not use any type assertions.
+src/main/ipc/pty-daemon-spawn-session-identity.test.ts:99 typescript(consistent-type-assertions): Do not use any type assertions.
+::error file=src/main/ipc/pty-daemon-spawn-session-identity.test.ts,line=99,title=typescript(consistent-type-assertions)::Do not use any type assertions.
+src/main/ipc/pty-daemon-spawn-session-identity.test.ts:99 typescript(consistent-type-assertions): Do not use any type assertions.
+::error file=src/main/ipc/pty-daemon-spawn-session-identity.test.ts,line=120,title=typescript(consistent-type-assertions)::Do not use any type assertions.
+src/main/ipc/pty-daemon-spawn-session-identity.test.ts:120 typescript(consistent-type-assertions): Do not use any type assertions.
+::error file=src/main/ipc/pty-daemon-spawn-session-identity.test.ts,line=120,title=typescript(consistent-type-assertions)::Do not use any type assertions.
+src/main/ipc/pty-daemon-spawn-session-identity.test.ts:120 typescript(consistent-type-assertions): Do not use any type assertions.
+::error file=src/main/ipc/pty-daemon-spawn-session-identity.test.ts,line=140,title=typescript(consistent-type-assertions)::Do not use any type assertions.
+src/main/ipc/pty-daemon-spawn-session-identity.test.ts:140 typescript(consistent-type-assertions): Do not use any type assertions.
+::error file=src/main/ipc/pty-daemon-spawn-session-identity.test.ts,line=140,title=typescript(consistent-type-assertions)::Do not use any type assertions.
+src/main/ipc/pty-daemon-spawn-session-identity.test.ts:140 typescript(consistent-type-assertions): Do not use any type assertions.
+::error file=src/main/ipc/pty-daemon-spawn-session-identity.test.ts,line=242,title=typescript(consistent-type-assertions)::Do not use any type assertions.
+src/main/ipc/pty-daemon-spawn-session-identity.test.ts:242 typescript(consistent-type-assertions): Do not use any type assertions.
+::error file=src/main/ipc/pty-daemon-spawn-session-identity.test.ts,line=242,title=typescript(consistent-type-assertions)::Do not use any type assertions.
+src/main/ipc/pty-daemon-spawn-session-identity.test.ts:242 typescript(consistent-type-assertions): Do not use any type assertions.
+::error file=src/main/ssh/ssh-relay-session-test-fixtures.ts,line=18,title=typescript(consistent-type-assertions)::Do not use any type assertions.
+src/main/ssh/ssh-relay-session-test-fixtures.ts:18 typescript(consistent-type-assertions): Do not use any type assertions.
+::error file=src/main/ssh/ssh-relay-session-test-fixtures.ts,line=18,title=typescript(consistent-type-assertions)::Do not use any type assertions.
+src/main/ssh/ssh-relay-session-test-fixtures.ts:18 typescript(consistent-type-assertions): Do not use any type assertions.
+::error file=src/main/persistence/applying-settings/terminal-settings-migrations.ts,line=136,title=typescript(consistent-type-assertions)::Do not use any type assertions.
+src/main/persistence/applying-settings/terminal-settings-migrations.ts:136 typescript(consistent-type-assertions): Do not use any type assertions.
+::error file=src/main/persistence/applying-settings/terminal-settings-migrations.ts,line=141,title=typescript(consistent-type-assertions)::Do not use any type assertions.
+src/main/persistence/applying-settings/terminal-settings-migrations.ts:141 typescript(consistent-type-assertions): Do not use any type assertions.
+::error file=src/main/persistence/applying-settings/terminal-settings-migrations.ts,line=172,title=typescript(consistent-type-assertions)::Do not use any type assertions.
+src/main/persistence/applying-settings/terminal-settings-migrations.ts:172 typescript(consistent-type-assertions): Do not use any type assertions.
+::error file=src/main/persistence/applying-settings/terminal-settings-migrations.ts,line=180,title=typescript(consistent-type-assertions)::Do not use any type assertions.
+src/main/persistence/applying-settings/terminal-settings-migrations.ts:180 typescript(consistent-type-assertions): Do not use any type assertions.
+::error file=src/renderer/src/runtime/web-session-tabs-sync-host-authority.test.ts,line=94,title=typescript(consistent-type-assertions)::Do not use any type assertions.
+src/renderer/src/runtime/web-session-tabs-sync-host-authority.test.ts:94 typescript(consistent-type-assertions): Do not use any type assertions.
+::error file=src/renderer/src/runtime/web-session-tabs-sync-host-authority.test.ts,line=99,title=typescript(consistent-type-assertions)::Do not use any type assertions.
+src/renderer/src/runtime/web-session-tabs-sync-host-authority.test.ts:99 typescript(consistent-type-assertions): Do not use any type assertions.
+::error file=src/shared/secret-store.ts,line=84,title=typescript(consistent-type-assertions)::Do not use any type assertions.
+src/shared/secret-store.ts:84 typescript(consistent-type-assertions): Do not use any type assertions.
+::error file=src/shared/secret-store.ts,line=84,title=typescript(consistent-type-assertions)::Do not use any type assertions.
+src/shared/secret-store.ts:84 typescript(consistent-type-assertions): Do not use any type assertions.
+::error file=src/main/codex-accounts/runtime-home-retained-pane-sync-consent-gate.test.ts,line=65,title=typescript(consistent-type-assertions)::Do not use any type assertions.
+src/main/codex-accounts/runtime-home-retained-pane-sync-consent-gate.test.ts:65 typescript(consistent-type-assertions): Do not use any type assertions.
+::error file=src/main/codex-accounts/runtime-home-retained-pane-sync-consent-gate.test.ts,line=65,title=typescript(consistent-type-assertions)::Do not use any type assertions.
+src/main/codex-accounts/runtime-home-retained-pane-sync-consent-gate.test.ts:65 typescript(consistent-type-assertions): Do not use any type assertions.
+::error file=src/main/ipc/pty-ipc-spawn-drivers.ts,line=67,title=typescript(consistent-type-assertions)::Do not use any type assertions.
+src/main/ipc/pty-ipc-spawn-drivers.ts:67 typescript(consistent-type-assertions): Do not use any type assertions.
+::error file=src/main/ipc/pty-ipc-spawn-drivers.ts,line=99,title=typescript(consistent-type-assertions)::Do not use any type assertions.
+src/main/ipc/pty-ipc-spawn-drivers.ts:99 typescript(consistent-type-assertions): Do not use any type assertions.
+::error file=src/main/ipc/pty-ipc-spawn-drivers.ts,line=99,title=typescript(consistent-type-assertions)::Do not use any type assertions.
+src/main/ipc/pty-ipc-spawn-drivers.ts:99 typescript(consistent-type-assertions): Do not use any type assertions.
+::error file=src/renderer/src/lib/launch-work-item-direct.test.ts,line=175,title=typescript(consistent-type-assertions)::Do not use any type assertions.
+src/renderer/src/lib/launch-work-item-direct.test.ts:175 typescript(consistent-type-assertions): Do not use any type assertions.
+::error file=src/renderer/src/lib/launch-work-item-direct.test.ts,line=613,title=typescript(consistent-type-assertions)::Do not use any type assertions.
+src/renderer/src/lib/launch-work-item-direct.test.ts:613 typescript(consistent-type-assertions): Do not use any type assertions.
+::error file=src/main/ipc/pty-controller-spawn-admission.test.ts,line=92,title=typescript(consistent-type-assertions)::Do not use any type assertions.
+src/main/ipc/pty-controller-spawn-admission.test.ts:92 typescript(consistent-type-assertions): Do not use any type assertions.
+::error file=src/renderer/src/components/terminal-pane/pty-connection-sleeping-resume-banner.test.ts,line=154,title=typescript(consistent-type-assertions)::Do not use any type assertions.
+src/renderer/src/components/terminal-pane/pty-connection-sleeping-resume-banner.test.ts:154 typescript(consistent-type-assertions): Do not use any type assertions.
+::error file=src/renderer/src/components/terminal-pane/pty-connection-sleeping-resume-banner.test.ts,line=263,title=typescript(consistent-type-assertions)::Do not use any type assertions.
+src/renderer/src/components/terminal-pane/pty-connection-sleeping-resume-banner.test.ts:263 typescript(consistent-type-assertions): Do not use any type assertions.
+::error file=src/renderer/src/components/terminal-pane/pty-connection-sleeping-resume-banner.test.ts,line=353,title=typescript(consistent-type-assertions)::Do not use any type assertions.
+src/renderer/src/components/terminal-pane/pty-connection-sleeping-resume-banner.test.ts:353 typescript(consistent-type-assertions): Do not use any type assertions.
+::error file=src/main/ipc/pty-daemon-spawn-agent-home-env.test.ts,line=489,title=typescript(consistent-type-assertions)::Do not use any type assertions.
+src/main/ipc/pty-daemon-spawn-agent-home-env.test.ts:489 typescript(consistent-type-assertions): Do not use any type assertions.
+::error file=src/main/ipc/pty-serializer-settlement-mapping.test.ts,line=483,title=typescript(consistent-type-assertions)::Do not use any type assertions.
+src/main/ipc/pty-serializer-settlement-mapping.test.ts:483 typescript(consistent-type-assertions): Do not use any type assertions.
+::error file=src/main/ipc/pty-serializer-settlement-mapping.test.ts,line=483,title=typescript(consistent-type-assertions)::Do not use any type assertions.
+src/main/ipc/pty-serializer-settlement-mapping.test.ts:483 typescript(consistent-type-assertions): Do not use any type assertions.
+::error file=src/main/ipc/pty-serializer-settlement-mapping.test.ts,line=483,title=typescript(consistent-type-assertions)::Do not use any type assertions.
+src/main/ipc/pty-serializer-settlement-mapping.test.ts:483 typescript(consistent-type-assertions): Do not use any type assertions.
+::error file=src/main/persistence/applying-settings/agent-bypass-defaults-review-migration.test.ts,line=15,title=typescript(consistent-type-assertions)::Do not use any type assertions.
+src/main/persistence/applying-settings/agent-bypass-defaults-review-migration.test.ts:15 typescript(consistent-type-assertions): Do not use any type assertions.
+::error file=src/main/persistence/applying-settings/agent-bypass-defaults-review-migration.test.ts,line=28,title=typescript(consistent-type-assertions)::Do not use any type assertions.
+src/main/persistence/applying-settings/agent-bypass-defaults-review-migration.test.ts:28 typescript(consistent-type-assertions): Do not use any type assertions.
+::error file=src/main/persistence/applying-settings/agent-bypass-defaults-review-migration.test.ts,line=38,title=typescript(consistent-type-assertions)::Do not use any type assertions.
+src/main/persistence/applying-settings/agent-bypass-defaults-review-migration.test.ts:38 typescript(consistent-type-assertions): Do not use any type assertions.
+::error file=src/main/persistence/applying-settings/agent-bypass-defaults-review-migration.test.ts,line=45,title=typescript(consistent-type-assertions)::Do not use any type assertions.
+src/main/persistence/applying-settings/agent-bypass-defaults-review-migration.test.ts:45 typescript(consistent-type-assertions): Do not use any type assertions.
+::error file=src/renderer/src/components/terminal-pane/pty-connection-cold-restore-resume-command.test.ts,line=177,title=typescript(consistent-type-assertions)::Do not use any type assertions.
+src/renderer/src/components/terminal-pane/pty-connection-cold-restore-resume-command.test.ts:177 typescript(consistent-type-assertions): Do not use any type assertions.
+::error file=src/renderer/src/components/terminal-pane/pty-connection-cold-restore-resume-command.test.ts,line=282,title=typescript(consistent-type-assertions)::Do not use any type assertions.
+src/renderer/src/components/terminal-pane/pty-connection-cold-restore-resume-command.test.ts:282 typescript(consistent-type-assertions): Do not use any type assertions.
+::error file=src/renderer/src/components/terminal-pane/pty-connection-cold-restore-resume-command.test.ts,line=394,title=typescript(consistent-type-assertions)::Do not use any type assertions.
+src/renderer/src/components/terminal-pane/pty-connection-cold-restore-resume-command.test.ts:394 typescript(consistent-type-assertions): Do not use any type assertions.
+::error file=src/renderer/src/components/terminal-pane/pty-connection-cold-restore-resume-command.test.ts,line=484,title=typescript(consistent-type-assertions)::Do not use any type assertions.
+src/renderer/src/components/terminal-pane/pty-connection-cold-restore-resume-command.test.ts:484 typescript(consistent-type-assertions): Do not use any type assertions.
+::error file=src/renderer/src/components/terminal-pane/pty-connection-cold-restore-resume-command.test.ts,line=535,title=typescript(consistent-type-assertions)::Do not use any type assertions.
+src/renderer/src/components/terminal-pane/pty-connection-cold-restore-resume-command.test.ts:535 typescript(consistent-type-assertions): Do not use any type assertions.
+::error file=src/main/runtime/rpc/methods/orchestration/worker/worker-observation.ts,line=81,title=typescript(consistent-type-assertions)::Do not use any type assertions.
+src/main/runtime/rpc/methods/orchestration/worker/worker-observation.ts:81 typescript(consistent-type-assertions): Do not use any type assertions.
+::error file=src/main/runtime/runtime-client-settings-codex-credential-mirror-revocation.test.ts,line=30,title=typescript(consistent-type-assertions)::Do not use any type assertions.
+src/main/runtime/runtime-client-settings-codex-credential-mirror-revocation.test.ts:30 typescript(consistent-type-assertions): Do not use any type assertions.
+::error file=src/main/runtime/orchestration/orchestration-unsupervised-dispatch-recovery.test.ts,line=11,title=typescript(consistent-type-assertions)::Do not use any type assertions.
+src/main/runtime/orchestration/orchestration-unsupervised-dispatch-recovery.test.ts:11 typescript(consistent-type-assertions): Do not use any type assertions.
+::error file=src/main/runtime/orchestration/orchestration-unsupervised-dispatch-recovery.test.ts,line=11,title=typescript(consistent-type-assertions)::Do not use any type assertions.
+src/main/runtime/orchestration/orchestration-unsupervised-dispatch-recovery.test.ts:11 typescript(consistent-type-assertions): Do not use any type assertions.
+::error file=src/main/runtime/orchestration/orchestration-unsupervised-dispatch-recovery.test.ts,line=19,title=typescript(consistent-type-assertions)::Do not use any type assertions.
+src/main/runtime/orchestration/orchestration-unsupervised-dispatch-recovery.test.ts:19 typescript(consistent-type-assertions): Do not use any type assertions.
+::error file=src/main/runtime/orchestration/orchestration-unsupervised-dispatch-recovery.test.ts,line=19,title=typescript(consistent-type-assertions)::Do not use any type assertions.
+src/main/runtime/orchestration/orchestration-unsupervised-dispatch-recovery.test.ts:19 typescript(consistent-type-assertions): Do not use any type assertions.
+::error file=src/main/runtime/orchestration/orchestration-unsupervised-dispatch-recovery.test.ts,line=27,title=typescript(consistent-type-assertions)::Do not use any type assertions.
+src/main/runtime/orchestration/orchestration-unsupervised-dispatch-recovery.test.ts:27 typescript(consistent-type-assertions): Do not use any type assertions.
+::error file=src/main/runtime/orchestration/orchestration-unsupervised-dispatch-recovery.test.ts,line=27,title=typescript(consistent-type-assertions)::Do not use any type assertions.
+src/main/runtime/orchestration/orchestration-unsupervised-dispatch-recovery.test.ts:27 typescript(consistent-type-assertions): Do not use any type assertions.
+::error file=src/main/runtime/orchestration/orchestration-unsupervised-dispatch-recovery.test.ts,line=69,title=typescript(consistent-type-assertions)::Do not use any type assertions.
+src/main/runtime/orchestration/orchestration-unsupervised-dispatch-recovery.test.ts:69 typescript(consistent-type-assertions): Do not use any type assertions.
+::error file=src/main/runtime/orchestration/db/worker-dispatch/worker-terminal-recovery.ts,line=38,title=typescript(consistent-type-assertions)::Do not use any type assertions.
+src/main/runtime/orchestration/db/worker-dispatch/worker-terminal-recovery.ts:38 typescript(consistent-type-assertions): Do not use any type assertions.
+::error file=src/main/runtime/rpc/methods/orchestration/worker/worker-start-validation-launch-scope.test.ts,line=12,title=typescript(consistent-type-assertions)::Do not use any type assertions.
+src/main/runtime/rpc/methods/orchestration/worker/worker-start-validation-launch-scope.test.ts:12 typescript(consistent-type-assertions): Do not use any type assertions.
+::error file=src/main/runtime/rpc/methods/orchestration/worker/worker-start-validation-launch-scope.test.ts,line=12,title=typescript(consistent-type-assertions)::Do not use any type assertions.
+src/main/runtime/rpc/methods/orchestration/worker/worker-start-validation-launch-scope.test.ts:12 typescript(consistent-type-assertions): Do not use any type assertions.
+::error file=src/main/runtime/rpc/methods/orchestration/worker/worker-start-validation-launch-scope.test.ts,line=19,title=typescript(consistent-type-assertions)::Do not use any type assertions.
+src/main/runtime/rpc/methods/orchestration/worker/worker-start-validation-launch-scope.test.ts:19 typescript(consistent-type-assertions): Do not use any type assertions.
+casting code quality: 99 new finding(s) across 236 changed file(s).
