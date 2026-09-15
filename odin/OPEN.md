@@ -220,3 +220,19 @@ and the renderer's byte-parser fallback never both write the same pane. `agent-s
 `dropsCommandCodeAgentStatus` ownership filter (`agent-status-command-code-ownership-filter.ts`) so a command-code
 row main observed cannot overwrite a pane a different foreground/retained/launch agent owns — main has no visibility
 into that renderer-only state, so filtering stays client-side per §3.2(b) of the renderer-writer plan.
+
+## Agent status: a second cross-machine clock comparison survives residual S
+
+README's row S says a `stateStartedAt` comparison still guards provider-session retention and
+that this is written down here; it previously was not. `remapHostAgentStatus`'s caller in
+`web-session-tabs-sync/agent-status-patch.ts:105-109` computes
+`hostIdentityPredatesCurrentTurn` as `existing.stateStartedAt > entry.stateStartedAt` — the same
+shape of comparison residual S removed from the primary ownership decision
+(`existing.updatedAt > entry.updatedAt`, `agent-status-patch.ts`'s old wall-clock arm). This one
+was not in scope for that fix: it does not decide which row wins (that is `clientOwnsEntry`,
+fenced and ownership-gated per the table above); it only decides whether to keep `providerSession`
+and `lastAssistantMessage` from the pre-existing entry when the host's incoming row says `done`
+but the existing entry does not. A host and client clock disagreeing here does not misattribute
+status, only which turn's provider-session detail survives a remap — lower stakes than the
+ownership question residual S closed, but still a wall-clock comparison across machines that are
+not guaranteed to agree, and still open.
