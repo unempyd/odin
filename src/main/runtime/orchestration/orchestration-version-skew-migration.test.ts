@@ -571,9 +571,11 @@ describe('OrchestrationDb version-skew migration', () => {
     raw.close()
 
     db = new OrchestrationDb(dbPath)
-    expect(
-      (db.db.pragma('table_info(dispatch_contexts)') as { name: string }[]).map(({ name }) => name)
-    ).toContain('exit_code')
+    // oxlint-disable-next-line typescript/consistent-type-assertions -- SAFETY: pragma() is typed unknown; table_info(...) is documented sqlite3 shape {name, ...}.
+    const dispatchContextColumns = db.db.pragma('table_info(dispatch_contexts)') as {
+      name: string
+    }[]
+    expect(dispatchContextColumns.map(({ name }) => name)).toContain('exit_code')
   })
 
   it('treats a v35 stamp over the wrong index predicate as skew', () => {

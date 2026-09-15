@@ -93,9 +93,9 @@ describe('CodexRuntimeHomeService restoreSystemDefaultSnapshot consent gate (G1)
 
     const markerPath = getRuntimeLogoutMarkerPath()
     expect(existsSync(markerPath)).toBe(true)
-    const marker = JSON.parse(readFileSync(markerPath, 'utf-8')) as {
-      systemDefaultAuthJson: string | null
-    }
+    const marker: { systemDefaultAuthJson: string | null } = JSON.parse(
+      readFileSync(markerPath, 'utf-8')
+    )
     expect(marker.systemDefaultAuthJson).toBeNull()
   })
 })

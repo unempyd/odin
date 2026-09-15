@@ -12,12 +12,13 @@ function isManagedOwnedProvenance(provenancePath: string): boolean {
     return false
   }
   try {
-    const parsed = JSON.parse(readFileSync(provenancePath, 'utf-8')) as unknown
+    const parsed: unknown = JSON.parse(readFileSync(provenancePath, 'utf-8'))
     return (
       !!parsed &&
       typeof parsed === 'object' &&
       !Array.isArray(parsed) &&
-      (parsed as { owner?: unknown }).owner === 'managed'
+      'owner' in parsed &&
+      parsed.owner === 'managed'
     )
   } catch {
     return false
