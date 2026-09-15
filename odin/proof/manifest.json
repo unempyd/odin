@@ -71,6 +71,14 @@
       "reproduce": "expected 'exited' to be 'unverifiable'"
     },
     {
+      "id": "O3b",
+      "title": "classifyTerminalProcessInspectionFailure gives terminal_handle_stale/terminal_exited/no_connected_pty/a PTY-not-found message their own reasons instead of the host-proven terminal_gone",
+      "commit": "PENDING-O3-COMMIT-HASH",
+      "tests": ["src/shared/terminal-process-inspection.test.ts"],
+      "reproduce": "expected 'terminal_gone' to be 'terminal_handle_stale'",
+      "note": "docs/reference/ssh-execution-boundary.md's own 'terminal_gone is overloaded' paragraph names this exact bug: classifyTerminalProcessInspectionFailure (shared/terminal-process-inspection.ts:83-95) bucketed a client-side registry miss (stale handle, exited entry, no connected pty, a 'PTY \"<id>\" not found' message) under the same 'terminal_gone' string as the host's own relay-side tombstone claim. This function and its bucketing are byte-identical at upstream 539d4d1f32b4 (verified by diff) -- a genuine inherited Orca residual, not Odin-introduced -- so it is recorded in the existing hash-cited shape once the fix commit exists."
+    },
+    {
       "id": "A",
       "title": "Retired-incarnation tombstone never mints a proven exit from an absent status",
       "commit": "731c49c558",
@@ -131,6 +139,15 @@
       "commit": "013965c537",
       "tests": ["src/shared/retired-pty-incarnations.test.ts"],
       "note": "Closed by construction, not mechanically reproduced: upstream src/relay/pty-handler.ts:2412 hard-codes code: 0 in reapExitedPty even for evidence 'record-torn-down' (its own docblock at :2395-2402 says that is not a death), and :2632-2656 publishes verdict 'exited' from it. Odin routes the code through resolveRetiredPtyIncarnationCode (UNVERIFIED_PROCESS_EXIT_CODE unless the evidence is a proven exit) and the consumer applies the same isProvenProcessExit gate as the daemon (A). The race has no deterministic harness in the relay test surface, so its test pins the extracted mapping rather than reproducing the upstream path."
+    },
+    {
+      "id": "O3a",
+      "title": "A structured worker's own host-owned unverifiable is never treated as absent on release",
+      "commit": "odin(O3a) -- see git log --grep O3a",
+      "tests": [
+        "src/main/runtime/rpc/methods/orchestration/worker/worker-release-structured-unverifiable.test.ts"
+      ],
+      "note": "Closed by construction, not mechanically reproduced: worker-release-completion.ts's missing/unattached branch was widened under O2 to also match `observation.status === 'unverifiable' && observation.terminal === null`, gated on `terminal === null` rather than on which observer produced the observation. observeStructuredWorker also reports `terminal: null` for its own legitimate host-owned `unverifiable` (host not installed, no durable record, non-native lease, no attached child), so a structured worker in that state joined the same branch as an absent PTY -- in recovery mode this reaches inspectTerminalProcessIncarnationLiveness, a check built for PTY incarnations, and could settle the release from its answer as if the worker were absent. Fixed by tagging inspectWorkerTerminal's return with an explicit `kind: 'pty' | 'structured'` and gating the clause on `kind === 'pty'` instead of `terminal === null`. At upstream 539d4d1f32b4 this clause is `observation.status === 'missing' || observation.status === 'unattached'` with no `unverifiable` case at all -- the O2 fix that introduced the wider clause postdates this fork, so the bug (and the fix) exist only inside Odin's own code; running this test's mocks against upstream's narrower clause passes there too, for an unrelated reason (upstream never considers `unverifiable` in this branch to begin with), so it is not usable as an upstream reproduction. odin/proofs/O3a.before.txt/.after.txt instead pin the test failing against Odin's own pre-fix clause (`observation.terminal === null`) and passing against the fix (`observation.kind === 'pty'`)."
     }
   ]
 }
