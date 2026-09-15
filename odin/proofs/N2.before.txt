@@ -1,0 +1,33 @@
+
+ RUN  v4.1.11 /Users/briankeeny/Desktop/odin-wt-fix4a
+
+ ❯ src/main/runtime/orchestration/orchestration-version-skew-migration.test.ts (15 tests | 1 failed) 672ms
+     × repairs a v42 schema missing the exit_code column 42ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/main/runtime/orchestration/orchestration-version-skew-migration.test.ts > OrchestrationDb version-skew migration > repairs a v42 schema missing the exit_code column
+AssertionError: expected 42 to be 6 // Object.is equality
+
+- Expected
++ Received
+
+- 6
++ 42
+
+ ❯ src/main/runtime/orchestration/orchestration-version-skew-migration.test.ts:570:80
+    568|     raw.exec('ALTER TABLE dispatch_contexts DROP COLUMN exit_code;')
+    569|     raw.pragma('user_version = 42')
+    570|     expect(resolveOrchestrationMigrationStartVersion(raw, 42, SCHEMA_V…
+       |                                                                                ^
+    571|     raw.close()
+    572|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 14 passed (15)
+   Start at  11:35:43
+   Duration  1.90s (transform 770ms, setup 74ms, import 917ms, tests 672ms, environment 0ms)
+

@@ -5,7 +5,20 @@ import type { TerminalTab } from '../../../../shared/terminal-tab-types'
 
 // Minimal fixture: buildSubagentChildRows only reads a handful of TerminalTab
 // fields (id) through the row it returns; the rest is never touched.
-const tab = { id: 'tab-1' } as unknown as TerminalTab
+function createTab(overrides: Partial<TerminalTab> = {}): TerminalTab {
+  return {
+    id: 'tab-1',
+    ptyId: null,
+    worktreeId: 'wt-1',
+    title: 'bash',
+    customTitle: null,
+    color: null,
+    sortOrder: 0,
+    createdAt: 0,
+    ...overrides
+  }
+}
+const tab = createTab()
 
 function parentEntry(overrides: Partial<AgentStatusEntry> = {}): AgentStatusEntry {
   return {

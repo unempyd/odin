@@ -220,9 +220,10 @@ export abstract class CodexRuntimeHomeAuthSync extends CodexRuntimeHomeLaunch {
       // Why: every branch below either reads ~/.codex/auth.json or a cached snapshot of it and
       // writes that credential into the runtime home. Without consent this method may still do
       // the clearing/logout bookkeeping every caller relies on (switch-away, system-default-
-      // changed), but it must never read or write the credential itself (G1).
+      // changed), but it must never read or write the credential itself (G1, G3): pass null
+      // explicitly so the marker's default-arg readSystemDefaultAuth() never runs.
       rmSync(runtimeAuthPath, { force: true })
-      this.persistRuntimeLogoutMarker()
+      this.persistRuntimeLogoutMarker(null)
       this.lastWrittenAuthJson = null
       this.persistSharedRuntimeAuthProvenance({ owner: 'system-default', authJson: null })
       return
