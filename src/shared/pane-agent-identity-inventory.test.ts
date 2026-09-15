@@ -211,6 +211,9 @@ const INVENTORY: readonly InventoryGroup[] = [
     paths: [
       ['src/renderer/src/components/sidebar/worktree-title-derived-agent-rows.ts', 2],
       ['src/renderer/src/components/terminal-pane/pty-connection/shell-command-inference.ts', 2],
+      // status-D: the command-code ownership filter reads the pane's owner to decide whether a
+      // host-published command-code row belongs to this pane; it produces no identity itself.
+      ['src/renderer/src/hooks/ipc-events/agent-status-command-code-ownership-filter.ts', 2],
       ['src/renderer/src/lib/use-tab-agent.ts', 2]
     ]
   },
