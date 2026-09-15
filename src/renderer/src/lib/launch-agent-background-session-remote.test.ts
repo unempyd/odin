@@ -25,6 +25,11 @@ const mockPasteDraftWhenAgentReady = vi.fn()
 const mockMarkTrusted = vi.fn()
 const mockDispatchEvent = vi.fn()
 const mockGetAgentLaunchPlatformForRepo = vi.fn<() => NodeJS.Platform>()
+const mockCreateBackgroundAgentStatusConsumer = vi.fn(() => ({
+  consume: vi.fn(),
+  resolveRouting: vi.fn(),
+  observeLaunchIngress: vi.fn()
+}))
 const state = createAgentBackgroundSessionTestState({
   createTab: mockCreateTab,
   setTabCustomTitle: mockSetTabCustomTitle,
@@ -63,6 +68,11 @@ vi.mock('@/components/terminal-pane/pty-data-sidecar-subscriptions', () => ({
   subscribeToPtyData: mockSubscribeToPtyData
 }))
 
+vi.mock('@/lib/background-agent-status-consumer', () => ({
+  createBackgroundAgentStatusConsumer: (...args: unknown[]) =>
+    mockCreateBackgroundAgentStatusConsumer(...args)
+}))
+
 describe('launchAgentBackgroundSession remote runtime and SSH startup delivery', () => {
   beforeEach(() => {
     resetAgentBackgroundSessionTestHarness({
@@ -83,6 +93,34 @@ describe('launchAgentBackgroundSession remote runtime and SSH startup delivery',
       spawn: mockSpawn,
       write: mockWrite
     })
+  })
+
+  // odin(status-probe-await): a transient status.get failure must not fail the launch
+  // or strand the launch-config registration made before the probe.
+  it('proceeds and keeps writing status when the remote status-ownership probe rejects', async () => {
+    useRemoteAgentBackgroundRuntime(state)
+    mockRuntimeEnvironmentTransportCall.mockImplementation((request: { method: string }) => {
+      if (request.method === 'status.get') {
+        return Promise.reject(new Error('status probe unreachable'))
+      }
+      return (mockRuntimeEnvironmentCall as unknown as (value: unknown) => unknown)(request)
+    })
+    const { launchAgentBackgroundSession } = await import('./launch-agent-background-session')
+
+    const result = await launchAgentBackgroundSession({
+      agent: 'claude',
+      worktreeId: 'wt-1',
+      prompt: 'run the automation'
+    })
+
+    expect(result).not.toBeNull()
+    expect(mockRegisterAgentLaunchConfig).toHaveBeenCalled()
+    expect(state.clearAgentLaunchConfig).not.toHaveBeenCalled()
+    // A rejected probe must fall back to "host does not own" — the pane keeps
+    // parsing and writing its own status, exactly as it does for an old host.
+    expect(mockCreateBackgroundAgentStatusConsumer).toHaveBeenCalledWith(
+      expect.objectContaining({ writesRemoteAgentStatusFallback: true })
+    )
   })
 
   it('closes a runtime terminal when its worktree disappears before creation resolves', async () => {

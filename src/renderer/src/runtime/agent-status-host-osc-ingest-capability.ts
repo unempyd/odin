@@ -10,10 +10,12 @@ import { runtimeEnvironmentSupportsCapability } from './runtime-rpc-client'
  * directly): a client stops parsing its own OSC bytes only for a host that answers yes.
  */
 export function hostOwnsRemoteAgentStatus(environmentId: string): Promise<boolean> {
+  // Why swallow: a transient probe failure must fall back to "host does not own" — the
+  // increment's own stated default — never fail a caller mid-launch (odin(status-probe-await)).
   return runtimeEnvironmentSupportsCapability(
     environmentId,
     AGENT_STATUS_HOST_OSC_INGEST_RUNTIME_CAPABILITY
-  )
+  ).catch(() => false)
 }
 
 const lastKnownHostOwnsRemoteAgentStatus = new Map<string, boolean>()
