@@ -15,7 +15,15 @@ import type { RuntimeLeafRecord, RuntimePtyWorktreeRecord } from './runtime-term
 
 const HANDLE = 'terminal-1'
 
-function createWait(options: { pty?: RuntimePtyWorktreeRecord; leaf?: RuntimeLeafRecord }) {
+function createWait(options: {
+  pty?: RuntimePtyWorktreeRecord
+  leaf?: RuntimeLeafRecord
+  /** Simulates the handle vanishing between registration and the deadline: the first
+   *  getLivePty/getLiveLeaf call (the synchronous registration check) returns the given
+   *  record; every call after that reports it gone (null, or a throw for the leaf path,
+   *  which never returns null). */
+  goesStaleAfterRegistration?: boolean
+}) {
   const waiters = new RuntimeTerminalWaiterRegistry()
   const shared = {
     getTabTitle: () => null,
@@ -31,12 +39,32 @@ function createWait(options: { pty?: RuntimePtyWorktreeRecord; leaf?: RuntimeLea
     getLiveLeaf: (leaf) => leaf,
     resolve: (waiter, result) => waiters.resolve(waiter, result)
   })
+  let ptyCalls = 0
+  let leafCalls = 0
   const wait = new RuntimeTerminalWait(
     {
       ...shared,
       defaultTimeoutMs: 60_000,
-      getLivePty: () => (options.pty ? { pty: options.pty } : null),
-      getLiveLeaf: () => ({ leaf: options.leaf ?? makeTuiIdleLeaf() }),
+      getLivePty: () => {
+        ptyCalls += 1
+        // Why 2, not 1: an exit wait legitimately re-reads the live record once at the
+        // very top of wait() and once more inside the promise executor's registration
+        // check, both before the timer can ever fire.
+        if (options.goesStaleAfterRegistration && ptyCalls > 2) {
+          return null
+        }
+        return options.pty ? { pty: options.pty } : null
+      },
+      getLiveLeaf: () => {
+        leafCalls += 1
+        // Why 2, not 1: an exit wait legitimately re-reads the live leaf once at the very
+        // top of wait() and once more inside the promise executor's registration check,
+        // both before the timer can ever fire.
+        if (options.goesStaleAfterRegistration && leafCalls > 2) {
+          throw new Error('terminal_handle_stale')
+        }
+        return { leaf: options.leaf ?? makeTuiIdleLeaf() }
+      },
       startVisibleReadProbe: vi.fn()
     },
     waiters,
@@ -109,5 +137,47 @@ describe('RuntimeTerminalWait exit-condition timeout', () => {
     await vi.advanceTimersByTimeAsync(1000)
 
     expect(settled).toHaveBeenCalledExactlyOnceWith({ error: 'timeout' })
+  })
+
+  // odin(wait-absence-verdict): the live record itself going missing by the deadline is an
+  // absence, not proof of death — the very class of evidence residual O2 taught the rest of
+  // the system not to treat as proof. It must resolve the silence verdict too, not reject
+  // with a bare 'terminal_handle_stale'.
+  it('resolves the silence verdict from the last known record when the PTY handle goes stale before the deadline', async () => {
+    const pty = makeTuiIdlePty({ connected: true })
+    const { wait } = createWait({ pty, goesStaleAfterRegistration: true })
+
+    const settled = watch(wait.wait(HANDLE, { condition: 'exit', timeoutMs: 1000 }))
+    await vi.advanceTimersByTimeAsync(1000)
+
+    expect(settled).toHaveBeenCalledExactlyOnceWith({
+      ok: {
+        handle: HANDLE,
+        condition: 'exit',
+        satisfied: false,
+        status: 'running',
+        exitCode: null,
+        evidence: 'silence'
+      }
+    })
+  })
+
+  it('resolves the silence verdict from the last known record when getLiveLeaf throws before the deadline', async () => {
+    const leaf = makeTuiIdleLeaf({ connected: true })
+    const { wait } = createWait({ leaf, goesStaleAfterRegistration: true })
+
+    const settled = watch(wait.wait(HANDLE, { condition: 'exit', timeoutMs: 1000 }))
+    await vi.advanceTimersByTimeAsync(1000)
+
+    expect(settled).toHaveBeenCalledExactlyOnceWith({
+      ok: {
+        handle: HANDLE,
+        condition: 'exit',
+        satisfied: false,
+        status: 'running',
+        exitCode: null,
+        evidence: 'silence'
+      }
+    })
   })
 })
