@@ -129,8 +129,17 @@
       "tests": [
         "src/main/runtime/orchestration/orchestration-version-skew-migration.test.ts"
       ],
-      "reproduce": "expected 42 to be 6",
       "note": "Closed by construction, not mechanically reproduced against upstream 539d4d1f32b4: schema v42 and dispatch_contexts.exit_code are Odin's own additions (residual N, commit 07184d77d6) with no upstream counterpart, so this defect cannot exist there. VERSIONED_POST_V6_COLUMNS in orchestration-schema-version-skew.ts never registered the v42 column migrate-v42.ts adds, so a database already stamped user_version=42 without it read as schema-complete and the column was never repaired. The added test pins resolveOrchestrationMigrationStartVersion falling back to the v6 floor (and the column being restored) for a v42-stamped database missing it; N2.before.txt / N2.after.txt show the test failing then passing across the fix."
+    },
+    {
+      "id": "G3",
+      "title": "Credential mirror: no-consent branch stays no-read/no-write; revocation is scoped to system-default copies",
+      "commit": "cbd2f06bd8",
+      "tests": [
+        "src/main/codex-accounts/runtime-home-restore-consent-gate.test.ts",
+        "src/main/codex-accounts/codex-credential-mirror-consent-revocation.test.ts"
+      ],
+      "note": "Closed by construction, not mechanically reproduced against upstream 539d4d1f32b4: the credential mirror (codexCredentialMirrorConsent, runtime-home-service-auth-sync.ts, codex-credential-mirror-consent-revocation.ts) is Odin's own addition for residual G (commit f14f8249f9) with no upstream counterpart. Two gaps in that addition: (a) restoreSystemDefaultSnapshot's no-consent branch called persistRuntimeLogoutMarker() with its default argument (readSystemDefaultAuth()), copying ~/.codex/auth.json verbatim into system-default-runtime-logout.json despite the branch's own comment that it must never read or write the credential -- fixed by passing null explicitly. (b) clearMirroredCodexCredentials() deleted the shared runtime auth.json and shared-runtime-auth-provenance.json unconditionally, even when markSharedRuntimeAuthManaged had stamped owner: 'managed' there for a retained pane's own refreshed credential -- scoped to skip both deletions when the provenance owner is 'managed', and added deletion of the previously-untouched logout marker. G3.before.txt / G3.after.txt: 3 of 6 tests fail before, 6/6 pass after."
     }
   ]
 }
