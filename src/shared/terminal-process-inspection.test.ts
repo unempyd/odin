@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest'
-import { classifyTerminalProcessInspectionFailure } from './terminal-process-inspection'
+import {
+  classifyTerminalProcessInspectionFailure,
+  isOwnerProvenTerminalAbsence
+} from './terminal-process-inspection'
 
 // O3: `terminal_gone` used to be overloaded across two evidentiary strengths (see
 // docs/reference/ssh-execution-boundary.md's `terminal_gone` paragraph) -- a real relay-side
@@ -46,5 +49,23 @@ describe('classifyTerminalProcessInspectionFailure (O3)', () => {
     expect(
       classifyTerminalProcessInspectionFailure(new Error('inspection invariant violated'))
     ).toBe(null)
+  })
+})
+
+// O4: the one owner-proven-absence gate shared by inspectWorkerTerminal and inspectRemoteAttachment.
+describe('isOwnerProvenTerminalAbsence (O4)', () => {
+  it("accepts a resolved null and the owner's own terminal_gone code or message", () => {
+    expect(isOwnerProvenTerminalAbsence(undefined)).toBe(true)
+    expect(isOwnerProvenTerminalAbsence({ code: 'terminal_gone' })).toBe(true)
+    expect(isOwnerProvenTerminalAbsence(new Error('terminal_gone'))).toBe(true)
+  })
+
+  it.each([
+    Object.assign(new Error('deadline exceeded'), { code: 'request_timeout' }),
+    Object.assign(new Error('terminal_handle_stale'), { code: 'terminal_handle_stale' }),
+    new Error('PTY "term_1" not found'),
+    new Error('boom')
+  ])('rejects lost contact and client-side misses: %s', (failure) => {
+    expect(isOwnerProvenTerminalAbsence(failure)).toBe(false)
   })
 })

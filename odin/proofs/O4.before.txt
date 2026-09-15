@@ -1,0 +1,82 @@
+
+ RUN  v4.1.11 /Users/briankeeny/Desktop/odin-wt-fix4c
+
+ ❯ src/main/runtime/rpc/methods/orchestration/federation/federation-attachment-observation.test.ts (5 tests | 3 failed) 15ms
+     × classifies a request timeout as unverifiable, not missing 9ms
+     × treats terminal_handle_stale as unverifiable, not owner-proven missing 1ms
+     × classifies an unclassified showTerminal failure as unverifiable, not missing 1ms
+ ❯ src/main/runtime/rpc/methods/orchestration/federation/federated-worker-release-host-unverifiable-recovery.test.ts (1 test | 1 failed) 10ms
+     × keeps a transiently unreachable terminal pending in recovery mode instead of reverting it to retained 8ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/main/runtime/rpc/methods/orchestration/federation/federated-worker-release-host-unverifiable-recovery.test.ts > releaseRemoteAttachment recovery routing for a lost-contact observation (O4) > keeps a transiently unreachable terminal pending in recovery mode instead of reverting it to retained
+AssertionError: expected 'retained' to be 'release_pending' // Object.is equality
+
+Expected: "release_pending"
+Received: "retained"
+
+ ❯ src/main/runtime/rpc/methods/orchestration/federation/federated-worker-release-host-unverifiable-recovery.test.ts:50:27
+     48|     })
+     49|
+     50|     expect(receipt.state).toBe('release_pending')
+       |                           ^
+     51|     expect(revertWorkerTerminalReleaseToRetained).not.toHaveBeenCalled…
+     52|   })
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/4]⎯
+
+ FAIL  src/main/runtime/rpc/methods/orchestration/federation/federation-attachment-observation.test.ts > inspectRemoteAttachment showTerminal failure classification (O4) > classifies a request timeout as unverifiable, not missing
+AssertionError: expected 'missing' to be 'unverifiable' // Object.is equality
+
+Expected: "unverifiable"
+Received: "missing"
+
+ ❯ src/main/runtime/rpc/methods/orchestration/federation/federation-attachment-observation.test.ts:45:32
+     43|     const observation = await inspectRemoteAttachment(runtime, DISPATC…
+     44|
+     45|     expect(observation.status).toBe('unverifiable')
+       |                                ^
+     46|     expect(observation).toMatchObject({ terminal: null, exact: false, …
+     47|   })
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/4]⎯
+
+ FAIL  src/main/runtime/rpc/methods/orchestration/federation/federation-attachment-observation.test.ts > inspectRemoteAttachment showTerminal failure classification (O4) > treats terminal_handle_stale as unverifiable, not owner-proven missing
+AssertionError: expected 'missing' to be 'unverifiable' // Object.is equality
+
+Expected: "unverifiable"
+Received: "missing"
+
+ ❯ src/main/runtime/rpc/methods/orchestration/federation/federation-attachment-observation.test.ts:58:32
+     56|     const observation = await inspectRemoteAttachment(runtime, DISPATC…
+     57|
+     58|     expect(observation.status).toBe('unverifiable')
+       |                                ^
+     59|     expect(observation.reason).toBe('terminal_handle_stale')
+     60|   })
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/4]⎯
+
+ FAIL  src/main/runtime/rpc/methods/orchestration/federation/federation-attachment-observation.test.ts > inspectRemoteAttachment showTerminal failure classification (O4) > classifies an unclassified showTerminal failure as unverifiable, not missing
+AssertionError: expected 'missing' to be 'unverifiable' // Object.is equality
+
+Expected: "unverifiable"
+Received: "missing"
+
+ ❯ src/main/runtime/rpc/methods/orchestration/federation/federation-attachment-observation.test.ts:67:32
+     65|     const observation = await inspectRemoteAttachment(runtime, DISPATC…
+     66|
+     67|     expect(observation.status).toBe('unverifiable')
+       |                                ^
+     68|     expect(observation.reason).toBe('unclassified_inspection_failure')
+     69|   })
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/4]⎯
+
+
+ Test Files  2 failed (2)
+      Tests  4 failed | 2 passed (6)
+   Start at  14:05:47
+   Duration  1.48s (transform 963ms, setup 145ms, import 1.21s, tests 25ms, environment 0ms)
+

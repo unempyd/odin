@@ -78,6 +78,28 @@ export function isClientOnlyUnverifiableInspection(
 }
 
 /**
+ * Whether a `showTerminal` that yielded nothing is the execution owner itself saying the terminal
+ * is gone. A resolved null (`showTerminalFailure === undefined`) is the owner answering "no such
+ * terminal"; a thrown PTY-host `terminal_gone` code or message is the same claim from further down
+ * the stack. Every other failure -- a transport timeout, `terminal_handle_stale`,
+ * `terminal_not_found`, an unclassified throw -- is loss of contact, never proof of absence (O1/O2).
+ * Shared by the local worker observer and its federation twin (O4) so the two gates cannot drift.
+ */
+export function isOwnerProvenTerminalAbsence(showTerminalFailure: unknown): boolean {
+  if (showTerminalFailure === undefined) {
+    return true
+  }
+  const code =
+    showTerminalFailure && typeof showTerminalFailure === 'object' && 'code' in showTerminalFailure
+      ? String((showTerminalFailure as { code?: unknown }).code)
+      : undefined
+  return (
+    code === 'terminal_gone' ||
+    (showTerminalFailure instanceof Error && showTerminalFailure.message === 'terminal_gone')
+  )
+}
+
+/**
  * Classify only failures that mean the execution host could not be observed.
  * Unexpected programming errors deliberately return null and remain throws.
  */

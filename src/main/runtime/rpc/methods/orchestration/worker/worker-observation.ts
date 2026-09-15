@@ -3,7 +3,10 @@ import type { OrcaRuntimeService } from '../../../../orca-runtime'
 import type { OrchestrationDb } from '../../../../orchestration/db'
 import { OrchestrationError } from '../../../../orchestration/orchestration-error'
 import { parseWorkerTerminalHostScope } from '../../../../orchestration/worker-terminal-process-liveness'
-import { classifyTerminalProcessInspectionFailure } from '../../../../../../shared/terminal-process-inspection'
+import {
+  classifyTerminalProcessInspectionFailure,
+  isOwnerProvenTerminalAbsence
+} from '../../../../../../shared/terminal-process-inspection'
 import { exposeUtcTimestamp } from '../../../../orchestration/db/utc-timestamp'
 import type { OrchestrationFleetWorker } from '../../../../../../shared/orchestration-fleet-projection'
 import { projectWorkerFleet } from './worker-list-projection'
@@ -80,17 +83,7 @@ export async function inspectWorkerTerminal(
     // not mint `missing` here even though `classifyTerminalProcessInspectionFailure` buckets them
     // under the same client-facing 'terminal_gone' reason as a real owner-proven `terminal_gone`.
     const failureReason = classifyTerminalProcessInspectionFailure(showTerminalFailure)
-    const failureCode =
-      showTerminalFailure &&
-      typeof showTerminalFailure === 'object' &&
-      'code' in showTerminalFailure
-        ? String((showTerminalFailure as { code?: unknown }).code)
-        : undefined
-    const ownerSaysNotFound =
-      showTerminalFailure === undefined ||
-      failureCode === 'terminal_gone' ||
-      (showTerminalFailure instanceof Error && showTerminalFailure.message === 'terminal_gone')
-    if (ownerSaysNotFound) {
+    if (isOwnerProvenTerminalAbsence(showTerminalFailure)) {
       return { terminal: null, exact: false, status: 'missing', kind: 'pty' }
     }
     return {

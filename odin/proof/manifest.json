@@ -79,6 +79,17 @@
       "note": "docs/reference/ssh-execution-boundary.md's own 'terminal_gone is overloaded' paragraph names this exact bug: classifyTerminalProcessInspectionFailure (shared/terminal-process-inspection.ts:83-95) bucketed a client-side registry miss (stale handle, exited entry, no connected pty, a 'PTY \"<id>\" not found' message) under the same 'terminal_gone' string as the host's own relay-side tombstone claim. This function and its bucketing are byte-identical at upstream 539d4d1f32b4 (verified by diff) -- a genuine inherited Orca residual, not Odin-introduced -- so it is recorded in the existing hash-cited shape once the fix commit exists."
     },
     {
+      "id": "O4",
+      "title": "inspectRemoteAttachment (the execution host's federation twin of inspectWorkerTerminal) reports a thrown showTerminal failure as unverifiable, never owner-proven missing; recovery release keeps that answer pending instead of reverting it",
+      "commit": "odin(O4) -- see git log --grep O4",
+      "tests": [
+        "src/main/runtime/rpc/methods/orchestration/federation/federation-attachment-observation.test.ts",
+        "src/main/runtime/rpc/methods/orchestration/federation/federated-worker-release-host-unverifiable-recovery.test.ts"
+      ],
+      "reproduce": "expected 'missing' to be 'unverifiable'",
+      "note": "Raised by Pullfrog's review of stablyai/orca#20682 as the sibling path O1 left alone: src/main/runtime/rpc/methods/orchestration/federation/federation-attachment-observation.ts:39-42 at upstream 539d4d1f32b4 does `runtime.showTerminal(handle).catch(() => null)` and returns status 'missing' for any null -- a transport timeout, a stale local handle or an unclassified throw on the execution host all read as the owner certifying the terminal gone. That word ships to the Run home through orchestration.federationShow (worker-show --json for a federated worker) and drives releaseRemoteAttachment's recovery routing. Consumers never settle exited on it (federationObserve and the fleet projection already collapse it to unverifiable; release never closes a terminal it cannot observe), so the defect is the owner-proven-absence claim itself, not a false exit. Fix: one shared gate, isOwnerProvenTerminalAbsence (src/shared/terminal-process-inspection.ts), used by both observers -- a resolved null or the owner's own terminal_gone is 'missing', everything else 'unverifiable' with classifyTerminalProcessInspectionFailure's reason; releaseRemoteAttachment in recovery mode treats unverifiable-with-no-terminal like missing/unattached (release_pending, retry after the next inventory) rather than reverting the release to retained. Remote attachments are PTY-backed only, so the O3a structured-worker hazard does not apply there. Reproduce: the first proof file fails at upstream with the regex; the second fails there with \"expected 'retained' to be 'release_pending'\"."
+    },
+    {
       "id": "A",
       "title": "Retired-incarnation tombstone never mints a proven exit from an absent status",
       "commit": "731c49c558",
