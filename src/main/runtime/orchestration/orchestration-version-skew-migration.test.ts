@@ -555,6 +555,27 @@ describe('OrchestrationDb version-skew migration', () => {
     expect(sql).toContain('pointer_enter_pending > 0')
   })
 
+  // N2: the v42 exit_code column was missing from VERSIONED_POST_V6_COLUMNS, so a database
+  // stamped v42 without it read as schema-complete and the column was never repaired.
+  it('repairs a v42 schema missing the exit_code column', () => {
+    tempDir = mkdtempSync(join(tmpdir(), 'orca-db-version-skew-v42-'))
+    const dbPath = join(tempDir, 'orchestration.db')
+    db = new OrchestrationDb(dbPath)
+    db.close()
+    db = undefined
+
+    const raw = new Database(dbPath)
+    raw.exec('ALTER TABLE dispatch_contexts DROP COLUMN exit_code;')
+    raw.pragma('user_version = 42')
+    expect(resolveOrchestrationMigrationStartVersion(raw, 42, SCHEMA_VERSION)).toBe(6)
+    raw.close()
+
+    db = new OrchestrationDb(dbPath)
+    expect(
+      (db.db.pragma('table_info(dispatch_contexts)') as { name: string }[]).map(({ name }) => name)
+    ).toContain('exit_code')
+  })
+
   it('treats a v35 stamp over the wrong index predicate as skew', () => {
     tempDir = mkdtempSync(join(tmpdir(), 'orca-db-v35-predicate-skew-'))
     const dbPath = join(tempDir, 'orchestration.db')
