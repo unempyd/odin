@@ -11,7 +11,10 @@ import { splitWorktreeIdForFilesystem } from '../../shared/worktree/id'
 import { isWindowsAbsolutePathLike } from '../../shared/cross-platform-path'
 import type { ProcessedAgentStatusChunk } from '../../shared/agent-status-osc'
 import { mapExplicitAgentStateToRuntimeTerminalStatus } from './runtime-worktree-status-projection'
-import { cancelCommandCodeDoneSettle, openCommandCodeDoneSettle } from './command-code-done-settle'
+import {
+  cancelCommandCodeDoneSettle,
+  openCommandCodeDoneSettle
+} from '../../shared/command-code-output-done-settle-window'
 
 type TerminalAgentStatusTarget = {
   source: 'mounted-leaf' | 'pty-record'

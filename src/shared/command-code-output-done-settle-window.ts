@@ -1,18 +1,15 @@
 /**
- * Command Code done-settle window (main-owned).
+ * Command Code done-settle window.
  *
  * Why: Command Code's TUI keeps rendering the composer while tools run, so a
  * submitted prompt returning to the idle composer only really completed the
- * turn if no active status repaint arrives within this window. Ported from
- * the renderer (`command-code-done-settle.ts`) now that main is the sole
- * writer of command-code status: main has no mount/park lifecycle to survive
- * across (unlike the renderer, whose pane can unmount mid-window), so this
- * drops the renderer version's cross-mount executor handoff and keeps only
- * the timer, keyed by pane.
+ * turn if no active status repaint arrives within this window. Shared by main
+ * (the sole writer of command-code status for a main-authority pane, with no
+ * mount/park lifecycle to survive) and the renderer (the writer for a
+ * kill-switch-off local pane or a remote-runtime pane, which layers a
+ * cross-mount executor registry on top of this window in its own module —
+ * see `src/renderer/src/components/terminal-pane/command-code-done-settle.ts`).
  */
-
-// Mirrors the renderer's settle window so completion timing is identical
-// regardless of which side used to write it.
 export const COMMAND_CODE_OUTPUT_DONE_SETTLE_MS = 1500
 
 const timerByPaneKey = new Map<string, ReturnType<typeof setTimeout>>()
