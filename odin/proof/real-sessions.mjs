@@ -466,6 +466,11 @@ async function main() {
   if (!existsSync(serveEntry) || !existsSync(cliEntry)) {
     throw new Error('build first: pnpm run build:cli && pnpm run build:electron-vite')
   }
+  // Why: without this the artifact can't say which Odin build produced the recorded results.
+  const odinCommit = spawnSync('git', ['rev-parse', 'HEAD'], {
+    cwd: projectDir,
+    encoding: 'utf8'
+  }).stdout.trim()
   const results = {}
   if (PHASES.includes('default-blocks')) {
     for (const agent of AGENTS) {
@@ -507,7 +512,7 @@ async function main() {
   const out = join(outDir, `real-sessions.${new Date().toISOString().replace(/[:.]/g, '-')}.json`)
   writeFileSync(
     out,
-    JSON.stringify({ ok, results, agents: AGENTS, phases: PHASES, events }, null, 2)
+    JSON.stringify({ ok, odinCommit, results, agents: AGENTS, phases: PHASES, events }, null, 2)
   )
   log('summary', { ok, results, file: out })
   process.exitCode = ok ? 0 : 1

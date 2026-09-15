@@ -1,0 +1,12 @@
+# Round-4 retroactive after-proof for commit 4660dbc895
+# (odin(status-cache-revisit): re-evaluate remote-runtime status ownership on
+# every probe resolution)
+# Same two test files, run on this worktree's HEAD (fix applied).
+
+ RUN  v4.1.11 /Users/briankeeny/Desktop/odin-wt-fix5e
+
+
+ Test Files  2 passed (2)
+      Tests  29 passed (29)
+   Start at  18:33:47
+   Duration  13.43s (transform 7.84s, setup 216ms, import 529ms, tests 11.88s, environment 0ms)

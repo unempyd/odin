@@ -1,0 +1,98 @@
+# Round-4 retroactive failing-first proof for commit 4660dbc895
+# (odin(status-cache-revisit): re-evaluate remote-runtime status ownership on
+# every probe resolution)
+#
+# Both test files were modified in place by the fix commit, so they already
+# existed at the parent commit (3c5b4c2d55) -- just without the new cases and
+# assertions. To prove failing-first, both test files AS THEY EXIST IN THE FIX
+# COMMIT were copied (`git show 4660dbc895:<path>`) into a detached worktree
+# at the commit's parent, overwriting the parent's older versions, and run
+# there unmodified against the parent's (pre-fix) source (which has no
+# renderer-owned-agent-status-registry ownership-tracking export at all, and
+# an unconditional-wiring gap in pty-connection-remote-runtime-attach.ts). No
+# production file was changed in that worktree.
+
+ RUN  v4.1.11 /private/tmp/claude-501/-Users-briankeeny/fb3c7cb3-697c-4164-a902-55e6d1f5b7eb/scratchpad/proof-wts/4660dbc895-parent
+
+ ❯ src/renderer/src/components/terminal-pane/renderer-owned-agent-status-registry.test.ts (11 tests | 4 failed) 23ms
+     × cold start: keeps writing until a probe proves the host owns it, then cedes the claim 8ms
+     × flips back to renderer-owned when a later probe reports a host downgrade 1ms
+     × ignores a probe resolution that repeats the current verdict 1ms
+     × stops reacting to probe resolutions and leaks no claim once disposed 1ms
+ ❯ src/renderer/src/components/terminal-pane/pty-connection-remote-runtime-attach.test.ts (18 tests | 1 failed) 5321ms
+     × stops writing its own OSC-derived status when the paired host advertises the ingest capability 60ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 5 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/renderer/src/components/terminal-pane/pty-connection-remote-runtime-attach.test.ts > connectPanePty > stops writing its own OSC-derived status when the paired host advertises the ingest capability
+AssertionError: expected undefined to deeply equal Any<Function>
+
+- Expected:
+Any<Function>
+
++ Received:
+undefined
+
+ ❯ src/renderer/src/components/terminal-pane/pty-connection-remote-runtime-attach.test.ts:311:27
+    309|       | ((payload: { state: string; agentType: string }) => void)
+    310|       | undefined
+    311|     expect(onAgentStatus).toEqual(expect.any(Function))
+       |                           ^
+    312|     onAgentStatus?.({ state: 'working', agentType: 'claude' })
+    313|     expect(mockStoreState.setAgentStatus).not.toHaveBeenCalled()
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/5]⎯
+
+ FAIL  src/renderer/src/components/terminal-pane/renderer-owned-agent-status-registry.test.ts > trackRemoteAgentStatusOwnership > cold start: keeps writing until a probe proves the host owns it, then cedes the claim
+TypeError: trackRemoteAgentStatusOwnership is not a function
+ ❯ src/renderer/src/components/terminal-pane/renderer-owned-agent-status-registry.test.ts:122:23
+    120|     const bus = fakeHostOwnsChangesBus()
+    121|     const onOwnershipChange = vi.fn()
+    122|     const ownership = trackRemoteAgentStatusOwnership({
+       |                       ^
+    123|       paneKey: PANE,
+    124|       environmentId: ENV,
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/5]⎯
+
+ FAIL  src/renderer/src/components/terminal-pane/renderer-owned-agent-status-registry.test.ts > trackRemoteAgentStatusOwnership > flips back to renderer-owned when a later probe reports a host downgrade
+TypeError: trackRemoteAgentStatusOwnership is not a function
+ ❯ src/renderer/src/components/terminal-pane/renderer-owned-agent-status-registry.test.ts:143:23
+    141|     const bus = fakeHostOwnsChangesBus()
+    142|     const onOwnershipChange = vi.fn()
+    143|     const ownership = trackRemoteAgentStatusOwnership({
+       |                       ^
+    144|       paneKey: PANE,
+    145|       environmentId: ENV,
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/5]⎯
+
+ FAIL  src/renderer/src/components/terminal-pane/renderer-owned-agent-status-registry.test.ts > trackRemoteAgentStatusOwnership > ignores a probe resolution that repeats the current verdict
+TypeError: trackRemoteAgentStatusOwnership is not a function
+ ❯ src/renderer/src/components/terminal-pane/renderer-owned-agent-status-registry.test.ts:163:5
+    161|     const bus = fakeHostOwnsChangesBus()
+    162|     const onOwnershipChange = vi.fn()
+    163|     trackRemoteAgentStatusOwnership({
+       |     ^
+    164|       paneKey: PANE,
+    165|       environmentId: ENV,
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/5]⎯
+
+ FAIL  src/renderer/src/components/terminal-pane/renderer-owned-agent-status-registry.test.ts > trackRemoteAgentStatusOwnership > stops reacting to probe resolutions and leaks no claim once disposed
+TypeError: trackRemoteAgentStatusOwnership is not a function
+ ❯ src/renderer/src/components/terminal-pane/renderer-owned-agent-status-registry.test.ts:179:23
+    177|     const bus = fakeHostOwnsChangesBus()
+    178|     const onOwnershipChange = vi.fn()
+    179|     const ownership = trackRemoteAgentStatusOwnership({
+       |                       ^
+    180|       paneKey: PANE,
+    181|       environmentId: ENV,
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/5]⎯
+
+
+ Test Files  2 failed (2)
+      Tests  5 failed | 24 passed (29)
+   Start at  18:31:54
+   Duration  6.14s (transform 3.52s, setup 239ms, import 341ms, tests 5.34s, environment 0ms)

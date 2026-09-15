@@ -1,0 +1,93 @@
+# Round-4 retroactive failing-first proof for commit b705a96191
+# (odin(wait-absence-verdict): an exit wait resolves silence instead of rejecting on absence)
+#
+# The commit modified an existing test file
+# (src/main/runtime/runtime-terminal-wait-exit-timeout.test.ts) in place, so the
+# file already existed at the parent commit -- just without the two new cases.
+# To prove failing-first, the test file AS IT EXISTS IN THE FIX COMMIT was
+# copied (`git show b705a96191:<path>`) into a detached worktree at the
+# commit's parent (f59cb1052b), overwriting the parent's older version of the
+# same file, and run there unmodified against the parent's (pre-fix)
+# runtime-terminal-wait.ts. No production file was changed in that worktree.
+
+ RUN  v4.1.11 /private/tmp/claude-501/-Users-briankeeny/fb3c7cb3-697c-4164-a902-55e6d1f5b7eb/scratchpad/proof-wts/b705a96191-parent
+
+ ❯ src/main/runtime/runtime-terminal-wait-exit-timeout.test.ts (5 tests | 2 failed) 33ms
+     × resolves the silence verdict from the last known record when the PTY handle goes stale before the deadline 11ms
+     × resolves the silence verdict from the last known record when getLiveLeaf throws before the deadline 2ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/main/runtime/runtime-terminal-wait-exit-timeout.test.ts > RuntimeTerminalWait exit-condition timeout > resolves the silence verdict from the last known record when the PTY handle goes stale before the deadline
+AssertionError: expected "vi.fn()" to be called once with arguments: [ { ok: { …(6) } } ]
+
+Received:
+
+  1st vi.fn() call:
+
+  [
+    {
+-     "ok": {
+-       "condition": "exit",
+-       "evidence": "silence",
+-       "exitCode": null,
+-       "handle": "terminal-1",
+-       "satisfied": false,
+-       "status": "running",
+-     },
++     "error": "terminal_handle_stale",
+    },
+  ]
+
+
+Number of calls: 1
+
+ ❯ src/main/runtime/runtime-terminal-wait-exit-timeout.test.ts:153:21
+    151|     await vi.advanceTimersByTimeAsync(1000)
+    152|
+    153|     expect(settled).toHaveBeenCalledExactlyOnceWith({
+       |                     ^
+    154|       ok: {
+    155|         handle: HANDLE,
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  src/main/runtime/runtime-terminal-wait-exit-timeout.test.ts > RuntimeTerminalWait exit-condition timeout > resolves the silence verdict from the last known record when getLiveLeaf throws before the deadline
+AssertionError: expected "vi.fn()" to be called once with arguments: [ { ok: { …(6) } } ]
+
+Received:
+
+  1st vi.fn() call:
+
+  [
+    {
+-     "ok": {
+-       "condition": "exit",
+-       "evidence": "silence",
+-       "exitCode": null,
+-       "handle": "terminal-1",
+-       "satisfied": false,
+-       "status": "running",
+-     },
++     "error": "terminal_handle_stale",
+    },
+  ]
+
+
+Number of calls: 1
+
+ ❯ src/main/runtime/runtime-terminal-wait-exit-timeout.test.ts:172:21
+    170|     await vi.advanceTimersByTimeAsync(1000)
+    171|
+    172|     expect(settled).toHaveBeenCalledExactlyOnceWith({
+       |                     ^
+    173|       ok: {
+    174|         handle: HANDLE,
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 3 passed (5)
+   Start at  18:31:24
+   Duration  19.24s (transform 14.45s, setup 93ms, import 18.81s, tests 31ms, environment 0ms)

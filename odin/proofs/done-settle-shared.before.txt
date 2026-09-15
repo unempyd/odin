@@ -1,0 +1,37 @@
+# Round-4 retroactive failing-first proof for commit e7d2138916
+# (odin(done-settle-shared): move the command-code done-settle window to one
+# shared module)
+#
+# The commit's test file (src/shared/command-code-output-done-settle-window.test.ts)
+# is NEW -- it did not exist at the parent commit (4660dbc895), which still had
+# the two separate implementations (src/main/runtime/command-code-done-settle.ts
+# and the renderer's own copy) with no shared module or shared test at all. Per
+# the worker brief, the fix commit's test file was copied
+# (`git show e7d2138916:<path>`) into a detached worktree at the parent, which
+# fails to even resolve its import -- that import failure (the shared module
+# genuinely does not exist pre-fix) is the failing-first evidence. No
+# production file was changed in that worktree.
+
+ RUN  v4.1.11 /private/tmp/claude-501/-Users-briankeeny/fb3c7cb3-697c-4164-a902-55e6d1f5b7eb/scratchpad/proof-wts/e7d2138916-parent
+
+ ❯ src/shared/command-code-output-done-settle-window.test.ts (0 test)
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/shared/command-code-output-done-settle-window.test.ts [ src/shared/command-code-output-done-settle-window.test.ts ]
+Error: Cannot find module './command-code-output-done-settle-window' imported from /private/tmp/claude-501/-Users-briankeeny/fb3c7cb3-697c-4164-a902-55e6d1f5b7eb/scratchpad/proof-wts/e7d2138916-parent/src/shared/command-code-output-done-settle-window.test.ts
+ ❯ src/shared/command-code-output-done-settle-window.test.ts:4:1
+      2| import { join, relative, resolve } from 'node:path'
+      3| import { afterEach, beforeEach, describe, expect, it, vi } from 'vites…
+      4| import {
+       | ^
+      5|   COMMAND_CODE_OUTPUT_DONE_SETTLE_MS,
+      6|   _resetCommandCodeDoneSettlesForTest,
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  no tests
+   Start at  18:32:16
+   Duration  415ms (transform 77ms, setup 92ms, import 0ms, tests 0ms, environment 0ms)

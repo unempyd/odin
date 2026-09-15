@@ -73,5 +73,21 @@ for (const r of m.residuals) console.log([r.id, r.tests.join(' ')].join('\t'))
   cp "$LOGDIR/$id.before.log" "$LOGDIR/$id.upstream.log"
   [ "$fail" = 1 ] && echo 1 > "$SCRATCH/.fail"
 done
+
+# closedByConstruction entries have no upstream reproduction (the defect is Odin-introduced or
+# has no deterministic upstream harness — see each entry's manifest note) — CLOSE only, on Odin.
+node -e "
+const m=require('$MANIFEST');
+for (const c of m.closedByConstruction) console.log([c.id, c.tests.join(' ')].join('\t'))
+" | while IFS=$'\t' read -r id tests; do
+  if [ -n "$ONLY" ] && [ "$ONLY" != "$id" ]; then continue; fi
+  echo "=== $id (closed by construction, no upstream reproduction)"
+  if (cd "$ROOT" && "$ROOT/node_modules/.bin/vitest" run --config config/vitest.config.ts $tests >"$LOGDIR/$id.run.log" 2>&1); then
+    echo "  CLOSE:     ok — proof tests pass on Odin $(git rev-parse --short HEAD)"
+  else
+    echo "  CLOSE:     FAILED — see odin/proofs/logs/$id.run.log"; fail=1
+  fi
+  [ "$fail" = 1 ] && echo 1 > "$SCRATCH/.fail"
+done
 [ -f "$SCRATCH/.fail" ] && { echo "SOME PROOFS FAILED"; exit 1; }
 echo "ALL PROOFS: reproduced upstream, closed on Odin"
