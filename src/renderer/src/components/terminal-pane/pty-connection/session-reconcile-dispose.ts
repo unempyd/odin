@@ -183,8 +183,11 @@ export function installSessionReconcileDispose(session: ConnectPanePtySession): 
         session.deps.onPtyErrorClearedRef?.current?.(session.pane.id)
       }
       // Why: a detached client stops observing the pane's bytes, so it must cede
-      // agent-status authority back to the host on the next mirrored snapshot.
-      session.releaseRendererOwnedAgentStatusPane?.()
+      // agent-status authority back to the host on the next mirrored snapshot,
+      // and stop reacting to later probe resolutions for its environment —
+      // otherwise a stale closure could re-claim a pane key no live transport
+      // observes bytes for.
+      session.disposeRemoteAgentStatusOwnershipTracking?.()
       session.directSshPaneRetrySettlementCancelled = true
       for (const timer of session.directSshPaneRetrySettlementTimers) {
         clearTimeout(timer)

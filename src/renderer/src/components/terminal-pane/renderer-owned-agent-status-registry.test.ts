@@ -1,10 +1,11 @@
-import { beforeEach, describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import {
   _getRendererOwnedAgentStatusPaneCountForTest,
   isClientAuthoritativeAgentStatusPane,
   markRendererOwnedAgentStatusWrite,
   registerRendererOwnedAgentStatusPane,
-  resetRendererOwnedAgentStatusPanesForTests
+  resetRendererOwnedAgentStatusPanesForTests,
+  trackRemoteAgentStatusOwnership
 } from './renderer-owned-agent-status-registry'
 
 const PANE = 'tab-1:11111111-1111-4111-8111-111111111111'
@@ -78,5 +79,116 @@ describe('renderer-owned agent status registry', () => {
 
     expect(isClientAuthoritativeAgentStatusPane(PANE)).toBe(true)
     expect(_getRendererOwnedAgentStatusPaneCountForTest()).toBe(1)
+  })
+})
+
+// odin(status-cache-revisit): shouldOwnAgentStatusInRenderer was decided once,
+// synchronously, at connection time and never revisited — a cold-start pane kept
+// writing (and fencing the host mirror out) for its whole lifetime, and a host
+// downgraded mid-session left a stale claim with no writer left at all.
+describe('trackRemoteAgentStatusOwnership', () => {
+  beforeEach(() => {
+    resetRendererOwnedAgentStatusPanesForTests()
+  })
+
+  function fakeHostOwnsChangesBus(): {
+    subscribe: (environmentId: string, listener: (owns: boolean) => void) => () => void
+    emit: (environmentId: string, owns: boolean) => void
+  } {
+    const listenersByEnv = new Map<string, Set<(owns: boolean) => void>>()
+    return {
+      subscribe: (environmentId, listener) => {
+        let set = listenersByEnv.get(environmentId)
+        if (!set) {
+          set = new Set()
+          listenersByEnv.set(environmentId, set)
+        }
+        set.add(listener)
+        return () => {
+          listenersByEnv.get(environmentId)?.delete(listener)
+        }
+      },
+      emit: (environmentId, owns) => {
+        for (const listener of listenersByEnv.get(environmentId) ?? []) {
+          listener(owns)
+        }
+      }
+    }
+  }
+
+  it('cold start: keeps writing until a probe proves the host owns it, then cedes the claim', () => {
+    const bus = fakeHostOwnsChangesBus()
+    const onOwnershipChange = vi.fn()
+    const ownership = trackRemoteAgentStatusOwnership({
+      paneKey: PANE,
+      environmentId: ENV,
+      cachedHostOwns: false, // cold default: unknown -> keep writing
+      onOwnershipChange,
+      subscribeToHostOwnsChanges: bus.subscribe
+    })
+    expect(ownership.shouldOwnAgentStatusInRenderer).toBe(true)
+    markRendererOwnedAgentStatusWrite(PANE)
+    expect(isClientAuthoritativeAgentStatusPane(PANE)).toBe(true)
+
+    bus.emit(ENV, true)
+
+    expect(onOwnershipChange).toHaveBeenCalledWith(false)
+    expect(isClientAuthoritativeAgentStatusPane(PANE)).toBe(false)
+    expect(_getRendererOwnedAgentStatusPaneCountForTest()).toBe(0)
+  })
+
+  it('flips back to renderer-owned when a later probe reports a host downgrade', () => {
+    const bus = fakeHostOwnsChangesBus()
+    const onOwnershipChange = vi.fn()
+    const ownership = trackRemoteAgentStatusOwnership({
+      paneKey: PANE,
+      environmentId: ENV,
+      cachedHostOwns: true, // host already proved ownership at connection time
+      onOwnershipChange,
+      subscribeToHostOwnsChanges: bus.subscribe
+    })
+    expect(ownership.shouldOwnAgentStatusInRenderer).toBe(false)
+    expect(_getRendererOwnedAgentStatusPaneCountForTest()).toBe(0)
+
+    bus.emit(ENV, false)
+
+    expect(onOwnershipChange).toHaveBeenCalledWith(true)
+    markRendererOwnedAgentStatusWrite(PANE)
+    expect(isClientAuthoritativeAgentStatusPane(PANE)).toBe(true)
+  })
+
+  it('ignores a probe resolution that repeats the current verdict', () => {
+    const bus = fakeHostOwnsChangesBus()
+    const onOwnershipChange = vi.fn()
+    trackRemoteAgentStatusOwnership({
+      paneKey: PANE,
+      environmentId: ENV,
+      cachedHostOwns: false,
+      onOwnershipChange,
+      subscribeToHostOwnsChanges: bus.subscribe
+    })
+
+    bus.emit(ENV, false)
+
+    expect(onOwnershipChange).not.toHaveBeenCalled()
+  })
+
+  it('stops reacting to probe resolutions and leaks no claim once disposed', () => {
+    const bus = fakeHostOwnsChangesBus()
+    const onOwnershipChange = vi.fn()
+    const ownership = trackRemoteAgentStatusOwnership({
+      paneKey: PANE,
+      environmentId: ENV,
+      cachedHostOwns: false,
+      onOwnershipChange,
+      subscribeToHostOwnsChanges: bus.subscribe
+    })
+    markRendererOwnedAgentStatusWrite(PANE)
+
+    ownership.dispose()
+
+    expect(_getRendererOwnedAgentStatusPaneCountForTest()).toBe(0)
+    bus.emit(ENV, true)
+    expect(onOwnershipChange).not.toHaveBeenCalled()
   })
 })

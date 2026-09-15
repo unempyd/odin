@@ -19,30 +19,58 @@ export function hostOwnsRemoteAgentStatus(environmentId: string): Promise<boolea
 }
 
 const lastKnownHostOwnsRemoteAgentStatus = new Map<string, boolean>()
+const hostOwnsRemoteAgentStatusListeners = new Map<string, Set<(owns: boolean) => void>>()
 
 /**
  * Synchronous last-known verdict for `hostOwnsRemoteAgentStatus`, for a caller that must decide
  * ownership before a transport exists (`direct-ssh-retry-status.ts`'s `shouldOwnAgentStatusInRenderer`,
- * decided once at connection time and never revisited). Defaults to `false` — the client keeps
- * writing, today's behavior — until the probe this module fires resolves at least once for that
- * environment: defaulting the other way would starve a pane on a cold probe.
+ * decided at connection time from whatever is known so far). Defaults to `false` — the client
+ * keeps writing, today's behavior — until the probe this module fires resolves at least once for
+ * that environment: defaulting the other way would starve a pane on a cold probe. A live session
+ * does not have to re-read this itself — see `subscribeToHostOwnsRemoteAgentStatusChanges` below.
  */
 export function cachedHostOwnsRemoteAgentStatus(environmentId: string): boolean {
   return lastKnownHostOwnsRemoteAgentStatus.get(environmentId) ?? false
 }
 
+/**
+ * Notifies every listener for `environmentId` when a probe resolves — so a pane connected before
+ * the cold-start default was known (or before a host upgrade/downgrade mid-session) can flip its
+ * own live ownership decision instead of freezing whatever `cachedHostOwnsRemoteAgentStatus`
+ * returned at connection time. Returns the unsubscribe.
+ */
+export function subscribeToHostOwnsRemoteAgentStatusChanges(
+  environmentId: string,
+  listener: (owns: boolean) => void
+): () => void {
+  let listeners = hostOwnsRemoteAgentStatusListeners.get(environmentId)
+  if (!listeners) {
+    listeners = new Set()
+    hostOwnsRemoteAgentStatusListeners.set(environmentId, listeners)
+  }
+  listeners.add(listener)
+  return () => {
+    hostOwnsRemoteAgentStatusListeners.get(environmentId)?.delete(listener)
+  }
+}
+
 /** Fire-and-forget: the client must probe, never assume (remote-wire-compatibility.md) — this
- *  warms the cache so the *next* pane connecting to this environment (or a reconnect of this one)
- *  reads a real verdict instead of the cold default. Never throws. */
+ *  warms the cache and notifies every live subscriber for this environment (see
+ *  `subscribeToHostOwnsRemoteAgentStatusChanges`), including the pane whose own connection fired
+ *  this probe. Never throws. */
 export function primeHostOwnsRemoteAgentStatusCache(environmentId: string): void {
   void hostOwnsRemoteAgentStatus(environmentId)
     .then((owns) => {
       lastKnownHostOwnsRemoteAgentStatus.set(environmentId, owns)
+      for (const listener of hostOwnsRemoteAgentStatusListeners.get(environmentId) ?? []) {
+        listener(owns)
+      }
     })
     .catch(() => {})
 }
 
-/** Test-only: drops every cached verdict so suites cannot leak state across cases. */
+/** Test-only: drops every cached verdict and subscriber so suites cannot leak state across cases. */
 export function _resetHostOwnsRemoteAgentStatusCacheForTest(): void {
   lastKnownHostOwnsRemoteAgentStatus.clear()
+  hostOwnsRemoteAgentStatusListeners.clear()
 }

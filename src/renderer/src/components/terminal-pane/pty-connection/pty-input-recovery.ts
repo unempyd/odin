@@ -121,9 +121,12 @@ export function installPtyInputRecovery(session: ConnectPanePtySession): void {
     // parses OSC 9999 before renderer delivery and forwards through the hook
     // server with local/SSH identity. Remote-runtime streams do not pass
     // through local main, so the renderer stays their status owner only until
-    // the paired host proves (status-C) it ingests its own OSC bytes.
-    ...(session.shouldOwnAgentStatusInRenderer
-      ? { onAgentStatus: session.handleRendererOwnedAgentStatus }
+    // the paired host proves (status-C) it ingests its own OSC bytes — wired
+    // for every remote-runtime pane (not gated on the ownership decision
+    // itself, which can flip after this transport is created and can never
+    // be rewired); the live decision is read inside the handler at call time.
+    ...(session.runtimeEnvironmentId !== null
+      ? { onAgentStatus: (payload) => session.handleRendererOwnedAgentStatus(payload) }
       : {})
   }
   if (session.connectionOwnerHydrating) {
