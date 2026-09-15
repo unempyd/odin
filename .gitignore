@@ -69,6 +69,10 @@ desktop.ini
 npm-debug.log*
 pnpm-debug.log*
 
+# odin/proof/run-proofs.sh's per-run debug output — regenerated every invocation, not evidence
+# (unlike the checked-in odin/proofs/<id>.before.txt / <id>.after.txt files beside it).
+odin/proofs/logs/
+
 # Coverage
 coverage/
 

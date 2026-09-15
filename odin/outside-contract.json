@@ -107,6 +107,12 @@
       "purpose": "vitest include glob extended so this file and odin/outside-contract-scope.test.ts run under the standard test runner. Added by the same commit that adds this file.",
       "commits": ["(this commit -- see git log -1 -- config/vitest.config.ts)"],
       "files": ["config/vitest.config.ts"]
+    },
+    {
+      "name": "proof-runner-log-hygiene",
+      "purpose": "run-proofs.sh's per-run debug logs (<id>.run.log/<id>.upstream.log) moved out of the tracked odin/proofs/ directory into odin/proofs/logs/, explicitly gitignored -- odin/ proof-runner infrastructure, not out-of-contract work.",
+      "commits": ["(this commit -- see git log -1 -- .gitignore)"],
+      "files": [".gitignore"]
     }
   ]
 }
