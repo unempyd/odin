@@ -20,6 +20,10 @@ export class OrcaRuntimeWithBuildPtyTerminalSummary extends OrcaRuntimeWithGetPt
     const title = getLatestPtyTitle(pty)
     const pane = parsePaneKey(pty.paneKey ?? '')
     const orphaned = !pty.tabId || !pane || pane.tabId !== pty.tabId
+    const contactLoss = this.remoteTransportContactLoss(
+      pty.connectionId,
+      Boolean(pty.lastExitCause)
+    )
     return {
       handle: this.issuePtyHandle(pty),
       ptyId: pty.ptyId,
@@ -31,11 +35,12 @@ export class OrcaRuntimeWithBuildPtyTerminalSummary extends OrcaRuntimeWithGetPt
       tabId: orphaned ? `pty:${pty.ptyId}` : pty.tabId!,
       leafId: orphaned ? `pty:${pty.ptyId}` : pane.leafId,
       title,
-      connected: pty.connected,
-      writable: pty.connected,
+      connected: contactLoss ? false : pty.connected,
+      writable: contactLoss ? false : pty.connected,
       lastOutputAt: pty.lastOutputAt,
       preview: pty.preview,
       ...(pty.lastExitCause ? { exitCause: pty.lastExitCause } : {}),
+      ...(contactLoss ? { liveness: contactLoss } : {}),
       ...this.terminalExecutionHostField(pty.ptyId, pty.worktreeId),
       ...this.resolvePaneAgentIdentityField(
         pty.launchAgent,

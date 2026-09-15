@@ -112,6 +112,14 @@
       "commit": "6d10576a71",
       "tests": ["src/main/runtime/runtime-rpc-websocket-bind-host.test.ts"],
       "reproduce": "expected '0.0.0.0' to be '127.0.0.1'"
+    },
+    {
+      "id": "show-contact-loss",
+      "title": "terminal show forces connected/writable false and an unverifiable liveness verdict while the owning SSH target's relay is lost or reconnecting, instead of reading a stale connected:true",
+      "commit": "odin(show-contact-loss) -- see git log --grep show-contact-loss",
+      "tests": ["src/main/runtime/show-contact-loss.test.ts"],
+      "reproduce": "expected true to be false",
+      "note": "Found against a real host (odin/proofs/ssh-boundary.2026-09-15T01-39-52-596Z.json phase4): after the transport was iptables-dropped, `[ssh] Relay channel ... lost; reconnect attempt 1/6` and `Keepalive timeout` fired, yet `terminal show` kept answering connected:true/writable:true with no exitCause for all 17 samples over 90s. buildPtyTerminalSummary/buildTerminalSummary (src/main/runtime/orca-runtime-build-pty-terminal-summary.ts, orca-runtime-write-orchestration-pointer-pty.ts) read pty.connected straight off the record, which only a PTY data/exit event or an inventory sweep updates -- never the relay-lost/reconnect callbacks in src/main/ipc/ssh-relay-session-callbacks.ts. Fix reuses the existing SSH connection-state registry (getRegisteredSshState) rather than adding a second tracker: while the owning target's status is not 'connected', connected/writable are forced false and a new RuntimeTerminalSummary.liveness field reports {status:'unverifiable', reason:'reconnecting'|'transport_lost'} -- never exitCause/exited. A genuine owner-proven exit (pty.lastExitCause already set) is never overridden."
     }
   ],
   "closedByConstruction": [

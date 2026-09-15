@@ -1,0 +1,53 @@
+
+ RUN  v4.1.11 /Users/briankeeny/Desktop/odin-wt-showloss
+
+ ❯ src/main/runtime/show-contact-loss.test.ts (5 tests | 2 failed) 44ms
+     × reports unverifiable, not connected, while the relay is lost and reconnecting 30ms
+     × never asserts exited while the transport is merely lost (a non-reconnecting status too) 4ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/main/runtime/show-contact-loss.test.ts > show-contact-loss: terminal show honesty during SSH transport loss > reports unverifiable, not connected, while the relay is lost and reconnecting
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ src/main/runtime/show-contact-loss.test.ts:74:31
+     72|     const summary = await runtime.showTerminal(HANDLE)
+     73|
+     74|     expect(summary.connected).toBe(false)
+       |                               ^
+     75|     expect(summary.writable).toBe(false)
+     76|     expect(summary.exitCause).toBeUndefined()
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  src/main/runtime/show-contact-loss.test.ts > show-contact-loss: terminal show honesty during SSH transport loss > never asserts exited while the transport is merely lost (a non-reconnecting status too)
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ src/main/runtime/show-contact-loss.test.ts:87:31
+     85|
+     86|     expect(summary.exitCause).toBeUndefined()
+     87|     expect(summary.connected).toBe(false)
+       |                               ^
+     88|     expect(summary.liveness).toEqual({ status: 'unverifiable', reason:…
+     89|   })
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 3 passed (5)
+   Start at  11:39:22
+   Duration  15.65s (transform 11.54s, setup 76ms, import 15.30s, tests 44ms, environment 0ms)
+

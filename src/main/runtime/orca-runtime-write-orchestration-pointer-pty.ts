@@ -10,6 +10,7 @@ import { selectRuntimeHookAgentRowForPane } from './runtime-mobile-agent-status-
 import { isTuiAgent } from '../../shared/tui-agent-config'
 import { resolvePublishedPaneAgentIdentity } from '../../shared/published-pane-agent-identity'
 import type { RuntimeTerminalSummary, RuntimeWorktreePsSummary } from '../../shared/runtime-types'
+import { getRegisteredSshState } from '../ssh/ssh-target-registry'
 import type { RuntimeWorktreeSummaryPathIndex } from './runtime-worktree-summary-paths'
 import { parseRuntimeWorktreeId } from './runtime-worktree-path-identity'
 import { findRuntimeWorktreeSummaryByPath } from './runtime-worktree-summary-paths'
@@ -86,6 +87,31 @@ export class OrcaRuntimeWithWriteOrchestrationPointerPty extends OrcaRuntimeWith
     }
     const hostId = fromPtyId ?? this.tryGetWorkspaceSessionHostIdForWorktree(worktreeId)
     return hostId ? { executionHostId: hostId } : {}
+  }
+
+  // Why: buildPtyTerminalSummary/buildTerminalSummary read pty.connected straight off the record,
+  // which only changes on a PTY data/exit event or an inventory sweep — neither fires when the SSH
+  // relay/transport itself is merely lost and reconnecting. Without this, `terminal show` keeps
+  // reporting `connected: true` for the whole reconnect window (docs/reference/
+  // ssh-execution-boundary.md, show-contact-loss). Reuses the existing SSH connection-state
+  // registry (`getRegisteredSshState`, already fed by the relay-lost/reconnect callbacks in
+  // `src/main/ipc/ssh-relay-session-callbacks.ts`) rather than adding a second tracker.
+  protected remoteTransportContactLoss(
+    connectionId: string | null,
+    hasExitEvidence: boolean
+  ): { status: 'unverifiable'; reason: 'transport_lost' | 'reconnecting' } | null {
+    if (hasExitEvidence || !connectionId) {
+      // Real host-delivered exit evidence outranks transport status; never overwritten here.
+      return null
+    }
+    const state = getRegisteredSshState(connectionId)
+    if (!state || state.status === 'connected') {
+      return null
+    }
+    return {
+      status: 'unverifiable',
+      reason: state.status === 'reconnecting' ? 'reconnecting' : 'transport_lost'
+    }
   }
 
   protected resolvePaneAgentIdentityField(
@@ -165,6 +191,10 @@ export class OrcaRuntimeWithWriteOrchestrationPointerPty extends OrcaRuntimeWith
       !leaf.ptyId.startsWith('remote:') &&
       parseAppSshPtyId(leaf.ptyId) === null &&
       this.ptyController?.hasPty?.(leaf.ptyId) !== true
+    const contactLoss = this.remoteTransportContactLoss(
+      pty?.connectionId ?? null,
+      Boolean(leaf.lastExitCause)
+    )
     return {
       handle: this.issueHandle(leaf),
       ptyId: leaf.ptyId,
@@ -176,11 +206,12 @@ export class OrcaRuntimeWithWriteOrchestrationPointerPty extends OrcaRuntimeWith
       tabId: leaf.tabId,
       leafId: leaf.leafId,
       title,
-      connected: provenAbsent ? false : leaf.connected,
-      writable: provenAbsent ? false : leaf.writable,
+      connected: provenAbsent || contactLoss ? false : leaf.connected,
+      writable: provenAbsent || contactLoss ? false : leaf.writable,
       lastOutputAt: leaf.lastOutputAt,
       preview: leaf.preview,
       ...(leaf.lastExitCause ? { exitCause: leaf.lastExitCause } : {}),
+      ...(contactLoss ? { liveness: contactLoss } : {}),
       ...this.terminalExecutionHostField(leaf.ptyId, leaf.worktreeId),
       ...this.resolvePaneAgentIdentityField(
         pty?.launchAgent,
