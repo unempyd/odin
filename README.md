@@ -96,6 +96,24 @@ Stated plainly, because two independent reviews returned NOT FINISHED against `o
 
 Everything above is either in `odin/OPEN.md` with a plan, or accepted for v0.1.0 as Orca's existing behaviour.
 
+## Outside the contract
+
+The clusters below touch this repository but close no residual and are not proven by any file
+under `odin/proof/manifest.json`. Each is operator-directed maintenance on the public repo or its
+docs site, not contract work; the full file list and upstream `539d4d1f32b4` diff, grouped the same
+way, is `odin/outside-contract.json`, and `odin/outside-contract-scope.test.ts` fails if a future
+change lands outside `odin/`, `src/`, `docs/reference/`, or this file without being added there.
+
+| Cluster | Purpose | Commit range |
+|---|---|---|
+| `.claude/agents/github-steward.md` | A repo-maintenance subagent brief for the operator's own triage/CI/security/release workflow. Never merges anything itself. | `bd256c7b6f` |
+| Dependabot + workflow permissions | Dependabot coverage for the four pnpm roots; least-privilege `permissions: contents: read` on the workflows a security scan flagged. | `9e022c023d`..`643e28ff98` |
+| Docs-site Vercel→Pages migration | `stablyai/orca`'s Vercel project isn't available to this fork; static-export the docs site to GitHub Pages (new export config, static search/OG routes, `CNAME`/`.nojekyll`, Odin branding in the shared layout/header/footer). | `6c7b4c5b6e`..`911f713c8b` |
+| Docs-site content | Odin branding of existing pages plus a new `odin/` section on the public docs site mirroring this README's residual table, real-session runs, and review verdict. | `6c7b4c5b6e`..`495f5ff97c` |
+| `cloud/` and `mobile/` dependency bumps | Lockfile/workspace-override bumps resolving Dependabot alerts inherited from upstream's own lockfiles; no source file in either tree changed. | `b3a1a0bc7b` |
+
+None of this closes a residual, and none of it is cited by VERIFIED.md, OPEN.md, or the table above.
+
 ## Upstream pull requests
 
 Every contract above is offered back to Orca as a single-commit pull request with its failing-first test, rebased onto upstream `main` and stripped of Odin-only artefacts. Open as of 2026-09-15:
