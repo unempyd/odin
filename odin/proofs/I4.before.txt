@@ -1,0 +1,58 @@
+
+ RUN  v4.1.11 /Users/briankeeny/Desktop/odin-wt-fix4b
+
+ ❯ src/main/runtime/rpc/methods/orchestration/worker/worker-launch-preferences.test.ts (42 tests | 2 failed) 1386ms
+       × labels a static-catalog-fallback probe answer catalog, not probe (I4a) 12ms
+       × re-probes after a transient failure instead of pinning every later launch to unverified (I4b) 2ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/main/runtime/rpc/methods/orchestration/worker/worker-launch-preferences.test.ts > orchestration worker launch preferences > Launch receipt catalogOrigin honesty (I4) > labels a static-catalog-fallback probe answer catalog, not probe (I4a)
+AssertionError: expected { …(2) } to deeply equal { …(2) }
+
+- Expected
++ Received
+
+@@ -11,8 +11,8 @@
+      "requested": {
+        "agent": "claude",
+        "effort": null,
+        "model": "aws-bedrock-opus-5",
+      },
+-     "source": "catalog",
++     "source": "probe",
+    },
+  }
+
+ ❯ src/main/runtime/rpc/methods/orchestration/worker/worker-launch-preferences.test.ts:553:8
+    551|           discoverAgentModels: staticCatalogFallback
+    552|         })
+    553|       ).resolves.toEqual({
+       |        ^
+    554|         preferences: { model: 'aws-bedrock-opus-5' },
+    555|         receipt: {
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  src/main/runtime/rpc/methods/orchestration/worker/worker-launch-preferences.test.ts > orchestration worker launch preferences > Launch receipt catalogOrigin honesty (I4) > re-probes after a transient failure instead of pinning every later launch to unverified (I4b)
+AssertionError: expected 'unverified' to be 'probe' // Object.is equality
+
+Expected: "probe"
+Received: "unverified"
+
+ ❯ src/main/runtime/rpc/methods/orchestration/worker/worker-launch-preferences.test.ts:602:37
+    600|         discoverAgentModels: flaky
+    601|       })
+    602|       expect(second.receipt.source).toBe('probe')
+       |                                     ^
+    603|       expect(calls).toBe(2)
+    604|     })
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 40 passed (42)
+   Start at  11:38:17
+   Duration  2.72s (transform 765ms, setup 83ms, import 1.02s, tests 1.39s, environment 0ms)
+

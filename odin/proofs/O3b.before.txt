@@ -1,0 +1,182 @@
+
+ RUN  v4.1.11 /Users/briankeeny/Desktop/odin-wt-fix4b
+
+ ❯ src/shared/terminal-process-inspection.test.ts (7 tests | 4 failed) 23ms
+     × gives 'terminal_handle_stale' its own reason, distinct from terminal_gone 12ms
+     × gives 'terminal_exited' its own reason, distinct from terminal_gone 2ms
+     × gives 'no_connected_pty' its own reason, distinct from terminal_gone 1ms
+     × classifies a "PTY ... not found" message as terminal_not_found, not terminal_gone 1ms
+ ❯ src/renderer/src/runtime/runtime-terminal-inspection.test.ts (43 tests | 4 failed) 765ms
+     × reports 'no_connected_pty' remote process inspection as client-only unverifiable with its own reason 13ms
+     × reports 'terminal_handle_stale' remote process inspection as client-only unverifiable with its own reason 2ms
+     × reports 'terminal_exited' remote process inspection as client-only unverifiable with its own reason 2ms
+     × reports a PTY-not-found message as terminal_not_found, distinct from a host-proven terminal_gone (O3) 2ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 8 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/shared/terminal-process-inspection.test.ts > classifyTerminalProcessInspectionFailure (O3) > gives 'terminal_handle_stale' its own reason, distinct from terminal_gone
+AssertionError: expected 'terminal_gone' to be 'terminal_handle_stale' // Object.is equality
+
+Expected: "terminal_handle_stale"
+Received: "terminal_gone"
+
+ ❯ src/shared/terminal-process-inspection.test.ts:16:64
+     14|     { code: 'no_connected_pty', reason: 'no_connected_pty' }
+     15|   ])('gives $code its own reason, distinct from terminal_gone', ({ cod…
+     16|     expect(classifyTerminalProcessInspectionFailure({ code })).toBe(re…
+       |                                                                ^
+     17|     expect(classifyTerminalProcessInspectionFailure(new Error(code))).…
+     18|   })
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/8]⎯
+
+ FAIL  src/shared/terminal-process-inspection.test.ts > classifyTerminalProcessInspectionFailure (O3) > gives 'terminal_exited' its own reason, distinct from terminal_gone
+AssertionError: expected 'terminal_gone' to be 'terminal_exited' // Object.is equality
+
+Expected: "terminal_exited"
+Received: "terminal_gone"
+
+ ❯ src/shared/terminal-process-inspection.test.ts:16:64
+     14|     { code: 'no_connected_pty', reason: 'no_connected_pty' }
+     15|   ])('gives $code its own reason, distinct from terminal_gone', ({ cod…
+     16|     expect(classifyTerminalProcessInspectionFailure({ code })).toBe(re…
+       |                                                                ^
+     17|     expect(classifyTerminalProcessInspectionFailure(new Error(code))).…
+     18|   })
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/8]⎯
+
+ FAIL  src/shared/terminal-process-inspection.test.ts > classifyTerminalProcessInspectionFailure (O3) > gives 'no_connected_pty' its own reason, distinct from terminal_gone
+AssertionError: expected 'terminal_gone' to be 'no_connected_pty' // Object.is equality
+
+Expected: "no_connected_pty"
+Received: "terminal_gone"
+
+ ❯ src/shared/terminal-process-inspection.test.ts:16:64
+     14|     { code: 'no_connected_pty', reason: 'no_connected_pty' }
+     15|   ])('gives $code its own reason, distinct from terminal_gone', ({ cod…
+     16|     expect(classifyTerminalProcessInspectionFailure({ code })).toBe(re…
+       |                                                                ^
+     17|     expect(classifyTerminalProcessInspectionFailure(new Error(code))).…
+     18|   })
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/8]⎯
+
+ FAIL  src/shared/terminal-process-inspection.test.ts > classifyTerminalProcessInspectionFailure (O3) > classifies a "PTY ... not found" message as terminal_not_found, not terminal_gone
+AssertionError: expected 'terminal_gone' to be 'terminal_not_found' // Object.is equality
+
+Expected: "terminal_not_found"
+Received: "terminal_gone"
+
+ ❯ src/shared/terminal-process-inspection.test.ts:21:91
+     19|
+     20|   it('classifies a "PTY ... not found" message as terminal_not_found, …
+     21|     expect(classifyTerminalProcessInspectionFailure(new Error('PTY "te…
+       |                                                                                           ^
+     22|       'terminal_not_found'
+     23|     )
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/8]⎯
+
+ FAIL  src/renderer/src/runtime/runtime-terminal-inspection.test.ts > runtime terminal owner routing > reports 'no_connected_pty' remote process inspection as client-only unverifiable with its own reason
+AssertionError: expected { foregroundProcess: null, …(3) } to deeply equal { foregroundProcess: null, …(3) }
+
+- Expected
++ Received
+
+  {
+    "foregroundProcess": null,
+    "hasChildProcesses": false,
+-   "reason": "no_connected_pty",
++   "reason": "terminal_gone",
+    "verdict": "unverifiable",
+  }
+
+ ❯ src/renderer/src/runtime/runtime-terminal-inspection.test.ts:273:8
+    271|           'remote:env-1@@terminal-stale'
+    272|         )
+    273|       ).resolves.toEqual({
+       |        ^
+    274|         foregroundProcess: null,
+    275|         hasChildProcesses: false,
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/8]⎯
+
+ FAIL  src/renderer/src/runtime/runtime-terminal-inspection.test.ts > runtime terminal owner routing > reports 'terminal_handle_stale' remote process inspection as client-only unverifiable with its own reason
+AssertionError: expected { foregroundProcess: null, …(3) } to deeply equal { foregroundProcess: null, …(3) }
+
+- Expected
++ Received
+
+  {
+    "foregroundProcess": null,
+    "hasChildProcesses": false,
+-   "reason": "terminal_handle_stale",
++   "reason": "terminal_gone",
+    "verdict": "unverifiable",
+  }
+
+ ❯ src/renderer/src/runtime/runtime-terminal-inspection.test.ts:273:8
+    271|           'remote:env-1@@terminal-stale'
+    272|         )
+    273|       ).resolves.toEqual({
+       |        ^
+    274|         foregroundProcess: null,
+    275|         hasChildProcesses: false,
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/8]⎯
+
+ FAIL  src/renderer/src/runtime/runtime-terminal-inspection.test.ts > runtime terminal owner routing > reports 'terminal_exited' remote process inspection as client-only unverifiable with its own reason
+AssertionError: expected { foregroundProcess: null, …(3) } to deeply equal { foregroundProcess: null, …(3) }
+
+- Expected
++ Received
+
+  {
+    "foregroundProcess": null,
+    "hasChildProcesses": false,
+-   "reason": "terminal_exited",
++   "reason": "terminal_gone",
+    "verdict": "unverifiable",
+  }
+
+ ❯ src/renderer/src/runtime/runtime-terminal-inspection.test.ts:273:8
+    271|           'remote:env-1@@terminal-stale'
+    272|         )
+    273|       ).resolves.toEqual({
+       |        ^
+    274|         foregroundProcess: null,
+    275|         hasChildProcesses: false,
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/8]⎯
+
+ FAIL  src/renderer/src/runtime/runtime-terminal-inspection.test.ts > runtime terminal owner routing > reports a PTY-not-found message as terminal_not_found, distinct from a host-proven terminal_gone (O3)
+AssertionError: expected { foregroundProcess: null, …(3) } to deeply equal { foregroundProcess: null, …(3) }
+
+- Expected
++ Received
+
+  {
+    "foregroundProcess": null,
+    "hasChildProcesses": false,
+-   "reason": "terminal_not_found",
++   "reason": "terminal_gone",
+    "verdict": "unverifiable",
+  }
+
+ ❯ src/renderer/src/runtime/runtime-terminal-inspection.test.ts:293:6
+    291|         'remote:env-1@@terminal-not-found'
+    292|       )
+    293|     ).resolves.toEqual({
+       |      ^
+    294|       foregroundProcess: null,
+    295|       hasChildProcesses: false,
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/8]⎯
+
+
+ Test Files  2 failed (2)
+      Tests  8 failed | 42 passed (50)
+   Start at  11:50:18
+   Duration  8.16s (transform 5.19s, setup 184ms, import 7.07s, tests 788ms, environment 0ms)
+

@@ -54,11 +54,29 @@
       "note": "Round-3 review finding: CURSOR_SESSION_OPTION_CATALOG sets supportsWorkerLaunchPreferences: true, but PROBEABLE_LAUNCH_AGENTS excluded cursor, so a cursor launch fell to the bottom catalog-only branch -- effective: {...selection}, honestly labelled source: 'catalog' but never checked against the installed CLI. At upstream this whole probe apparatus does not exist yet, so every agent's receipt is the unconditional clone; the reproduce regex pins the same 'source': 'catalog' (never 'probe') diff line the I entry's fix already closed for claude/codex."
     },
     {
+      "id": "I4",
+      "title": "source: 'probe' requires the discovery answer's own catalogOrigin; a failed probe is not memoised past its own call",
+      "commit": "odin(I4) -- see git log --grep I4",
+      "tests": [
+        "src/main/runtime/rpc/methods/orchestration/worker/worker-launch-preferences.test.ts"
+      ],
+      "reproduce": "expected undefined to be 'unverified'",
+      "note": "Round-4 review finding, Odin-introduced (I4a): verifyAgentLaunchSelection labelled the outcome source: 'probe' on result.success alone, but discoverCommitMessageModelsLocal also returns success: true, catalogOrigin: 'spec' when the installed CLI exits 0 with no parseable model list and finalizeModelDiscoveryOutput falls back to the static catalog -- that fallback earned the same 'probe' label as a real live-CLI answer. Fixed by threading catalogOrigin through AgentLaunchVerification and labelling 'catalog' unless catalogOrigin === 'probe'. (I4b, same commit): probeAgentModelsOnce memoised the discover() promise for the process lifetime including failures, keyed by (executor, agentId), so one transient miss pinned every later worker-start for that agent to 'unverified' forever; fixed by evicting the cache entry on any failed outcome so the next launch re-probes. At upstream 539d4d1f32b4 resolveWorkerLaunchPreferences is synchronous (I3's own comment: no probe exists at all) so `await`ing its plain return object is a no-op; the I4a test's own `.resolves` matcher throws 'You must provide a Promise' first (an infrastructure mismatch, not used as the reproduction, matching the I3 precedent), but the I4b test reaches a real, meaningful assertion: `first.receipt.source` is `undefined` there (no `source` field exists on the synchronous receipt at all) where this test expects `'unverified'` -- pinned as the reproduce regex."
+    },
+    {
       "id": "B",
       "title": "Worker liveness: an empty or non-enumerating host answer is unverifiable, never exited",
       "commit": "cfc277f2b1",
       "tests": ["src/main/runtime/orchestration/worker-terminal-process-liveness.test.ts"],
       "reproduce": "expected 'exited' to be 'unverifiable'"
+    },
+    {
+      "id": "O3b",
+      "title": "classifyTerminalProcessInspectionFailure gives terminal_handle_stale/terminal_exited/no_connected_pty/a PTY-not-found message their own reasons instead of the host-proven terminal_gone",
+      "commit": "382bf626a9",
+      "tests": ["src/shared/terminal-process-inspection.test.ts"],
+      "reproduce": "expected 'terminal_gone' to be 'terminal_handle_stale'",
+      "note": "docs/reference/ssh-execution-boundary.md's own 'terminal_gone is overloaded' paragraph names this exact bug: classifyTerminalProcessInspectionFailure (shared/terminal-process-inspection.ts:83-95) bucketed a client-side registry miss (stale handle, exited entry, no connected pty, a 'PTY \"<id>\" not found' message) under the same 'terminal_gone' string as the host's own relay-side tombstone claim. This function and its bucketing are byte-identical at upstream 539d4d1f32b4 (verified by diff) -- a genuine inherited Orca residual, not Odin-introduced -- so it is recorded in the existing hash-cited shape once the fix commit exists."
     },
     {
       "id": "A",
@@ -146,6 +164,15 @@
         "src/main/codex-accounts/codex-credential-mirror-consent-revocation.test.ts"
       ],
       "note": "Closed by construction, not mechanically reproduced against upstream 539d4d1f32b4: the credential mirror (codexCredentialMirrorConsent, runtime-home-service-auth-sync.ts, codex-credential-mirror-consent-revocation.ts) is Odin's own addition for residual G (commit f14f8249f9) with no upstream counterpart. Two gaps in that addition: (a) restoreSystemDefaultSnapshot's no-consent branch called persistRuntimeLogoutMarker() with its default argument (readSystemDefaultAuth()), copying ~/.codex/auth.json verbatim into system-default-runtime-logout.json despite the branch's own comment that it must never read or write the credential -- fixed by passing null explicitly. (b) clearMirroredCodexCredentials() deleted the shared runtime auth.json and shared-runtime-auth-provenance.json unconditionally, even when markSharedRuntimeAuthManaged had stamped owner: 'managed' there for a retained pane's own refreshed credential -- scoped to skip both deletions when the provenance owner is 'managed', and added deletion of the previously-untouched logout marker. G3.before.txt / G3.after.txt: 3 of 6 tests fail before, 6/6 pass after."
+    },
+    {
+      "id": "O3a",
+      "title": "A structured worker's own host-owned unverifiable is never treated as absent on release",
+      "commit": "odin(O3a) -- see git log --grep O3a",
+      "tests": [
+        "src/main/runtime/rpc/methods/orchestration/worker/worker-release-structured-unverifiable.test.ts"
+      ],
+      "note": "Closed by construction, not mechanically reproduced: worker-release-completion.ts's missing/unattached branch was widened under O2 to also match `observation.status === 'unverifiable' && observation.terminal === null`, gated on `terminal === null` rather than on which observer produced the observation. observeStructuredWorker also reports `terminal: null` for its own legitimate host-owned `unverifiable` (host not installed, no durable record, non-native lease, no attached child), so a structured worker in that state joined the same branch as an absent PTY -- in recovery mode this reaches inspectTerminalProcessIncarnationLiveness, a check built for PTY incarnations, and could settle the release from its answer as if the worker were absent. Fixed by tagging inspectWorkerTerminal's return with an explicit `kind: 'pty' | 'structured'` and gating the clause on `kind === 'pty'` instead of `terminal === null`. At upstream 539d4d1f32b4 this clause is `observation.status === 'missing' || observation.status === 'unattached'` with no `unverifiable` case at all -- the O2 fix that introduced the wider clause postdates this fork, so the bug (and the fix) exist only inside Odin's own code; running this test's mocks against upstream's narrower clause passes there too, for an unrelated reason (upstream never considers `unverifiable` in this branch to begin with), so it is not usable as an upstream reproduction. odin/proofs/O3a.before.txt/.after.txt instead pin the test failing against Odin's own pre-fix clause (`observation.terminal === null`) and passing against the fix (`observation.kind === 'pty'`)."
     }
   ]
 }

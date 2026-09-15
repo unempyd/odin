@@ -27,6 +27,11 @@ export async function inspectWorkerTerminal(
   status: 'unattached' | 'missing' | 'identity_changed' | 'live' | 'exited' | 'unverifiable'
   /** Set with `unverifiable`; names what we lost contact with. */
   reason?: string
+  /** Set on `terminal: null` observations to say which observer produced them (O3): 'pty' is a
+   *  `showTerminal` client-side failure (stale handle, no connected pty, ...); 'structured' is
+   *  `observeStructuredWorker`'s own host-owned verdict. The two are not interchangeable evidence
+   *  — a caller that treats every `terminal: null` the same conflates them. */
+  kind?: 'pty' | 'structured'
   /** Set only on a proven-exact worker parked on a prompt that needs a human. */
   agentWait?: RuntimeTerminalInteractiveWait | null
 }> {
@@ -55,6 +60,7 @@ export async function inspectWorkerTerminal(
       terminal: null,
       exact,
       status: exact ? observation.status : 'identity_changed',
+      kind: 'structured',
       ...(exact && observation.reason ? { reason: observation.reason } : {})
     }
   }
@@ -85,12 +91,13 @@ export async function inspectWorkerTerminal(
       failureCode === 'terminal_gone' ||
       (showTerminalFailure instanceof Error && showTerminalFailure.message === 'terminal_gone')
     if (ownerSaysNotFound) {
-      return { terminal: null, exact: false, status: 'missing' }
+      return { terminal: null, exact: false, status: 'missing', kind: 'pty' }
     }
     return {
       terminal: null,
       exact: false,
       status: 'unverifiable',
+      kind: 'pty',
       reason: failureReason ?? 'unclassified_inspection_failure'
     }
   }

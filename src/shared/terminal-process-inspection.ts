@@ -10,11 +10,20 @@ import type { RemoteForegroundEvidence } from './foreground-process-evidence'
  */
 export type PtyChildProcessVerdict = 'children' | 'no-children' | 'unverifiable'
 
-/** Reasons the renderer could not observe the execution host. */
+/** Reasons the renderer could not observe the execution host.
+ *  O3: `terminal_gone` is reserved for the host's own claim (`relay/pty-handler.ts`'s real
+ *  session/tombstone miss) -- an in-process registry miss on THIS side of the wire
+ *  (`terminal_handle_stale`, `terminal_exited`, `no_connected_pty`, a `PTY "<id>" not found`
+ *  message) is a weaker, client-side absence and must not borrow the host-proven spelling. See
+ *  docs/reference/ssh-execution-boundary.md's `terminal_gone` paragraph. */
 export type ClientOnlyUnverifiableReason =
   | 'transport_loss'
   | 'timeout'
   | 'terminal_gone'
+  | 'terminal_handle_stale'
+  | 'terminal_exited'
+  | 'no_connected_pty'
+  | 'terminal_not_found'
   | 'old_host'
 
 /**
@@ -80,17 +89,23 @@ export function classifyTerminalProcessInspectionFailure(
     error && typeof error === 'object' && 'code' in error
       ? String((error as { code?: unknown }).code)
       : ''
-  if (
-    code === 'terminal_handle_stale' ||
-    code === 'terminal_exited' ||
-    code === 'terminal_gone' ||
-    code === 'no_connected_pty' ||
-    message.includes('terminal_handle_stale') ||
-    message.includes('terminal_exited') ||
-    message.includes('terminal_gone') ||
-    message.includes('no_connected_pty') ||
-    /PTY\s+"[^"]+"\s+not found/i.test(message)
-  ) {
+  // O3: each of these is a client-side registry miss (a renderer graph-epoch mismatch, this
+  // process's own hasPty/adapter lookup finding nothing, ...), not the execution owner
+  // confirming absence -- so each earns its own honest reason instead of the host-proven
+  // 'terminal_gone' spelling below.
+  if (code === 'terminal_handle_stale' || message.includes('terminal_handle_stale')) {
+    return 'terminal_handle_stale'
+  }
+  if (code === 'terminal_exited' || message.includes('terminal_exited')) {
+    return 'terminal_exited'
+  }
+  if (code === 'no_connected_pty' || message.includes('no_connected_pty')) {
+    return 'no_connected_pty'
+  }
+  if (/PTY\s+"[^"]+"\s+not found/i.test(message)) {
+    return 'terminal_not_found'
+  }
+  if (code === 'terminal_gone' || message.includes('terminal_gone')) {
     return 'terminal_gone'
   }
   if (
