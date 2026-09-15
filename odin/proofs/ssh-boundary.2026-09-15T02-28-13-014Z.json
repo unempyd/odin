@@ -1,0 +1,1467 @@
+{
+  "ok": true,
+  "phases": {
+    "phase1": {
+      "ok": true,
+      "macIp": "175.35.0.108",
+      "head": "3cdf92b5f99bacbc32856d882c580043d1652170",
+      "resolved": {
+        "hostname": "65.108.95.199",
+        "port": 22,
+        "username": "root",
+        "identityFile": "/Users/briankeeny/.ssh/openclaw_vps_key"
+      }
+    },
+    "phase2": {
+      "ok": true,
+      "sshRow": {
+        "kind": "ssh",
+        "name": "claw-vps",
+        "id": "ssh-1789438950492-3a598f",
+        "selector": "--host ssh:ssh-1789438950492-3a598f",
+        "connected": false
+      },
+      "connectState": {
+        "state": {
+          "targetId": "ssh-1789438950492-3a598f",
+          "status": "connected",
+          "error": null,
+          "reconnectAttempt": 0,
+          "supportsFolderDownload": true,
+          "providerEpoch": "d8f2ea1a1f41c3c26c38c2d3-2",
+          "connectionGeneration": 6191378105024513,
+          "remotePlatform": "linux"
+        }
+      },
+      "relayCheck": {
+        "status": 0,
+        "stdout": "/root/.orca-remote/relay-0.1.0+9a9827b3fde2\n/root/.orca-remote/relay-0.1.0+aca66c7a50f8\nsrw------- 1 root root 0 Sep 14 19:35 /root/.orca-remote/relay-0.1.0+9a9827b3fde2/relay-578516318067a093.sock\nsrw------- 1 root root 0 Sep 14 19:44 /root/.orca-remote/relay-0.1.0+9a9827b3fde2/relay-68e71121d0c75bc0.sock\nsrw------- 1 root root 0 Sep 15 02:23 /root/.orca-remote/relay-0.1.0+aca66c7a50f8/relay-4da8cb177ce7f0b8.sock\n870277 /usr/bin/node relay.js --detached --grace-time 0 --sock-path /root/.orca-remote/relay-0.1.0+aca66c7a50f8/relay-4da8cb177ce7f0b8.sock --credential-file /root/.orca-remote/relay-0.1.0+aca66c7a50f8/relay-4da8cb177ce7f0b8.sock.credential --log-file /root/.orca-remote/relay-0.1.0+aca66c7a50f8/relay.log",
+        "stderr": ""
+      }
+    },
+    "phase3": {
+      "ok": true,
+      "worktreeId": "repo-1789438950493-76fb1a::/root/odin-proof/seed-odin-ssh-ed092a",
+      "terminal": "term_db1f29c6-668a-4bb9-ad05-b14d462bf1b4",
+      "baselineShow": {
+        "handle": "term_db1f29c6-668a-4bb9-ad05-b14d462bf1b4",
+        "ptyId": "ssh:ssh-1789438950492-3a598f@@pty2:9aa78471-a150-41da-b6f5-96e03122987d:2",
+        "incarnationId": "c6b27401-407d-405f-becf-c0893cc44cfc",
+        "orphaned": false,
+        "worktreeId": "repo-1789438950493-76fb1a::/root/odin-proof/seed-odin-ssh-ed092a",
+        "worktreePath": "/root/odin-proof/seed-odin-ssh-ed092a",
+        "branch": "refs/heads/odin-ssh-ed092a",
+        "tabId": "eff826a4-e0b3-46e9-ab0c-b304c83b79a3",
+        "leafId": "dd5781db-7136-4d21-b774-6b26ebe32873",
+        "title": "root@claw-vps: ~/odin-proof/seed-odin-ssh-ed092a",
+        "connected": true,
+        "writable": true,
+        "lastOutputAt": 1789439004731,
+        "preview": "root@claw-vps:~/odin-proof/seed-odin-ssh-ed092a#sleep 600",
+        "executionHostId": "ssh:ssh-1789438950492-3a598f",
+        "paneRuntimeId": -1,
+        "rendererGraphEpoch": 0,
+        "agentWait": null
+      },
+      "baselinePs": {
+        "worktrees": [
+          {
+            "workspaceKind": "git",
+            "worktreeId": "repo-1789438950493-76fb1a::/root/odin-proof/seed-odin-ssh-ed092a",
+            "repoId": "repo-1789438950493-76fb1a",
+            "hostId": "ssh:ssh-1789438950492-3a598f",
+            "terminalPlatform": "linux",
+            "repo": "odin-ssh-proof",
+            "path": "/root/odin-proof/seed-odin-ssh-ed092a",
+            "branch": "refs/heads/odin-ssh-ed092a",
+            "isArchived": false,
+            "isMainWorktree": false,
+            "hasHostSidebarActivity": true,
+            "worktreeInstanceId": "b69361f8-31af-46b5-8c00-21cd97300c75",
+            "parentWorktreeId": null,
+            "childWorktreeIds": [],
+            "displayName": "odin-ssh-ed092a",
+            "workspaceStatus": "in-progress",
+            "sortOrder": 1789439001214,
+            "lastActivityAt": 1789439001214,
+            "createdAt": 1789439001214,
+            "creatorProvenance": {
+              "kind": "host"
+            },
+            "linkedIssue": null,
+            "linkedPR": null,
+            "linkedLinearIssue": null,
+            "linkedGitLabMR": null,
+            "linkedGitLabIssue": null,
+            "comment": "",
+            "isPinned": false,
+            "isActive": true,
+            "unread": false,
+            "liveTerminalCount": 2,
+            "hasAttachedPty": true,
+            "lastOutputAt": 1789439004731,
+            "preview": "root@claw-vps:~/odin-proof/seed-odin-ssh-ed092a#sleep 600",
+            "status": "active",
+            "agents": []
+          },
+          {
+            "workspaceKind": "git",
+            "worktreeId": "repo-1789438950493-76fb1a::/root/odin-proof/seed",
+            "repoId": "repo-1789438950493-76fb1a",
+            "hostId": "ssh:ssh-1789438950492-3a598f",
+            "terminalPlatform": "linux",
+            "repo": "odin-ssh-proof",
+            "path": "/root/odin-proof/seed",
+            "branch": "refs/heads/main",
+            "isArchived": false,
+            "isMainWorktree": true,
+            "hasHostSidebarActivity": false,
+            "worktreeInstanceId": "02f93731-e8cb-4fd2-8cf6-330c44d45e7c",
+            "parentWorktreeId": null,
+            "childWorktreeIds": [],
+            "displayName": "main",
+            "workspaceStatus": "in-progress",
+            "sortOrder": 1789438989620,
+            "lastActivityAt": 1789438989619,
+            "linkedIssue": null,
+            "linkedPR": null,
+            "linkedLinearIssue": null,
+            "linkedGitLabMR": null,
+            "linkedGitLabIssue": null,
+            "comment": "",
+            "isPinned": false,
+            "isActive": false,
+            "unread": false,
+            "liveTerminalCount": 0,
+            "hasAttachedPty": false,
+            "lastOutputAt": null,
+            "preview": "",
+            "status": "inactive",
+            "agents": []
+          }
+        ],
+        "hostScope": {
+          "hostIds": ["ssh:ssh-1789438950492-3a598f"],
+          "omittedHostIds": ["local"],
+          "omittedHostSelectors": [
+            {
+              "hostId": "local",
+              "selector": "--host local"
+            }
+          ]
+        },
+        "totalCount": 2,
+        "truncated": false
+      },
+      "sleepPid": "871592",
+      "shellPid": "871560"
+    },
+    "phase4": {
+      "ok": true,
+      "samples": [
+        {
+          "at": "2026-09-15T02:23:36.806Z",
+          "show": {
+            "handle": "term_db1f29c6-668a-4bb9-ad05-b14d462bf1b4",
+            "ptyId": "ssh:ssh-1789438950492-3a598f@@pty2:9aa78471-a150-41da-b6f5-96e03122987d:2",
+            "incarnationId": "c6b27401-407d-405f-becf-c0893cc44cfc",
+            "orphaned": false,
+            "worktreeId": "repo-1789438950493-76fb1a::/root/odin-proof/seed-odin-ssh-ed092a",
+            "worktreePath": "/root/odin-proof/seed-odin-ssh-ed092a",
+            "branch": "refs/heads/odin-ssh-ed092a",
+            "tabId": "eff826a4-e0b3-46e9-ab0c-b304c83b79a3",
+            "leafId": "dd5781db-7136-4d21-b774-6b26ebe32873",
+            "title": "root@claw-vps: ~/odin-proof/seed-odin-ssh-ed092a",
+            "connected": true,
+            "writable": true,
+            "lastOutputAt": 1789439004731,
+            "preview": "root@claw-vps:~/odin-proof/seed-odin-ssh-ed092a#sleep 600",
+            "executionHostId": "ssh:ssh-1789438950492-3a598f",
+            "paneRuntimeId": -1,
+            "rendererGraphEpoch": 0,
+            "agentWait": null
+          }
+        },
+        {
+          "at": "2026-09-15T02:23:42.177Z",
+          "show": {
+            "handle": "term_db1f29c6-668a-4bb9-ad05-b14d462bf1b4",
+            "ptyId": "ssh:ssh-1789438950492-3a598f@@pty2:9aa78471-a150-41da-b6f5-96e03122987d:2",
+            "incarnationId": "c6b27401-407d-405f-becf-c0893cc44cfc",
+            "orphaned": false,
+            "worktreeId": "repo-1789438950493-76fb1a::/root/odin-proof/seed-odin-ssh-ed092a",
+            "worktreePath": "/root/odin-proof/seed-odin-ssh-ed092a",
+            "branch": "refs/heads/odin-ssh-ed092a",
+            "tabId": "eff826a4-e0b3-46e9-ab0c-b304c83b79a3",
+            "leafId": "dd5781db-7136-4d21-b774-6b26ebe32873",
+            "title": "root@claw-vps: ~/odin-proof/seed-odin-ssh-ed092a",
+            "connected": true,
+            "writable": true,
+            "lastOutputAt": 1789439004731,
+            "preview": "root@claw-vps:~/odin-proof/seed-odin-ssh-ed092a#sleep 600",
+            "executionHostId": "ssh:ssh-1789438950492-3a598f",
+            "paneRuntimeId": -1,
+            "rendererGraphEpoch": 0,
+            "agentWait": null
+          }
+        },
+        {
+          "at": "2026-09-15T02:23:47.460Z",
+          "show": {
+            "handle": "term_db1f29c6-668a-4bb9-ad05-b14d462bf1b4",
+            "ptyId": "ssh:ssh-1789438950492-3a598f@@pty2:9aa78471-a150-41da-b6f5-96e03122987d:2",
+            "incarnationId": "c6b27401-407d-405f-becf-c0893cc44cfc",
+            "orphaned": false,
+            "worktreeId": "repo-1789438950493-76fb1a::/root/odin-proof/seed-odin-ssh-ed092a",
+            "worktreePath": "/root/odin-proof/seed-odin-ssh-ed092a",
+            "branch": "refs/heads/odin-ssh-ed092a",
+            "tabId": "eff826a4-e0b3-46e9-ab0c-b304c83b79a3",
+            "leafId": "dd5781db-7136-4d21-b774-6b26ebe32873",
+            "title": "root@claw-vps: ~/odin-proof/seed-odin-ssh-ed092a",
+            "connected": true,
+            "writable": true,
+            "lastOutputAt": 1789439004731,
+            "preview": "root@claw-vps:~/odin-proof/seed-odin-ssh-ed092a#sleep 600",
+            "executionHostId": "ssh:ssh-1789438950492-3a598f",
+            "paneRuntimeId": -1,
+            "rendererGraphEpoch": 0,
+            "agentWait": null
+          }
+        },
+        {
+          "at": "2026-09-15T02:23:57.766Z",
+          "show": {
+            "handle": "term_db1f29c6-668a-4bb9-ad05-b14d462bf1b4",
+            "ptyId": "ssh:ssh-1789438950492-3a598f@@pty2:9aa78471-a150-41da-b6f5-96e03122987d:2",
+            "incarnationId": "c6b27401-407d-405f-becf-c0893cc44cfc",
+            "orphaned": false,
+            "worktreeId": "repo-1789438950493-76fb1a::/root/odin-proof/seed-odin-ssh-ed092a",
+            "worktreePath": "/root/odin-proof/seed-odin-ssh-ed092a",
+            "branch": "",
+            "tabId": "eff826a4-e0b3-46e9-ab0c-b304c83b79a3",
+            "leafId": "dd5781db-7136-4d21-b774-6b26ebe32873",
+            "title": "root@claw-vps: ~/odin-proof/seed-odin-ssh-ed092a",
+            "connected": true,
+            "writable": true,
+            "lastOutputAt": 1789439004731,
+            "preview": "root@claw-vps:~/odin-proof/seed-odin-ssh-ed092a#sleep 600",
+            "executionHostId": "ssh:ssh-1789438950492-3a598f",
+            "paneRuntimeId": -1,
+            "rendererGraphEpoch": 0,
+            "agentWait": null
+          }
+        },
+        {
+          "at": "2026-09-15T02:24:03.079Z",
+          "show": {
+            "handle": "term_db1f29c6-668a-4bb9-ad05-b14d462bf1b4",
+            "ptyId": "ssh:ssh-1789438950492-3a598f@@pty2:9aa78471-a150-41da-b6f5-96e03122987d:2",
+            "incarnationId": "c6b27401-407d-405f-becf-c0893cc44cfc",
+            "orphaned": false,
+            "worktreeId": "repo-1789438950493-76fb1a::/root/odin-proof/seed-odin-ssh-ed092a",
+            "worktreePath": "/root/odin-proof/seed-odin-ssh-ed092a",
+            "branch": "",
+            "tabId": "eff826a4-e0b3-46e9-ab0c-b304c83b79a3",
+            "leafId": "dd5781db-7136-4d21-b774-6b26ebe32873",
+            "title": "root@claw-vps: ~/odin-proof/seed-odin-ssh-ed092a",
+            "connected": false,
+            "writable": false,
+            "lastOutputAt": 1789439004731,
+            "preview": "root@claw-vps:~/odin-proof/seed-odin-ssh-ed092a#sleep 600",
+            "liveness": {
+              "status": "unverifiable",
+              "reason": "reconnecting"
+            },
+            "executionHostId": "ssh:ssh-1789438950492-3a598f",
+            "paneRuntimeId": -1,
+            "rendererGraphEpoch": 0,
+            "agentWait": null
+          }
+        },
+        {
+          "at": "2026-09-15T02:24:08.355Z",
+          "show": {
+            "handle": "term_db1f29c6-668a-4bb9-ad05-b14d462bf1b4",
+            "ptyId": "ssh:ssh-1789438950492-3a598f@@pty2:9aa78471-a150-41da-b6f5-96e03122987d:2",
+            "incarnationId": "c6b27401-407d-405f-becf-c0893cc44cfc",
+            "orphaned": false,
+            "worktreeId": "repo-1789438950493-76fb1a::/root/odin-proof/seed-odin-ssh-ed092a",
+            "worktreePath": "/root/odin-proof/seed-odin-ssh-ed092a",
+            "branch": "",
+            "tabId": "eff826a4-e0b3-46e9-ab0c-b304c83b79a3",
+            "leafId": "dd5781db-7136-4d21-b774-6b26ebe32873",
+            "title": "root@claw-vps: ~/odin-proof/seed-odin-ssh-ed092a",
+            "connected": false,
+            "writable": false,
+            "lastOutputAt": 1789439004731,
+            "preview": "root@claw-vps:~/odin-proof/seed-odin-ssh-ed092a#sleep 600",
+            "liveness": {
+              "status": "unverifiable",
+              "reason": "reconnecting"
+            },
+            "executionHostId": "ssh:ssh-1789438950492-3a598f",
+            "paneRuntimeId": -1,
+            "rendererGraphEpoch": 0,
+            "agentWait": null
+          }
+        }
+      ],
+      "disconnectedAt": 4,
+      "duringPs": {
+        "worktrees": [
+          {
+            "workspaceKind": "git",
+            "worktreeId": "repo-1789438950493-76fb1a::/root/odin-proof/seed-odin-ssh-ed092a",
+            "repoId": "repo-1789438950493-76fb1a",
+            "hostId": "ssh:ssh-1789438950492-3a598f",
+            "terminalPlatform": "linux",
+            "repo": "odin-ssh-proof",
+            "path": "/root/odin-proof/seed-odin-ssh-ed092a",
+            "branch": "",
+            "isArchived": false,
+            "isMainWorktree": false,
+            "hasHostSidebarActivity": true,
+            "worktreeInstanceId": "b69361f8-31af-46b5-8c00-21cd97300c75",
+            "parentWorktreeId": null,
+            "childWorktreeIds": [],
+            "displayName": "odin-ssh-ed092a",
+            "workspaceStatus": "in-progress",
+            "sortOrder": 1789439001214,
+            "lastActivityAt": 1789439001214,
+            "createdAt": 1789439001214,
+            "creatorProvenance": {
+              "kind": "host"
+            },
+            "linkedIssue": null,
+            "linkedPR": null,
+            "linkedLinearIssue": null,
+            "linkedGitLabMR": null,
+            "linkedGitLabIssue": null,
+            "comment": "",
+            "isPinned": false,
+            "isActive": true,
+            "unread": false,
+            "liveTerminalCount": 0,
+            "hasAttachedPty": false,
+            "lastOutputAt": null,
+            "preview": "",
+            "status": "inactive",
+            "agents": []
+          },
+          {
+            "workspaceKind": "git",
+            "worktreeId": "repo-1789438950493-76fb1a::/root/odin-proof/seed",
+            "repoId": "repo-1789438950493-76fb1a",
+            "hostId": "ssh:ssh-1789438950492-3a598f",
+            "terminalPlatform": "linux",
+            "repo": "odin-ssh-proof",
+            "path": "/root/odin-proof/seed",
+            "branch": "",
+            "isArchived": false,
+            "isMainWorktree": true,
+            "hasHostSidebarActivity": false,
+            "worktreeInstanceId": "02f93731-e8cb-4fd2-8cf6-330c44d45e7c",
+            "parentWorktreeId": null,
+            "childWorktreeIds": [],
+            "displayName": "odin-ssh-proof",
+            "workspaceStatus": "in-progress",
+            "sortOrder": 1789438989620,
+            "lastActivityAt": 1789438989619,
+            "linkedIssue": null,
+            "linkedPR": null,
+            "linkedLinearIssue": null,
+            "linkedGitLabMR": null,
+            "linkedGitLabIssue": null,
+            "comment": "",
+            "isPinned": false,
+            "isActive": false,
+            "unread": false,
+            "liveTerminalCount": 0,
+            "hasAttachedPty": false,
+            "lastOutputAt": null,
+            "preview": "",
+            "status": "inactive",
+            "agents": []
+          }
+        ],
+        "hostScope": {
+          "hostIds": ["ssh:ssh-1789438950492-3a598f"],
+          "omittedHostIds": ["local"],
+          "omittedHostSelectors": [
+            {
+              "hostId": "local",
+              "selector": "--host local"
+            }
+          ]
+        },
+        "totalCount": 2,
+        "truncated": false
+      },
+      "duringWait": {
+        "handle": "term_db1f29c6-668a-4bb9-ad05-b14d462bf1b4",
+        "condition": "exit",
+        "satisfied": false,
+        "status": "running",
+        "exitCode": null,
+        "evidence": "silence"
+      }
+    },
+    "phase5": {
+      "ok": true,
+      "reconnectState": {
+        "state": {
+          "targetId": "ssh-1789438950492-3a598f",
+          "status": "connected",
+          "error": null,
+          "reconnectAttempt": 0,
+          "supportsFolderDownload": true,
+          "providerEpoch": "ef3c749cb435250bd5057723-6",
+          "connectionGeneration": 6191378105024517,
+          "remotePlatform": "linux"
+        }
+      },
+      "afterReconnectShow": {
+        "handle": "term_db1f29c6-668a-4bb9-ad05-b14d462bf1b4",
+        "ptyId": "ssh:ssh-1789438950492-3a598f@@pty2:9aa78471-a150-41da-b6f5-96e03122987d:2",
+        "incarnationId": "c6b27401-407d-405f-becf-c0893cc44cfc",
+        "orphaned": false,
+        "worktreeId": "repo-1789438950493-76fb1a::/root/odin-proof/seed-odin-ssh-ed092a",
+        "worktreePath": "/root/odin-proof/seed-odin-ssh-ed092a",
+        "branch": "refs/heads/odin-ssh-ed092a",
+        "tabId": "eff826a4-e0b3-46e9-ab0c-b304c83b79a3",
+        "leafId": "dd5781db-7136-4d21-b774-6b26ebe32873",
+        "title": "root@claw-vps: ~/odin-proof/seed-odin-ssh-ed092a",
+        "connected": true,
+        "writable": true,
+        "lastOutputAt": 1789439004731,
+        "preview": "root@claw-vps:~/odin-proof/seed-odin-ssh-ed092a#sleep 600",
+        "executionHostId": "ssh:ssh-1789438950492-3a598f",
+        "paneRuntimeId": -1,
+        "rendererGraphEpoch": 0,
+        "agentWait": null
+      },
+      "vpsSleepAfter": "871592 sleep 600",
+      "samePid": true,
+      "ruleGoneAfterExpiry": true
+    },
+    "phase6": {
+      "ok": true,
+      "outOfBandShellState": "dead",
+      "exitedShow": {
+        "handle": "term_db1f29c6-668a-4bb9-ad05-b14d462bf1b4",
+        "ptyId": "ssh:ssh-1789438950492-3a598f@@pty2:9aa78471-a150-41da-b6f5-96e03122987d:2",
+        "incarnationId": "c6b27401-407d-405f-becf-c0893cc44cfc",
+        "orphaned": false,
+        "worktreeId": "repo-1789438950493-76fb1a::/root/odin-proof/seed-odin-ssh-ed092a",
+        "worktreePath": "/root/odin-proof/seed-odin-ssh-ed092a",
+        "branch": "refs/heads/odin-ssh-ed092a",
+        "tabId": "eff826a4-e0b3-46e9-ab0c-b304c83b79a3",
+        "leafId": "dd5781db-7136-4d21-b774-6b26ebe32873",
+        "title": "root@claw-vps: ~/odin-proof/seed-odin-ssh-ed092a",
+        "connected": false,
+        "writable": false,
+        "lastOutputAt": 1789439004731,
+        "preview": "root@claw-vps:~/odin-proof/seed-odin-ssh-ed092a#sleep 600",
+        "exitCause": {
+          "kind": "unknown",
+          "reason": "cause_unreported"
+        },
+        "executionHostId": "ssh:ssh-1789438950492-3a598f",
+        "paneRuntimeId": -1,
+        "rendererGraphEpoch": 0
+      },
+      "exitedWait": {
+        "handle": "term_db1f29c6-668a-4bb9-ad05-b14d462bf1b4",
+        "condition": "exit",
+        "satisfied": true,
+        "status": "exited",
+        "exitCode": 0,
+        "exitCause": {
+          "kind": "unknown",
+          "reason": "cause_unreported"
+        }
+      },
+      "exitedShowAfterWait": {
+        "handle": "term_db1f29c6-668a-4bb9-ad05-b14d462bf1b4",
+        "ptyId": "ssh:ssh-1789438950492-3a598f@@pty2:9aa78471-a150-41da-b6f5-96e03122987d:2",
+        "incarnationId": "c6b27401-407d-405f-becf-c0893cc44cfc",
+        "orphaned": false,
+        "worktreeId": "repo-1789438950493-76fb1a::/root/odin-proof/seed-odin-ssh-ed092a",
+        "worktreePath": "/root/odin-proof/seed-odin-ssh-ed092a",
+        "branch": "refs/heads/odin-ssh-ed092a",
+        "tabId": "eff826a4-e0b3-46e9-ab0c-b304c83b79a3",
+        "leafId": "dd5781db-7136-4d21-b774-6b26ebe32873",
+        "title": "root@claw-vps: ~/odin-proof/seed-odin-ssh-ed092a",
+        "connected": false,
+        "writable": false,
+        "lastOutputAt": 1789439004731,
+        "preview": "root@claw-vps:~/odin-proof/seed-odin-ssh-ed092a#sleep 600",
+        "exitCause": {
+          "kind": "unknown",
+          "reason": "cause_unreported"
+        },
+        "executionHostId": "ssh:ssh-1789438950492-3a598f",
+        "paneRuntimeId": -1,
+        "rendererGraphEpoch": 0
+      }
+    },
+    "phase7": {
+      "ok": true,
+      "relayPidBefore": "870277",
+      "samples": [
+        {
+          "at": "2026-09-15T02:27:19.074Z",
+          "show": {
+            "handle": "term_a4f8baab-0023-4f6b-b6a9-e86d6855cb39",
+            "ptyId": "ssh:ssh-1789438950492-3a598f@@pty2:9aa78471-a150-41da-b6f5-96e03122987d:4",
+            "incarnationId": "17be2284-905b-4cba-baca-1e18e6e11da8",
+            "orphaned": false,
+            "worktreeId": "repo-1789438950493-76fb1a::/root/odin-proof/seed-odin-ssh-288489",
+            "worktreePath": "/root/odin-proof/seed-odin-ssh-288489",
+            "branch": "",
+            "tabId": "6556d92c-0423-41ad-a125-c2393d94213f",
+            "leafId": "8718086d-141b-430c-aa1d-c42fd4c553d9",
+            "title": "root@claw-vps: ~/odin-proof/seed-odin-ssh-288489",
+            "connected": false,
+            "writable": false,
+            "lastOutputAt": 1789439228013,
+            "preview": "root@claw-vps:~/odin-proof/seed-odin-ssh-288489#sleep 600",
+            "liveness": {
+              "status": "unverifiable",
+              "reason": "reconnecting"
+            },
+            "executionHostId": "ssh:ssh-1789438950492-3a598f",
+            "paneRuntimeId": -1,
+            "rendererGraphEpoch": 0,
+            "agentWait": null
+          }
+        },
+        {
+          "at": "2026-09-15T02:27:24.431Z",
+          "show": {
+            "handle": "term_a4f8baab-0023-4f6b-b6a9-e86d6855cb39",
+            "ptyId": "ssh:ssh-1789438950492-3a598f@@pty2:9aa78471-a150-41da-b6f5-96e03122987d:4",
+            "incarnationId": "17be2284-905b-4cba-baca-1e18e6e11da8",
+            "orphaned": false,
+            "worktreeId": "repo-1789438950493-76fb1a::/root/odin-proof/seed-odin-ssh-288489",
+            "worktreePath": "/root/odin-proof/seed-odin-ssh-288489",
+            "branch": "",
+            "tabId": "6556d92c-0423-41ad-a125-c2393d94213f",
+            "leafId": "8718086d-141b-430c-aa1d-c42fd4c553d9",
+            "title": "root@claw-vps: ~/odin-proof/seed-odin-ssh-288489",
+            "connected": false,
+            "writable": false,
+            "lastOutputAt": 1789439228013,
+            "preview": "root@claw-vps:~/odin-proof/seed-odin-ssh-288489#sleep 600",
+            "liveness": {
+              "status": "unverifiable",
+              "reason": "reconnecting"
+            },
+            "executionHostId": "ssh:ssh-1789438950492-3a598f",
+            "paneRuntimeId": -1,
+            "rendererGraphEpoch": 0,
+            "agentWait": null
+          }
+        }
+      ],
+      "disconnectedAt": 0,
+      "bPs": {
+        "worktrees": [
+          {
+            "workspaceKind": "git",
+            "worktreeId": "repo-1789438950493-76fb1a::/root/odin-proof/seed-odin-ssh-288489",
+            "repoId": "repo-1789438950493-76fb1a",
+            "hostId": "ssh:ssh-1789438950492-3a598f",
+            "terminalPlatform": "linux",
+            "repo": "odin-ssh-proof",
+            "path": "/root/odin-proof/seed-odin-ssh-288489",
+            "branch": "",
+            "isArchived": false,
+            "isMainWorktree": false,
+            "hasHostSidebarActivity": true,
+            "worktreeInstanceId": "2f0d4d3a-23a7-4f12-b239-616caf2a21f6",
+            "parentWorktreeId": null,
+            "childWorktreeIds": [],
+            "displayName": "odin-ssh-288489",
+            "workspaceStatus": "in-progress",
+            "sortOrder": 1789439224542,
+            "lastActivityAt": 1789439224541,
+            "createdAt": 1789439224541,
+            "creatorProvenance": {
+              "kind": "host"
+            },
+            "linkedIssue": null,
+            "linkedPR": null,
+            "linkedLinearIssue": null,
+            "linkedGitLabMR": null,
+            "linkedGitLabIssue": null,
+            "comment": "",
+            "isPinned": false,
+            "isActive": false,
+            "unread": false,
+            "liveTerminalCount": 0,
+            "hasAttachedPty": false,
+            "lastOutputAt": null,
+            "preview": "",
+            "status": "inactive",
+            "agents": []
+          },
+          {
+            "workspaceKind": "git",
+            "worktreeId": "repo-1789438950493-76fb1a::/root/odin-proof/seed-odin-ssh-ed092a",
+            "repoId": "repo-1789438950493-76fb1a",
+            "hostId": "ssh:ssh-1789438950492-3a598f",
+            "terminalPlatform": "linux",
+            "repo": "odin-ssh-proof",
+            "path": "/root/odin-proof/seed-odin-ssh-ed092a",
+            "branch": "",
+            "isArchived": false,
+            "isMainWorktree": false,
+            "hasHostSidebarActivity": true,
+            "worktreeInstanceId": "b69361f8-31af-46b5-8c00-21cd97300c75",
+            "parentWorktreeId": null,
+            "childWorktreeIds": [],
+            "displayName": "odin-ssh-ed092a",
+            "workspaceStatus": "in-progress",
+            "sortOrder": 1789439001214,
+            "lastActivityAt": 1789439001214,
+            "createdAt": 1789439001214,
+            "creatorProvenance": {
+              "kind": "host"
+            },
+            "linkedIssue": null,
+            "linkedPR": null,
+            "linkedLinearIssue": null,
+            "linkedGitLabMR": null,
+            "linkedGitLabIssue": null,
+            "comment": "",
+            "isPinned": false,
+            "isActive": true,
+            "unread": false,
+            "liveTerminalCount": 0,
+            "hasAttachedPty": false,
+            "lastOutputAt": null,
+            "preview": "",
+            "status": "inactive",
+            "agents": []
+          },
+          {
+            "workspaceKind": "git",
+            "worktreeId": "repo-1789438950493-76fb1a::/root/odin-proof/seed",
+            "repoId": "repo-1789438950493-76fb1a",
+            "hostId": "ssh:ssh-1789438950492-3a598f",
+            "terminalPlatform": "linux",
+            "repo": "odin-ssh-proof",
+            "path": "/root/odin-proof/seed",
+            "branch": "",
+            "isArchived": false,
+            "isMainWorktree": true,
+            "hasHostSidebarActivity": false,
+            "worktreeInstanceId": "02f93731-e8cb-4fd2-8cf6-330c44d45e7c",
+            "parentWorktreeId": null,
+            "childWorktreeIds": [],
+            "displayName": "odin-ssh-proof",
+            "workspaceStatus": "in-progress",
+            "sortOrder": 1789438989620,
+            "lastActivityAt": 1789438989619,
+            "linkedIssue": null,
+            "linkedPR": null,
+            "linkedLinearIssue": null,
+            "linkedGitLabMR": null,
+            "linkedGitLabIssue": null,
+            "comment": "",
+            "isPinned": false,
+            "isActive": false,
+            "unread": false,
+            "liveTerminalCount": 0,
+            "hasAttachedPty": false,
+            "lastOutputAt": null,
+            "preview": "",
+            "status": "inactive",
+            "agents": []
+          }
+        ],
+        "hostScope": {
+          "hostIds": ["ssh:ssh-1789438950492-3a598f"],
+          "omittedHostIds": ["local"],
+          "omittedHostSelectors": [
+            {
+              "hostId": "local",
+              "selector": "--host local"
+            }
+          ]
+        },
+        "totalCount": 3,
+        "truncated": false
+      },
+      "bWait": {
+        "handle": "term_a4f8baab-0023-4f6b-b6a9-e86d6855cb39",
+        "condition": "exit",
+        "satisfied": false,
+        "status": "unknown",
+        "exitCode": null,
+        "evidence": "silence"
+      },
+      "relaunch": {
+        "state": {
+          "targetId": "ssh-1789438950492-3a598f",
+          "status": "connected",
+          "error": null,
+          "reconnectAttempt": 0,
+          "supportsFolderDownload": true,
+          "providerEpoch": "12cde1ce10bed2f3b743b30a-7",
+          "connectionGeneration": 6191378105024518,
+          "remotePlatform": "linux"
+        }
+      }
+    }
+  },
+  "iptablesClean": true,
+  "events": [
+    {
+      "at": "2026-09-15T02:22:35.777Z",
+      "type": "vps.exec",
+      "cmd": "echo $SSH_CONNECTION",
+      "status": 0,
+      "stdout": "175.35.0.108 60405 65.108.95.199 22",
+      "stderr": ""
+    },
+    {
+      "at": "2026-09-15T02:22:35.779Z",
+      "type": "phase1.mac-ip",
+      "macIp": "175.35.0.108"
+    },
+    {
+      "at": "2026-09-15T02:22:40.095Z",
+      "type": "vps.exec",
+      "cmd": "mkdir -p /root/odin-proof && rm -rf /root/odin-proof/seed && cd /root/odin-proof && git init -q -b main seed && cd seed && git config user.email odin@proof.local && git config user.name 'Odin Proof' && printf '# odin ssh proof\\n' > README.md && git add -A && git commit -qm seed && git rev-parse HEAD",
+      "status": 0,
+      "stdout": "3cdf92b5f99bacbc32856d882c580043d1652170",
+      "stderr": ""
+    },
+    {
+      "at": "2026-09-15T02:22:40.095Z",
+      "type": "vps.repo-seeded",
+      "path": "/root/odin-proof/seed",
+      "head": "3cdf92b5f99bacbc32856d882c580043d1652170"
+    },
+    {
+      "at": "2026-09-15T02:22:40.112Z",
+      "type": "phase1.resolved-target",
+      "hostname": "65.108.95.199",
+      "port": 22,
+      "username": "root",
+      "identityFile": "/Users/briankeeny/.ssh/openclaw_vps_key"
+    },
+    {
+      "at": "2026-09-15T02:22:40.114Z",
+      "type": "profile",
+      "userDataDir": "/var/folders/08/tsc21p4n41ndkvcxq1kl0htw0000gn/T/odin-ssh-proof-OSSsQW",
+      "targetId": "ssh-1789438950492-3a598f",
+      "repoId": "repo-1789438950493-76fb1a"
+    },
+    {
+      "at": "2026-09-15T02:22:45.837Z",
+      "type": "host.ready",
+      "pid": 81904,
+      "status": {
+        "target": {
+          "kind": "local"
+        },
+        "app": {
+          "running": true,
+          "pid": 81904,
+          "desktopWindowStatus": "available"
+        },
+        "runtime": {
+          "state": "ready",
+          "reachable": true,
+          "connectionState": "connected",
+          "runtimeId": "c2156e0a-4c8d-4333-9bd9-8218b69a3543",
+          "appVersion": "43.7.0",
+          "remoteUpdateSupport": {
+            "installMode": "interactive",
+            "automatic": false,
+            "reason": "unpackaged-build"
+          },
+          "capabilities": [
+            "files.pathsExist",
+            "runtime.status.compat.v1",
+            "runtime.environments.v1",
+            "remote-runtime.shared-control.v1",
+            "orchestration.federation.v1",
+            "orchestration.federation-control-mail.v1",
+            "orchestration.federation-lifecycle-settlement.v1",
+            "orchestration.worker-stop-verdict.v1",
+            "orchestration.worker-launch-preferences.v1",
+            "orchestration.federation-structured-read.v1",
+            "orchestration.federation-fleet-snapshot.v1",
+            "orchestration.federation-release-archive.v1",
+            "orchestration.contract.v1",
+            "browser.screencast.v1",
+            "browser.tab-create-known-id.v1",
+            "browser.clientHost.v1",
+            "browser.clientHost.pageMetadata.v1",
+            "browser.clientHost.automation.v1",
+            "browser.clientHost.fileChannel.v1",
+            "network.browserTunnel.v1",
+            "network.browserTunnel.executionHosts.v1",
+            "terminal.binary-stream.v1",
+            "terminal.multiplex.v1",
+            "workspace-ports.v1",
+            "mobile.tasks.v1",
+            "project-host-setup.v1",
+            "task-source-context.v1",
+            "workspace-run-context.v1",
+            "worktree.linked-work-item-context.v1",
+            "worktree.github-pr-suppression.v1",
+            "folder-workspace.path-status.v1",
+            "linear.issue-attribute-filter.v1",
+            "jira.user-fields.v1",
+            "aiVault.v1",
+            "aiVault.session-titles.v1",
+            "terminal.query-reply-input.v1",
+            "terminal.prompt-delivery.v1",
+            "terminal.paired-parking.v1",
+            "terminal.quick-commands.v1",
+            "worktree.create-idempotency.v1",
+            "terminal.create-idempotency.v2",
+            "session-tabs.close-intent.v1",
+            "session-tabs.authoritative-inventory.v1",
+            "agent-session.session-boundary.v1",
+            "updater.remote-control.v1",
+            "agent-session.host-authority.v1",
+            "agent-session.omp-resume-path.v1",
+            "agent-session.structured.v1",
+            "agent-session.pending-send-result.v1",
+            "agent-session.structured.hold.v1",
+            "agent-session.structured.reveal.v1",
+            "agent-session.structured.resume-history.v1",
+            "agent-session.status-feed.v1",
+            "agent-status.host-osc-ingest.v1",
+            "agent-session.rewind.v1",
+            "agent-session.background-task-stop.v1",
+            "agent-session.turn-item.v1",
+            "agent-session.background-task-row-stop.v1",
+            "agent-session.kimi-resume.v1",
+            "files.mutation-ownership.v1",
+            "github.markPRReadyForReview",
+            "gitlab.updateMR.readyForReview.v1",
+            "worktree.visibility-defaults.v1",
+            "worktree.visibility-source-defaults.v1",
+            "accounts.import-host-credentials.v1",
+            "accounts.codex-reset-credit.v1",
+            "skills.install.v1",
+            "skills.install.bundle.v1",
+            "skills.install-cancel.v1",
+            "skills.install-progress.v1",
+            "skills.install-result.v2",
+            "skills.upload.v1",
+            "skills.manage.v1",
+            "skills.install-providers.v1",
+            "skills.delete.v1",
+            "automation.list-host-scope.v1",
+            "automation.owner-fencing.v1",
+            "automation.create-idempotency.v1",
+            "notifications.remote-push.v1",
+            "browser.certificate-trust.v1"
+          ]
+        },
+        "graph": {
+          "state": "ready"
+        }
+      }
+    },
+    {
+      "at": "2026-09-15T02:22:46.122Z",
+      "type": "phase2.host-list",
+      "hosts": [
+        {
+          "kind": "local",
+          "name": "this machine",
+          "id": "local",
+          "selector": "--host local",
+          "platform": "darwin"
+        },
+        {
+          "kind": "ssh",
+          "name": "claw-vps",
+          "id": "ssh-1789438950492-3a598f",
+          "selector": "--host ssh:ssh-1789438950492-3a598f",
+          "connected": false
+        }
+      ],
+      "sshRow": {
+        "kind": "ssh",
+        "name": "claw-vps",
+        "id": "ssh-1789438950492-3a598f",
+        "selector": "--host ssh:ssh-1789438950492-3a598f",
+        "connected": false
+      }
+    },
+    {
+      "at": "2026-09-15T02:22:46.134Z",
+      "type": "host.stderr",
+      "text": "[ssh-pty-consumer] no recovery record for ssh-1789438950492-3a598f; minting a new consumer identity. Relay PTYs the host attributes to this client's previous identity can no longer be swept.\n"
+    },
+    {
+      "at": "2026-09-15T02:22:50.516Z",
+      "type": "host.stderr",
+      "text": "[ssh] TCP_NODELAY enabled for claw-vps\n"
+    },
+    {
+      "at": "2026-09-15T02:22:50.518Z",
+      "type": "host.stdout",
+      "text": "[ssh-relay] Detecting remote platform...\n"
+    },
+    {
+      "at": "2026-09-15T02:22:51.550Z",
+      "type": "host.stdout",
+      "text": "[ssh-relay] Platform: linux-x64\n"
+    },
+    {
+      "at": "2026-09-15T02:22:53.941Z",
+      "type": "host.stdout",
+      "text": "[ssh-relay] Found node via path probe: /usr/bin/node\n"
+    },
+    {
+      "at": "2026-09-15T02:22:53.941Z",
+      "type": "host.stdout",
+      "text": "[ssh-relay] Remote dir: /root/.orca-remote/relay-0.1.0+aca66c7a50f8\n[ssh-relay] Already installed at 0.1.0+aca66c7a50f8: true\n"
+    },
+    {
+      "at": "2026-09-15T02:22:59.082Z",
+      "type": "host.stdout",
+      "text": "[ssh-relay] Launching relay...\n"
+    },
+    {
+      "at": "2026-09-15T02:22:59.778Z",
+      "type": "host.stderr",
+      "text": "[ssh-relay] Socket probe result: \"DEAD\"\n"
+    },
+    {
+      "at": "2026-09-15T02:23:03.553Z",
+      "type": "host.stdout",
+      "text": "[ssh-relay] Relay started successfully\n"
+    },
+    {
+      "at": "2026-09-15T02:23:09.197Z",
+      "type": "phase2.ssh-connect",
+      "connectState": {
+        "state": {
+          "targetId": "ssh-1789438950492-3a598f",
+          "status": "connected",
+          "error": null,
+          "reconnectAttempt": 0,
+          "supportsFolderDownload": true,
+          "providerEpoch": "d8f2ea1a1f41c3c26c38c2d3-2",
+          "connectionGeneration": 6191378105024513,
+          "remotePlatform": "linux"
+        }
+      },
+      "connectError": null
+    },
+    {
+      "at": "2026-09-15T02:23:15.542Z",
+      "type": "vps.exec",
+      "cmd": "ls -d ~/.orca-remote/relay-* 2>/dev/null; ls -l ~/.orca-remote/relay-*/*.sock 2>/dev/null; pgrep -af \"relay\\.js --detached\"",
+      "status": 0,
+      "stdout": "/root/.orca-remote/relay-0.1.0+9a9827b3fde2\n/root/.orca-remote/relay-0.1.0+aca66c7a50f8\nsrw------- 1 root root 0 Sep 14 19:35 /root/.orca-remote/relay-0.1.0+9a9827b3fde2/relay-578516318067a093.sock\nsrw------- 1 root root 0 Sep 14 19:44 /root/.orca-remote/relay-0.1.0+9a9827b3fde2/relay-68e71121d0c75bc0.sock\nsrw------- 1 root root 0 Sep 15 02:23 /root/.orca-remote/relay-0.1.0+aca66c7a50f8/relay-4da8cb177ce7f0b8.sock\n870277 /usr/bin/node relay.js --detached --grace-time 0 --sock-path /root/.orca-remote/relay-0.1.0+aca66c7a50f8/relay-4da8cb177ce7f0b8.sock --credential-file /root/.orca-remote/relay-0.1.0+aca66c7a50f8/relay-4da8cb177ce7f0b8.sock.credential --log-file /root/.orca-remote/relay-0.1.0+aca66c7a50f8/relay.log",
+      "stderr": ""
+    },
+    {
+      "at": "2026-09-15T02:23:31.744Z",
+      "type": "vps.exec",
+      "cmd": "ps -eo pid,ppid,pgid,tpgid,stat,tty,etimes,command | grep \"sleep 600\" | grep -v grep",
+      "status": 0,
+      "stdout": "871592  871560  871592  871592 S+   pts/1          6 sleep 600",
+      "stderr": ""
+    },
+    {
+      "at": "2026-09-15T02:23:31.745Z",
+      "type": "phase3.baseline",
+      "baselineShow": {
+        "handle": "term_db1f29c6-668a-4bb9-ad05-b14d462bf1b4",
+        "ptyId": "ssh:ssh-1789438950492-3a598f@@pty2:9aa78471-a150-41da-b6f5-96e03122987d:2",
+        "incarnationId": "c6b27401-407d-405f-becf-c0893cc44cfc",
+        "orphaned": false,
+        "worktreeId": "repo-1789438950493-76fb1a::/root/odin-proof/seed-odin-ssh-ed092a",
+        "worktreePath": "/root/odin-proof/seed-odin-ssh-ed092a",
+        "branch": "refs/heads/odin-ssh-ed092a",
+        "tabId": "eff826a4-e0b3-46e9-ab0c-b304c83b79a3",
+        "leafId": "dd5781db-7136-4d21-b774-6b26ebe32873",
+        "title": "root@claw-vps: ~/odin-proof/seed-odin-ssh-ed092a",
+        "connected": true,
+        "writable": true,
+        "lastOutputAt": 1789439004731,
+        "preview": "root@claw-vps:~/odin-proof/seed-odin-ssh-ed092a#sleep 600",
+        "executionHostId": "ssh:ssh-1789438950492-3a598f",
+        "paneRuntimeId": -1,
+        "rendererGraphEpoch": 0,
+        "agentWait": null
+      },
+      "baselinePs": {
+        "worktrees": [
+          {
+            "workspaceKind": "git",
+            "worktreeId": "repo-1789438950493-76fb1a::/root/odin-proof/seed-odin-ssh-ed092a",
+            "repoId": "repo-1789438950493-76fb1a",
+            "hostId": "ssh:ssh-1789438950492-3a598f",
+            "terminalPlatform": "linux",
+            "repo": "odin-ssh-proof",
+            "path": "/root/odin-proof/seed-odin-ssh-ed092a",
+            "branch": "refs/heads/odin-ssh-ed092a",
+            "isArchived": false,
+            "isMainWorktree": false,
+            "hasHostSidebarActivity": true,
+            "worktreeInstanceId": "b69361f8-31af-46b5-8c00-21cd97300c75",
+            "parentWorktreeId": null,
+            "childWorktreeIds": [],
+            "displayName": "odin-ssh-ed092a",
+            "workspaceStatus": "in-progress",
+            "sortOrder": 1789439001214,
+            "lastActivityAt": 1789439001214,
+            "createdAt": 1789439001214,
+            "creatorProvenance": {
+              "kind": "host"
+            },
+            "linkedIssue": null,
+            "linkedPR": null,
+            "linkedLinearIssue": null,
+            "linkedGitLabMR": null,
+            "linkedGitLabIssue": null,
+            "comment": "",
+            "isPinned": false,
+            "isActive": true,
+            "unread": false,
+            "liveTerminalCount": 2,
+            "hasAttachedPty": true,
+            "lastOutputAt": 1789439004731,
+            "preview": "root@claw-vps:~/odin-proof/seed-odin-ssh-ed092a#sleep 600",
+            "status": "active",
+            "agents": []
+          },
+          {
+            "workspaceKind": "git",
+            "worktreeId": "repo-1789438950493-76fb1a::/root/odin-proof/seed",
+            "repoId": "repo-1789438950493-76fb1a",
+            "hostId": "ssh:ssh-1789438950492-3a598f",
+            "terminalPlatform": "linux",
+            "repo": "odin-ssh-proof",
+            "path": "/root/odin-proof/seed",
+            "branch": "refs/heads/main",
+            "isArchived": false,
+            "isMainWorktree": true,
+            "hasHostSidebarActivity": false,
+            "worktreeInstanceId": "02f93731-e8cb-4fd2-8cf6-330c44d45e7c",
+            "parentWorktreeId": null,
+            "childWorktreeIds": [],
+            "displayName": "main",
+            "workspaceStatus": "in-progress",
+            "sortOrder": 1789438989620,
+            "lastActivityAt": 1789438989619,
+            "linkedIssue": null,
+            "linkedPR": null,
+            "linkedLinearIssue": null,
+            "linkedGitLabMR": null,
+            "linkedGitLabIssue": null,
+            "comment": "",
+            "isPinned": false,
+            "isActive": false,
+            "unread": false,
+            "liveTerminalCount": 0,
+            "hasAttachedPty": false,
+            "lastOutputAt": null,
+            "preview": "",
+            "status": "inactive",
+            "agents": []
+          }
+        ],
+        "hostScope": {
+          "hostIds": ["ssh:ssh-1789438950492-3a598f"],
+          "omittedHostIds": ["local"],
+          "omittedHostSelectors": [
+            {
+              "hostId": "local",
+              "selector": "--host local"
+            }
+          ]
+        },
+        "totalCount": 2,
+        "truncated": false
+      },
+      "vpsSleep": "871592  871560  871592  871592 S+   pts/1          6 sleep 600",
+      "sleepPid": "871592",
+      "shellPid": "871560"
+    },
+    {
+      "at": "2026-09-15T02:23:36.483Z",
+      "type": "vps.exec",
+      "cmd": "nohup sh -c 'iptables -I INPUT -s 175.35.0.108 -j DROP; sleep 150; iptables -D INPUT -s 175.35.0.108 -j DROP' >/dev/null 2>&1 & disown; echo armed",
+      "status": 0,
+      "stdout": "armed",
+      "stderr": ""
+    },
+    {
+      "at": "2026-09-15T02:23:36.484Z",
+      "type": "phase4.rule-armed",
+      "macIp": "175.35.0.108",
+      "blockWindowSec": 150
+    },
+    {
+      "at": "2026-09-15T02:23:58.572Z",
+      "type": "host.stderr",
+      "text": "[ssh-mux] Protocol error: Connection timed out (no ack received)\n"
+    },
+    {
+      "at": "2026-09-15T02:23:58.573Z",
+      "type": "host.stderr",
+      "text": "[ssh-relay-session] Relay channel lost for ssh-1789438950492-3a598f, triggering reconnect\n"
+    },
+    {
+      "at": "2026-09-15T02:23:58.574Z",
+      "type": "host.stderr",
+      "text": "[ssh] Relay channel for ssh-1789438950492-3a598f lost; reconnect attempt 1/6 in 500ms\n"
+    },
+    {
+      "at": "2026-09-15T02:23:59.080Z",
+      "type": "host.stdout",
+      "text": "[ssh-relay] Detecting remote platform...\n"
+    },
+    {
+      "at": "2026-09-15T02:24:38.932Z",
+      "type": "phase4.verdicts",
+      "ok": true,
+      "disconnectedAt": 4,
+      "sampleCount": 6,
+      "duringWait": {
+        "handle": "term_db1f29c6-668a-4bb9-ad05-b14d462bf1b4",
+        "condition": "exit",
+        "satisfied": false,
+        "status": "running",
+        "exitCode": null,
+        "evidence": "silence"
+      }
+    },
+    {
+      "at": "2026-09-15T02:24:38.932Z",
+      "type": "host.stderr",
+      "text": "[ssh] Connection error for claw-vps: Keepalive timeout\n[ssh] Reconnecting to claw-vps in 1000ms (delay step 1/9, failed handshakes 0/9)\n[ssh-relay] Remote platform detection failed (uname probe: failed, PowerShell probe: failed). Remote output: \"\"\n[ssh-relay-session] Failed to re-establish relay for ssh-1789438950492-3a598f: Could not detect the remote platform: No response from server\n[ssh] Relay channel for ssh-1789438950492-3a598f lost while the SSH transport is reconnecting; waiting 15000ms without consuming an attempt\n"
+    },
+    {
+      "at": "2026-09-15T02:24:55.701Z",
+      "type": "host.stderr",
+      "text": "[ssh] Reconnecting to claw-vps in 2000ms (delay step 2/9, failed handshakes 1/9)\n"
+    },
+    {
+      "at": "2026-09-15T02:25:27.731Z",
+      "type": "host.stderr",
+      "text": "[ssh] Reconnecting to claw-vps in 5000ms (delay step 3/9, failed handshakes 2/9)\n"
+    },
+    {
+      "at": "2026-09-15T02:26:02.767Z",
+      "type": "host.stderr",
+      "text": "[ssh] Reconnecting to claw-vps in 5000ms (delay step 4/9, failed handshakes 3/9)\n"
+    },
+    {
+      "at": "2026-09-15T02:26:16.076Z",
+      "type": "host.stderr",
+      "text": "[ssh] TCP_NODELAY enabled for claw-vps\n"
+    },
+    {
+      "at": "2026-09-15T02:26:16.082Z",
+      "type": "host.stdout",
+      "text": "[ssh-relay] Detecting remote platform...\n"
+    },
+    {
+      "at": "2026-09-15T02:26:17.461Z",
+      "type": "host.stdout",
+      "text": "[ssh-relay] Platform: linux-x64\n"
+    },
+    {
+      "at": "2026-09-15T02:26:20.215Z",
+      "type": "host.stdout",
+      "text": "[ssh-relay] Found node via path probe: /usr/bin/node\n"
+    },
+    {
+      "at": "2026-09-15T02:26:20.217Z",
+      "type": "host.stdout",
+      "text": "[ssh-relay] Remote dir: /root/.orca-remote/relay-0.1.0+aca66c7a50f8\n[ssh-relay] Already installed at 0.1.0+aca66c7a50f8: true\n"
+    },
+    {
+      "at": "2026-09-15T02:26:25.564Z",
+      "type": "host.stdout",
+      "text": "[ssh-relay] Launching relay...\n"
+    },
+    {
+      "at": "2026-09-15T02:26:26.276Z",
+      "type": "host.stderr",
+      "text": "[ssh-relay] Socket probe result: \"ALIVE\"\n"
+    },
+    {
+      "at": "2026-09-15T02:26:26.277Z",
+      "type": "host.stdout",
+      "text": "[ssh-relay] Existing relay socket found, attempting reconnect...\n"
+    },
+    {
+      "at": "2026-09-15T02:26:27.740Z",
+      "type": "host.stdout",
+      "text": "[ssh-relay] Reconnected to existing relay via socket\n"
+    },
+    {
+      "at": "2026-09-15T02:26:28.443Z",
+      "type": "host.stdout",
+      "text": "[ssh-relay] Relay started successfully\n"
+    },
+    {
+      "at": "2026-09-15T02:26:42.859Z",
+      "type": "vps.exec",
+      "cmd": "pgrep -af \"sleep 600\"",
+      "status": 0,
+      "stdout": "871592 sleep 600",
+      "stderr": ""
+    },
+    {
+      "at": "2026-09-15T02:26:42.859Z",
+      "type": "phase5.verdicts",
+      "ok": true,
+      "reconnectState": {
+        "state": {
+          "targetId": "ssh-1789438950492-3a598f",
+          "status": "connected",
+          "error": null,
+          "reconnectAttempt": 0,
+          "supportsFolderDownload": true,
+          "providerEpoch": "ef3c749cb435250bd5057723-6",
+          "connectionGeneration": 6191378105024517,
+          "remotePlatform": "linux"
+        }
+      },
+      "afterReconnectShow": {
+        "handle": "term_db1f29c6-668a-4bb9-ad05-b14d462bf1b4",
+        "ptyId": "ssh:ssh-1789438950492-3a598f@@pty2:9aa78471-a150-41da-b6f5-96e03122987d:2",
+        "incarnationId": "c6b27401-407d-405f-becf-c0893cc44cfc",
+        "orphaned": false,
+        "worktreeId": "repo-1789438950493-76fb1a::/root/odin-proof/seed-odin-ssh-ed092a",
+        "worktreePath": "/root/odin-proof/seed-odin-ssh-ed092a",
+        "branch": "refs/heads/odin-ssh-ed092a",
+        "tabId": "eff826a4-e0b3-46e9-ab0c-b304c83b79a3",
+        "leafId": "dd5781db-7136-4d21-b774-6b26ebe32873",
+        "title": "root@claw-vps: ~/odin-proof/seed-odin-ssh-ed092a",
+        "connected": true,
+        "writable": true,
+        "lastOutputAt": 1789439004731,
+        "preview": "root@claw-vps:~/odin-proof/seed-odin-ssh-ed092a#sleep 600",
+        "executionHostId": "ssh:ssh-1789438950492-3a598f",
+        "paneRuntimeId": -1,
+        "rendererGraphEpoch": 0,
+        "agentWait": null
+      },
+      "vpsSleepAfter": "871592 sleep 600",
+      "samePid": true
+    },
+    {
+      "at": "2026-09-15T02:26:47.173Z",
+      "type": "vps.exec",
+      "cmd": "iptables -S INPUT | grep 175.35.0.108 || true",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "at": "2026-09-15T02:26:51.466Z",
+      "type": "vps.exec",
+      "cmd": "kill -9 871560",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "at": "2026-09-15T02:26:58.873Z",
+      "type": "vps.exec",
+      "cmd": "ps -p 871560 >/dev/null 2>&1 && echo alive || echo dead",
+      "status": 0,
+      "stdout": "dead",
+      "stderr": ""
+    },
+    {
+      "at": "2026-09-15T02:26:58.874Z",
+      "type": "phase6.verdicts",
+      "ok": true,
+      "outOfBandShellState": "dead",
+      "exitedShow": {
+        "handle": "term_db1f29c6-668a-4bb9-ad05-b14d462bf1b4",
+        "ptyId": "ssh:ssh-1789438950492-3a598f@@pty2:9aa78471-a150-41da-b6f5-96e03122987d:2",
+        "incarnationId": "c6b27401-407d-405f-becf-c0893cc44cfc",
+        "orphaned": false,
+        "worktreeId": "repo-1789438950493-76fb1a::/root/odin-proof/seed-odin-ssh-ed092a",
+        "worktreePath": "/root/odin-proof/seed-odin-ssh-ed092a",
+        "branch": "refs/heads/odin-ssh-ed092a",
+        "tabId": "eff826a4-e0b3-46e9-ab0c-b304c83b79a3",
+        "leafId": "dd5781db-7136-4d21-b774-6b26ebe32873",
+        "title": "root@claw-vps: ~/odin-proof/seed-odin-ssh-ed092a",
+        "connected": false,
+        "writable": false,
+        "lastOutputAt": 1789439004731,
+        "preview": "root@claw-vps:~/odin-proof/seed-odin-ssh-ed092a#sleep 600",
+        "exitCause": {
+          "kind": "unknown",
+          "reason": "cause_unreported"
+        },
+        "executionHostId": "ssh:ssh-1789438950492-3a598f",
+        "paneRuntimeId": -1,
+        "rendererGraphEpoch": 0
+      },
+      "exitedWait": {
+        "handle": "term_db1f29c6-668a-4bb9-ad05-b14d462bf1b4",
+        "condition": "exit",
+        "satisfied": true,
+        "status": "exited",
+        "exitCode": 0,
+        "exitCause": {
+          "kind": "unknown",
+          "reason": "cause_unreported"
+        }
+      },
+      "exitedShowAfterWait": {
+        "handle": "term_db1f29c6-668a-4bb9-ad05-b14d462bf1b4",
+        "ptyId": "ssh:ssh-1789438950492-3a598f@@pty2:9aa78471-a150-41da-b6f5-96e03122987d:2",
+        "incarnationId": "c6b27401-407d-405f-becf-c0893cc44cfc",
+        "orphaned": false,
+        "worktreeId": "repo-1789438950493-76fb1a::/root/odin-proof/seed-odin-ssh-ed092a",
+        "worktreePath": "/root/odin-proof/seed-odin-ssh-ed092a",
+        "branch": "refs/heads/odin-ssh-ed092a",
+        "tabId": "eff826a4-e0b3-46e9-ab0c-b304c83b79a3",
+        "leafId": "dd5781db-7136-4d21-b774-6b26ebe32873",
+        "title": "root@claw-vps: ~/odin-proof/seed-odin-ssh-ed092a",
+        "connected": false,
+        "writable": false,
+        "lastOutputAt": 1789439004731,
+        "preview": "root@claw-vps:~/odin-proof/seed-odin-ssh-ed092a#sleep 600",
+        "exitCause": {
+          "kind": "unknown",
+          "reason": "cause_unreported"
+        },
+        "executionHostId": "ssh:ssh-1789438950492-3a598f",
+        "paneRuntimeId": -1,
+        "rendererGraphEpoch": 0
+      }
+    },
+    {
+      "at": "2026-09-15T02:27:13.964Z",
+      "type": "vps.exec",
+      "cmd": "pgrep -f \"relay\\.js --detached\"",
+      "status": 0,
+      "stdout": "870277",
+      "stderr": ""
+    },
+    {
+      "at": "2026-09-15T02:27:18.715Z",
+      "type": "vps.exec",
+      "cmd": "pkill -9 -f \"relay\\.js --detached\"",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "at": "2026-09-15T02:27:19.074Z",
+      "type": "host.stderr",
+      "text": "[ssh-relay-session] Relay channel lost for ssh-1789438950492-3a598f, triggering reconnect\n[ssh] Relay channel for ssh-1789438950492-3a598f lost; reconnect attempt 1/6 in 500ms\n"
+    },
+    {
+      "at": "2026-09-15T02:27:19.261Z",
+      "type": "host.stdout",
+      "text": "[ssh-relay] Detecting remote platform...\n"
+    },
+    {
+      "at": "2026-09-15T02:27:19.958Z",
+      "type": "host.stdout",
+      "text": "[ssh-relay] Platform: linux-x64\n"
+    },
+    {
+      "at": "2026-09-15T02:27:22.419Z",
+      "type": "host.stdout",
+      "text": "[ssh-relay] Found node via path probe: /usr/bin/node\n"
+    },
+    {
+      "at": "2026-09-15T02:27:22.419Z",
+      "type": "host.stdout",
+      "text": "[ssh-relay] Remote dir: /root/.orca-remote/relay-0.1.0+aca66c7a50f8\n[ssh-relay] Already installed at 0.1.0+aca66c7a50f8: true\n"
+    },
+    {
+      "at": "2026-09-15T02:27:55.234Z",
+      "type": "phase7.b-verdicts",
+      "ok": true,
+      "disconnectedAt": 0,
+      "sampleCount": 2,
+      "bWait": {
+        "handle": "term_a4f8baab-0023-4f6b-b6a9-e86d6855cb39",
+        "condition": "exit",
+        "satisfied": false,
+        "status": "unknown",
+        "exitCode": null,
+        "evidence": "silence"
+      }
+    },
+    {
+      "at": "2026-09-15T02:27:55.240Z",
+      "type": "host.stdout",
+      "text": "[ssh-relay] Launching relay...\n[ssh-relay] Existing relay socket found, attempting reconnect...\n[ssh-relay] Relay started successfully\n"
+    },
+    {
+      "at": "2026-09-15T02:27:55.241Z",
+      "type": "host.stderr",
+      "text": "[ssh-relay] Socket probe result: \"ALIVE\"\n[ssh-relay] Socket reconnect failed, establishing what owns the endpoint: Relay process exited before ready. stderr: [relay-connect] Socket error: connect ECONNREFUSED /root/.orca-remote/relay-0.1.0+aca66c7a50f8/relay-4da8cb177ce7f0b8.sock\n[ssh-relay] Relay endpoint incumbent: /root/.orca-remote/relay-0.1.0+aca66c7a50f8/relay-4da8cb177ce7f0b8.sock verdict=exited evidence=no-holder holders=none\n[ssh-relay-session] Dropping stale PTY pty2:9aa78471-a150-41da-b6f5-96e03122987d:1 for ssh-1789438950492-3a598f after relay reattach failed: PTY \"pty2:9aa78471-a150-41da-b6f5-96e03122987d:1\" not found\n[ssh-relay-session] Dropping stale PTY pty2:9aa78471-a150-41da-b6f5-96e03122987d:3 for ssh-1789438950492-3a598f after relay reattach failed: PTY \"pty2:9aa78471-a150-41da-b6f5-96e03122987d:3\" not found\n[ssh-relay-session] Dropping stale PTY pty2:9aa78471-a150-41da-b6f5-96e03122987d:4 for ssh-1789438950492-3a598f after relay reattach failed: PTY \"pty2:9aa78471-a150-41da-b6f5-96e03122987d:4\" not found\n[orchestration] legacy worker reconcile failed on relay ready {\n  targetId: 'ssh-1789438950492-3a598f',\n  error: Error: terminal_liveness_unavailable\n      at _ka.refreshRestoredOrchestrationAuthority (/Users/briankeeny/Desktop/odin-fork/out/main/index.js:7903:81659)\n      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\n}\n"
+    },
+    {
+      "at": "2026-09-15T02:27:58.245Z",
+      "type": "phase7.relaunch",
+      "state": {
+        "targetId": "ssh-1789438950492-3a598f",
+        "status": "connected",
+        "error": null,
+        "reconnectAttempt": 0,
+        "supportsFolderDownload": true,
+        "providerEpoch": "12cde1ce10bed2f3b743b30a-7",
+        "connectionGeneration": 6191378105024518,
+        "remotePlatform": "linux"
+      }
+    },
+    {
+      "at": "2026-09-15T02:27:59.949Z",
+      "type": "host.exit",
+      "code": 0,
+      "signal": null
+    },
+    {
+      "at": "2026-09-15T02:28:04.367Z",
+      "type": "vps.exec",
+      "cmd": "rm -rf /root/odin-proof",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "at": "2026-09-15T02:28:08.715Z",
+      "type": "vps.exec",
+      "cmd": "iptables -S INPUT | grep 175.35.0.108 || true",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "at": "2026-09-15T02:28:12.981Z",
+      "type": "vps.exec",
+      "cmd": "iptables -S INPUT | grep 175.35.0.108 || true",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "at": "2026-09-15T02:28:12.981Z",
+      "type": "cleanup.iptables",
+      "finalCheck": "",
+      "clean": true
+    }
+  ]
+}

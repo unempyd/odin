@@ -410,25 +410,37 @@ now fails the phase outright instead of being noted as an evidence gap.
 - **C** (`tui-idle` over SSH): not exercised — no phase in this proof drives an agent CLI over SSH,
   only a plain shell running `sleep 600`.
 
+## Run at `f707829826` — strengthened phases against claw-vps (2026-09-15T02:28Z)
+
+Artifact: `odin/proofs/ssh-boundary.2026-09-15T02-28-13-014Z.json`, `ok: true`, `iptablesClean: true`.
+The preceding run at `8b0df499bb` (`ssh-boundary.2026-09-15T01-39-52-596Z.json`) failed phase 4 under
+the strengthened assertion: for 90 s of dropped transport, with the host logging the relay channel
+loss and a keepalive timeout, `terminal show` kept answering `connected: true, writable: true`. That
+was the residual now recorded as `show-contact-loss` (README table, manifest, and
+`src/main/runtime/show-contact-loss.test.ts`); the same code exists at upstream `539d4d1f32`.
+
+- Phase 4 (iptables DROP, 150 s window): `connected` observed `false` on the fourth sample (~20 s,
+  the relay dead-link window), with `liveness: {status: 'unverifiable', reason: 'reconnecting'}`;
+  no sample carried `exitCause`; `terminal wait --for exit` (30 s budget, started during the
+  drop) resolved `{satisfied: false, status: 'running', evidence: 'silence'}`. `ok: true`.
+- Phase 5: reconnect re-adopted the same PTY. `ok: true`.
+- Phase 6: `SIGKILL` on the login shell → `outOfBandShellState: 'dead'`; the wait resolved
+  `{satisfied: true, status: 'exited', exitCode: 0, exitCause: {kind: 'unknown', reason:
+  'cause_unreported'}}`. `ok: true`; the `exitCode: 0` semantics for a signalled shell remain as
+  documented below.
+- Phase 7 (relay SIGKILL): `connected: false` on the first sample; the wait resolved
+  `{satisfied: false, status: 'unknown', evidence: 'silence'}`; relay relaunched on reconnect.
+  `ok: true`.
+
 ## Unproven claims (explicit, updated)
 
 - Of the four boundary verdicts from `docs/reference/ssh-execution-boundary.md`: **`terminal show`
-  never `exited` on transport loss** is now proven against a real host (phases 4 and 7) — under the
-  old single-sample check (see the driver contract update in §Phases 3–7); it does **not** show
-  that the `unverifiable` verdict was ever reached on a real drop, only that nothing changed in the
-  window sampled. The strengthened `pollUntilDisconnected`/`lossOfContactOk` assertion closes this
-  gap at the driver level (it now requires actually observing `connected: false`), but that
-  assertion has not itself been exercised against the real VPS yet — a re-run is the open item. The
-  other three verdicts (`worktree ps`'s "not covered" scope note, `worker-show`'s
-  `unverifiable`/`missing_liveness_verdict`, and `terminal wait --for exit`'s immediate
-  `satisfied:false, evidence:'silence'`) remain proven only by the unit tests
-  (`odin/proofs/*.after.txt`), not by this run — the wait-path finding above is the reason the third
-  one specifically still isn't. The `wait-silence` fix (above) closes the verdict-shape gap the
-  finding names, at the unit level only; this run has not been repeated against the fixed binary,
-  so "proven only by unit tests, not by this run" still holds for that third verdict — and, as of
-  the driver contract update, a re-run that fails to observe `terminal.wait` resolving
-  `satisfied:false, evidence:'silence'` during a real drop now fails phases 4/7 outright rather than
-  being noted as an evidence gap.
+  reaches `unverifiable` and never `exited` on a real transport loss** and **`terminal wait --for
+  exit` resolves `satisfied:false, evidence:'silence'` during the loss** are proven by the run at
+  `f707829826` (phases 4 and 7). `worktree ps`'s "not covered" scope note and `worker-show`'s
+  `unverifiable`/`missing_liveness_verdict` remain proven only by the unit tests
+  (`odin/proofs/*.after.txt`), not by this driver, which creates no orchestration worker on the
+  SSH host.
 - **Phase 6's "yields a proven exit" reads stronger than what the run shows**: the recorded verdict
   is `exitCode: 0` with `exitCause: {kind: 'unknown', reason: 'cause_unreported'}` for a SIGKILLed
   shell; actual death was established by the driver's own out-of-band `ssh ps -p` check, not by
