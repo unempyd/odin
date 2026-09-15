@@ -73,7 +73,7 @@
     {
       "id": "O3b",
       "title": "classifyTerminalProcessInspectionFailure gives terminal_handle_stale/terminal_exited/no_connected_pty/a PTY-not-found message their own reasons instead of the host-proven terminal_gone",
-      "commit": "PENDING-O3-COMMIT-HASH",
+      "commit": "382bf626a9",
       "tests": ["src/shared/terminal-process-inspection.test.ts"],
       "reproduce": "expected 'terminal_gone' to be 'terminal_handle_stale'",
       "note": "docs/reference/ssh-execution-boundary.md's own 'terminal_gone is overloaded' paragraph names this exact bug: classifyTerminalProcessInspectionFailure (shared/terminal-process-inspection.ts:83-95) bucketed a client-side registry miss (stale handle, exited entry, no connected pty, a 'PTY \"<id>\" not found' message) under the same 'terminal_gone' string as the host's own relay-side tombstone claim. This function and its bucketing are byte-identical at upstream 539d4d1f32b4 (verified by diff) -- a genuine inherited Orca residual, not Odin-introduced -- so it is recorded in the existing hash-cited shape once the fix commit exists."
