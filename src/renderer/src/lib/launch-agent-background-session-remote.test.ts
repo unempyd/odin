@@ -25,7 +25,7 @@ const mockPasteDraftWhenAgentReady = vi.fn()
 const mockMarkTrusted = vi.fn()
 const mockDispatchEvent = vi.fn()
 const mockGetAgentLaunchPlatformForRepo = vi.fn<() => NodeJS.Platform>()
-const mockCreateBackgroundAgentStatusConsumer = vi.fn(() => ({
+const mockCreateBackgroundAgentStatusConsumer = vi.fn((..._args: unknown[]) => ({
   consume: vi.fn(),
   resolveRouting: vi.fn(),
   observeLaunchIngress: vi.fn()
