@@ -54,6 +54,16 @@
       "note": "Round-3 review finding: CURSOR_SESSION_OPTION_CATALOG sets supportsWorkerLaunchPreferences: true, but PROBEABLE_LAUNCH_AGENTS excluded cursor, so a cursor launch fell to the bottom catalog-only branch -- effective: {...selection}, honestly labelled source: 'catalog' but never checked against the installed CLI. At upstream this whole probe apparatus does not exist yet, so every agent's receipt is the unconditional clone; the reproduce regex pins the same 'source': 'catalog' (never 'probe') diff line the I entry's fix already closed for claude/codex."
     },
     {
+      "id": "I4",
+      "title": "source: 'probe' requires the discovery answer's own catalogOrigin; a failed probe is not memoised past its own call",
+      "commit": "odin(I4) -- see git log --grep I4",
+      "tests": [
+        "src/main/runtime/rpc/methods/orchestration/worker/worker-launch-preferences.test.ts"
+      ],
+      "reproduce": "expected undefined to be 'unverified'",
+      "note": "Round-4 review finding, Odin-introduced (I4a): verifyAgentLaunchSelection labelled the outcome source: 'probe' on result.success alone, but discoverCommitMessageModelsLocal also returns success: true, catalogOrigin: 'spec' when the installed CLI exits 0 with no parseable model list and finalizeModelDiscoveryOutput falls back to the static catalog -- that fallback earned the same 'probe' label as a real live-CLI answer. Fixed by threading catalogOrigin through AgentLaunchVerification and labelling 'catalog' unless catalogOrigin === 'probe'. (I4b, same commit): probeAgentModelsOnce memoised the discover() promise for the process lifetime including failures, keyed by (executor, agentId), so one transient miss pinned every later worker-start for that agent to 'unverified' forever; fixed by evicting the cache entry on any failed outcome so the next launch re-probes. At upstream 539d4d1f32b4 resolveWorkerLaunchPreferences is synchronous (I3's own comment: no probe exists at all) so `await`ing its plain return object is a no-op; the I4a test's own `.resolves` matcher throws 'You must provide a Promise' first (an infrastructure mismatch, not used as the reproduction, matching the I3 precedent), but the I4b test reaches a real, meaningful assertion: `first.receipt.source` is `undefined` there (no `source` field exists on the synchronous receipt at all) where this test expects `'unverified'` -- pinned as the reproduce regex."
+    },
+    {
       "id": "B",
       "title": "Worker liveness: an empty or non-enumerating host answer is unverifiable, never exited",
       "commit": "cfc277f2b1",

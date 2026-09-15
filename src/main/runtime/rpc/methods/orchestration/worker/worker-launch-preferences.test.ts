@@ -522,6 +522,88 @@ describe('orchestration worker launch preferences', () => {
     })
   })
 
+  describe('Launch receipt catalogOrigin honesty (I4)', () => {
+    it('labels a static-catalog-fallback probe answer catalog, not probe (I4a)', async () => {
+      // Why this reproduces I4a: discoverCommitMessageModelsLocal's finalizeModelDiscoveryOutput
+      // returns success: true, catalogOrigin: 'spec' when the installed CLI exits 0 but reports no
+      // parseable model list (the Claude spec documents this for older CLIs) and falls back to the
+      // static catalog. verifyAgentLaunchSelection used to key its 'accepted' outcome on
+      // `result.success` alone, so this fallback earned the same `source: 'probe'` label as a real
+      // live-CLI answer even though the installed CLI never actually named this model.
+      const staticCatalogFallback: AgentLaunchModelDiscovery = async () => ({
+        success: true,
+        capability: {
+          id: 'claude',
+          label: 'Claude',
+          modelSource: 'dynamic',
+          models: [{ id: 'aws-bedrock-opus-5', label: 'aws-bedrock-opus-5' }],
+          defaultModelId: 'aws-bedrock-opus-5'
+        },
+        models: [{ id: 'aws-bedrock-opus-5', label: 'aws-bedrock-opus-5' }],
+        defaultModelId: 'aws-bedrock-opus-5',
+        catalogOrigin: 'spec'
+      })
+
+      await expect(
+        resolveWorkerLaunchPreferences({
+          agent: 'claude',
+          model: 'aws-bedrock-opus-5',
+          discoverAgentModels: staticCatalogFallback
+        })
+      ).resolves.toEqual({
+        preferences: { model: 'aws-bedrock-opus-5' },
+        receipt: {
+          requested: { agent: 'claude', model: 'aws-bedrock-opus-5', effort: null },
+          effective: { agent: 'claude', model: 'aws-bedrock-opus-5', effort: null },
+          source: 'catalog'
+        }
+      })
+    })
+
+    it('re-probes after a transient failure instead of pinning every later launch to unverified (I4b)', async () => {
+      // Why this reproduces I4b: probeAgentModelsOnce memoised the discover() promise for the
+      // process lifetime regardless of outcome, keyed by (executor, agentId). A single transient
+      // miss (CLI briefly unreachable) cached a rejected/false promise forever, so a second
+      // worker-start for the same agent -- using the SAME discover reference, as production does
+      // via discoverCommitMessageModelsLocal -- replayed the stale failure instead of asking again.
+      let calls = 0
+      const flaky: AgentLaunchModelDiscovery = async () => {
+        calls++
+        if (calls === 1) {
+          return { success: false, error: 'claude timed out on this attempt.' }
+        }
+        return {
+          success: true,
+          capability: {
+            id: 'claude',
+            label: 'Claude',
+            modelSource: 'dynamic',
+            models: [{ id: 'aws-bedrock-opus-5', label: 'aws-bedrock-opus-5' }],
+            defaultModelId: 'aws-bedrock-opus-5'
+          },
+          models: [{ id: 'aws-bedrock-opus-5', label: 'aws-bedrock-opus-5' }],
+          defaultModelId: 'aws-bedrock-opus-5',
+          catalogOrigin: 'probe'
+        }
+      }
+
+      const first = await resolveWorkerLaunchPreferences({
+        agent: 'claude',
+        model: 'aws-bedrock-opus-5',
+        discoverAgentModels: flaky
+      })
+      expect(first.receipt.source).toBe('unverified')
+
+      const second = await resolveWorkerLaunchPreferences({
+        agent: 'claude',
+        model: 'aws-bedrock-opus-5',
+        discoverAgentModels: flaky
+      })
+      expect(second.receipt.source).toBe('probe')
+      expect(calls).toBe(2)
+    })
+  })
+
   describe('Grok worker launch preferences (I2)', () => {
     it('is rejected before any probe: grok has no worker-launch-preferences catalog support', async () => {
       // Why this pins a boundary rather than exercising a probe: unlike Claude and Codex,

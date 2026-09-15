@@ -22,11 +22,14 @@ export type OrchestrationWorkerLaunchSelection = {
 
 /** How `effective` was determined (issue #10846 — `effective` must never be a
  *  silent clone of `requested`):
- *  - 'probe': the installed CLI was asked (list_models) and accepts this exact
- *    model; see `effortSource` for whether effort was probed too.
- *  - 'catalog': no live probe runs for this agent; `effective` is the request
- *    as validated against the static catalog only — an honest label, not a
- *    claim of verification.
+ *  - 'probe': the installed CLI was asked (list_models) and its own answer
+ *    (`catalogOrigin: 'probe'`) named this exact model; see `effortSource` for
+ *    whether effort was probed too.
+ *  - 'catalog': either no live probe runs for this agent, or the probe ran but
+ *    the CLI exited cleanly with no parseable model list, so discovery fell
+ *    back to the static catalog (`catalogOrigin: 'spec'`, I4) — `effective` is
+ *    the request as validated against the static catalog only, an honest
+ *    label, not a claim of live verification.
  *  - 'unverified': a probe exists but could not be run (not on PATH, timed
  *    out, too much output, ...); `unverifiedReason` carries the CLI/spawn
  *    failure text. The worker still starts on the catalog floor. */
@@ -87,7 +90,7 @@ export function createPendingWorkerLaunchReceipt(args: {
 export type AgentLaunchModelDiscovery = typeof discoverCommitMessageModelsLocal
 
 type AgentLaunchVerification =
-  | { outcome: 'accepted'; effortSource?: 'catalog' }
+  | { outcome: 'accepted'; catalogOrigin: 'probe' | 'spec'; effortSource?: 'catalog' }
   | { outcome: 'rejected'; reason: string }
   | { outcome: 'unverified'; reason: string }
 
@@ -117,6 +120,21 @@ function probeAgentModelsOnce(
     // git operation — the default environment is enough to ask "what does the
     // installed CLI accept", so no cwd/wsl routing is threaded through here.
     pending = discover(agentId, process.env)
+    // I4: only a successful probe is worth memoising for the process lifetime. A transient
+    // miss (CLI briefly unreachable, a timeout) must not pin every later worker-start for this
+    // agent to 'unverified' forever -- evict on failure (resolved false, or a thrown rejection)
+    // so the next launch re-probes.
+    pending
+      .then((result) => {
+        if (!result.success && byAgent!.get(agentId) === pending) {
+          byAgent!.delete(agentId)
+        }
+      })
+      .catch(() => {
+        if (byAgent!.get(agentId) === pending) {
+          byAgent!.delete(agentId)
+        }
+      })
     byAgent.set(agentId, pending)
   }
   return pending
@@ -151,7 +169,7 @@ async function verifyAgentLaunchSelection(
   }
   if (effort) {
     if (!verifyEffortAgainstProbe) {
-      return { outcome: 'accepted', effortSource: 'catalog' }
+      return { outcome: 'accepted', catalogOrigin: result.catalogOrigin, effortSource: 'catalog' }
     }
     const levels = listed.thinkingLevels ?? []
     if (!levels.some((level) => level.id === effort)) {
@@ -162,7 +180,7 @@ async function verifyAgentLaunchSelection(
       }
     }
   }
-  return { outcome: 'accepted' }
+  return { outcome: 'accepted', catalogOrigin: result.catalogOrigin }
 }
 
 /** Agents whose worker launch preferences are probed against the installed CLI (I / I2 / I3).
@@ -298,7 +316,10 @@ export async function resolveWorkerLaunchPreferences(args: {
         verification.outcome === 'accepted'
           ? {
               ...base,
-              source: 'probe',
+              // I4: finalizeModelDiscoveryOutput labels a static-catalog fallback (the installed
+              // CLI exited 0 but returned no parseable model list) catalogOrigin: 'spec' with
+              // success: true -- only 'probe' means the live CLI actually named this model.
+              source: verification.catalogOrigin === 'probe' ? 'probe' : 'catalog',
               ...(verification.effortSource ? { effortSource: verification.effortSource } : {})
             }
           : {
