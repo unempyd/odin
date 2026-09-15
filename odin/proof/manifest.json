@@ -121,6 +121,16 @@
       "commit": "013965c537",
       "tests": ["src/shared/retired-pty-incarnations.test.ts"],
       "note": "Closed by construction, not mechanically reproduced: upstream src/relay/pty-handler.ts:2412 hard-codes code: 0 in reapExitedPty even for evidence 'record-torn-down' (its own docblock at :2395-2402 says that is not a death), and :2632-2656 publishes verdict 'exited' from it. Odin routes the code through resolveRetiredPtyIncarnationCode (UNVERIFIED_PROCESS_EXIT_CODE unless the evidence is a proven exit) and the consumer applies the same isProvenProcessExit gate as the daemon (A). The race has no deterministic harness in the relay test surface, so its test pins the extracted mapping rather than reproducing the upstream path."
+    },
+    {
+      "id": "N2",
+      "title": "Schema-skew probe registers the v42 exit_code column",
+      "commit": "321f902830",
+      "tests": [
+        "src/main/runtime/orchestration/orchestration-version-skew-migration.test.ts"
+      ],
+      "reproduce": "expected 42 to be 6",
+      "note": "Closed by construction, not mechanically reproduced against upstream 539d4d1f32b4: schema v42 and dispatch_contexts.exit_code are Odin's own additions (residual N, commit 07184d77d6) with no upstream counterpart, so this defect cannot exist there. VERSIONED_POST_V6_COLUMNS in orchestration-schema-version-skew.ts never registered the v42 column migrate-v42.ts adds, so a database already stamped user_version=42 without it read as schema-complete and the column was never repaired. The added test pins resolveOrchestrationMigrationStartVersion falling back to the v6 floor (and the column being restored) for a v42-stamped database missing it; N2.before.txt / N2.after.txt show the test failing then passing across the fix."
     }
   ]
 }
