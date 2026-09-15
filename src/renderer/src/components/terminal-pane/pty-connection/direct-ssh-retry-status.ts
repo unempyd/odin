@@ -28,12 +28,13 @@ import {
 import { isMainTerminalSideEffectAuthorityForPty } from '../terminal-side-effect-facts-handler'
 import {
   cachedHostOwnsRemoteAgentStatus,
-  primeHostOwnsRemoteAgentStatusCache
+  primeHostOwnsRemoteAgentStatusCache,
+  subscribeToHostOwnsRemoteAgentStatusChanges
 } from '@/runtime/agent-status-host-osc-ingest-capability'
 import { isRendererHiddenPtyDeliveryGateEnabled } from '../terminal-hidden-delivery-gate'
 import {
   markRendererOwnedAgentStatusWrite,
-  registerRendererOwnedAgentStatusPane
+  trackRemoteAgentStatusOwnership
 } from '../renderer-owned-agent-status-registry'
 
 import { DIRECT_SSH_PANE_RETRY_SETTLEMENT_TIMEOUT_MS } from './pty-connect-limits'
@@ -147,30 +148,43 @@ export function installDirectSshRetryStatus(session: ConnectPanePtySession): voi
           availableWslDistros: session.localWindowsTerminalCapabilities?.wslDistros ?? null
         })
       : undefined
-  // status-C: the client must probe, never assume
+  // status-cache-revisit: the client must probe, never assume
   // (docs/reference/remote-wire-compatibility.md rule 3) — a capable host
   // already publishes this pane's row on session.tabs, so the renderer stops
-  // parsing its own OSC bytes for it. The probe is async and this decision is
-  // made once, synchronously, at transport creation and never revisited, so
-  // it reads the last-known cached verdict (defaulting to false — keep
-  // writing — until a probe resolves) and fires a fresh probe for next time.
+  // parsing its own OSC bytes for it. The probe is async, so the initial
+  // decision reads the last-known cached verdict (defaulting to false — keep
+  // writing — until a probe resolves for this environment); unlike a one-shot
+  // decision, trackRemoteAgentStatusOwnership also re-evaluates on every later
+  // probe resolution for this environment (including the one this pane's own
+  // prime call below fires), so a cold-start warm-up or a host
+  // upgrade/downgrade mid-session flips this live session's ownership instead
+  // of freezing whatever was known at connection time.
   const remoteRuntimeEnvironmentId = session.runtimeEnvironmentId
   if (remoteRuntimeEnvironmentId !== null) {
+    const ownership = trackRemoteAgentStatusOwnership({
+      paneKey: session.cacheKey,
+      environmentId: remoteRuntimeEnvironmentId,
+      cachedHostOwns: cachedHostOwnsRemoteAgentStatus(remoteRuntimeEnvironmentId),
+      onOwnershipChange: (shouldOwn) => {
+        session.shouldOwnAgentStatusInRenderer = shouldOwn
+      },
+      subscribeToHostOwnsChanges: subscribeToHostOwnsRemoteAgentStatusChanges
+    })
+    session.shouldOwnAgentStatusInRenderer = ownership.shouldOwnAgentStatusInRenderer
+    session.disposeRemoteAgentStatusOwnershipTracking = ownership.dispose
     primeHostOwnsRemoteAgentStatusCache(remoteRuntimeEnvironmentId)
+  } else {
+    session.shouldOwnAgentStatusInRenderer = false
+    session.disposeRemoteAgentStatusOwnershipTracking = null
   }
-  session.shouldOwnAgentStatusInRenderer =
-    remoteRuntimeEnvironmentId !== null &&
-    !cachedHostOwnsRemoteAgentStatus(remoteRuntimeEnvironmentId)
-  // Why: the host also mirrors agent status for this pane through tabs.
-  // Claiming here (decided once at transport creation, like the side-effect
-  // authority below) lets the mirror keep this renderer's byte-derived status
-  // instead of overwriting/deleting it on every republication. A capable
-  // host's pane never claims, so the mirror's host row wins unconditionally.
-  session.releaseRendererOwnedAgentStatusPane =
-    session.shouldOwnAgentStatusInRenderer && remoteRuntimeEnvironmentId !== null
-      ? registerRendererOwnedAgentStatusPane(session.cacheKey, remoteRuntimeEnvironmentId)
-      : null
   session.handleRendererOwnedAgentStatus = (payload): void => {
+    // Why: this callback is wired unconditionally onto a remote-runtime pane's
+    // transport (pty-input-recovery.ts) because the transport is created once
+    // and cannot be rewired when ownership later flips — so the live decision
+    // is read here, at call time, instead of at wiring time.
+    if (!session.shouldOwnAgentStatusInRenderer) {
+      return
+    }
     if (
       shouldSuppressCodexAutoApprovalStatus(payload, {
         paneKey: session.cacheKey,

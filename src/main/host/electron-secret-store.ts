@@ -36,21 +36,55 @@ export class ElectronSecretStore implements SecretStore {
   }
 }
 
-// Why: safeStorage.isEncryptionAvailable() (and, transitively, encryptString/decryptString, which
-// ProtectedSecretPersistence never calls without checking this first) can synchronously block the
-// whole main process waiting for an OS keychain authorization prompt on first touch. A windowless
-// launch (ORCA_BACKGROUND_LAUNCH — every agent-driven/E2E run per AGENTS.md) sets `accessory`
-// activation policy and hides the Dock tile (foreground-activation-policy.ts), so macOS has no
-// frontmost window to attach that prompt to and the call never returns — freezing ssh.connect (and
-// everything else on the event loop) forever with no timeout and no diagnosable error. Such a run
-// cannot answer a prompt anyway, so report unavailable up front rather than risk the hang; the
-// store's existing degraded-but-functional contract (retain prior ciphertext, or write plaintext)
-// already covers this.
+// Why: safeStorage.isEncryptionAvailable() (and, transitively, encryptString/decryptString) can
+// synchronously block the whole main process waiting for an OS keychain authorization prompt on
+// first touch. A windowless launch (ORCA_BACKGROUND_LAUNCH, or E2E-headless — proof drivers, tests,
+// and benchmarks; no production path sets either) sets `accessory` activation policy and hides the
+// Dock tile (foreground-activation-policy.ts), so macOS has no frontmost window to attach that
+// prompt to and the call never returns — freezing ssh.connect (and everything else on the event
+// loop) forever with no timeout and no diagnosable error (odin/proofs/ssh-boundary.md §Deviation 3).
+// Such a run cannot answer a prompt anyway, so report unavailable up front rather than risk the
+// hang. Scoped to darwin: the Keychain-prompt hang is a macOS-only failure mode — Linux/Windows have
+// no equivalent blocking prompt, so tripping the guard there would degrade real at-rest protection
+// for no reason.
+//
+// What "unavailable" degrades, per consumer (none of this is "retain prior ciphertext, or write
+// plaintext" uniformly — each caller has its own unavailable-branch behavior):
+//  - Protected slots (ProtectedSecretPersistence: opencodeSessionCookie, httpProxyUrl,
+//    browserKagiSessionLink, SSH PTY owner leases): the prior ciphertext is kept, but a NEW value
+//    is silently not persisted (`degraded: true`, blob unchanged).
+//  - MiniMax API key / cookie (minimax-api-key-store.ts, minimax-cookie-store.ts): written to disk
+//    in PLAINTEXT, with a console.warn at the call site.
+//  - Plugin secrets (plugin-secrets-store.ts): reads and writes both REFUSE.
+//  - Cloud session (profile-cloud-session-store.ts): reads back as `decrypt-failed`.
 function encryptionAvailableGuarded(): boolean {
-  if (isWindowlessLaunch()) {
+  if (process.platform === 'darwin' && isWindowlessLaunch()) {
+    warnWindowlessSecretsGuardTripped()
     return false
   }
   return safeStorage.isEncryptionAvailable()
+}
+
+let warnedWindowlessSecretsGuardTripped = false
+
+/** One-time: repeating this on every OSC/status tick or secret read would drown the console. */
+function warnWindowlessSecretsGuardTripped(): void {
+  if (warnedWindowlessSecretsGuardTripped) {
+    return
+  }
+  warnedWindowlessSecretsGuardTripped = true
+  console.warn(
+    '[secrets] Windowless launch (ORCA_BACKGROUND_LAUNCH or E2E-headless) — refusing to touch ' +
+      'the macOS Keychain to avoid an unattended hang with no window to authorize its prompt. ' +
+      'Consequences for this run: protected settings and SSH PTY owner leases are not persisted; ' +
+      'the MiniMax API key/cookie are written in plaintext; plugin secrets refuse to read or ' +
+      'write; a saved cloud session reads back as decrypt-failed.'
+  )
+}
+
+/** Test-only: lets a suite re-observe the one-time warning within the same process. */
+export function _resetWindowlessSecretsGuardWarningForTest(): void {
+  warnedWindowlessSecretsGuardTripped = false
 }
 
 // Electron omits getSelectedStorageBackend at runtime outside Linux despite its type declaration.

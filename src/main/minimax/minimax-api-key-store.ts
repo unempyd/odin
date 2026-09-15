@@ -1,7 +1,7 @@
 import { existsSync, readFileSync, rmSync } from 'node:fs'
 import { homedir } from 'node:os'
 import { join } from 'node:path'
-import { getSecretStore } from '../../shared/secret-store'
+import { getSecretStoreOrUnavailable } from '../../shared/secret-store'
 import { hardenExistingSecureFile, writeSecureFile } from '../../shared/secure-file'
 
 const MINIMAX_API_KEY_FILE = 'minimax-api-key.enc'
@@ -50,10 +50,10 @@ function readEnvelope(envelope: MiniMaxApiKeyEnvelope): string {
   if (envelope.kind === 'plaintext') {
     return envelope.payload.toString('utf8')
   }
-  if (!getSecretStore().isEncryptionAvailable()) {
+  if (!getSecretStoreOrUnavailable().isEncryptionAvailable()) {
     throw new Error('MiniMax API key could not be decrypted')
   }
-  return getSecretStore().decryptString(envelope.payload)
+  return getSecretStoreOrUnavailable().decryptString(envelope.payload)
 }
 
 export function hasMiniMaxApiKey(): boolean {
@@ -77,10 +77,10 @@ export function saveMiniMaxApiKey(key: string): void {
   if (!trimmed) {
     throw new Error('MiniMax API key is required')
   }
-  if (getSecretStore().isEncryptionAvailable()) {
+  if (getSecretStoreOrUnavailable().isEncryptionAvailable()) {
     writeSecureFile(
       getMiniMaxApiKeyPath(),
-      encodeApiKeyEnvelope('encrypted', getSecretStore().encryptString(trimmed))
+      encodeApiKeyEnvelope('encrypted', getSecretStoreOrUnavailable().encryptString(trimmed))
     )
     cachedMiniMaxApiKey = trimmed
     return

@@ -136,7 +136,10 @@ export class RuntimeTerminalWait {
                 resolve(buildPtyTerminalWaitResult(handle, condition, timedOut.pty))
                 return
               }
-              reject(new Error('terminal_handle_stale'))
+              // wait-absence-verdict: the live record going missing by the deadline is an
+              // absence, not proof of death — resolve the silence verdict from the last
+              // record this waiter observed instead of an opaque rejection.
+              resolve(buildPtyTerminalWaitResult(handle, condition, pty.pty))
               return
             }
             reject(new Error('timeout'))
@@ -241,8 +244,11 @@ export class RuntimeTerminalWait {
             try {
               const timedOut = this.deps.getLiveLeaf(handle)
               resolve(buildTerminalWaitResult(handle, condition, timedOut.leaf))
-            } catch (error) {
-              reject(error instanceof Error ? error : new Error(String(error)))
+            } catch {
+              // wait-absence-verdict: getLiveLeaf throwing at the deadline is an absence,
+              // not proof of death — resolve the silence verdict from the last record this
+              // waiter observed instead of rethrowing an opaque rejection.
+              resolve(buildTerminalWaitResult(handle, condition, leaf))
             }
             return
           }

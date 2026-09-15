@@ -6,16 +6,24 @@
  * that opened the window. Owning the deadline here means park cannot strand the
  * row at 'working' and reveal need not complete the turn early; only the row
  * write (routing + title slot) stays with whoever currently owns the pane.
+ *
+ * The window itself (the constant and the timer bookkeeping) is main's too —
+ * see `src/shared/command-code-output-done-settle-window.ts` — this module
+ * layers only the renderer-specific concern on top: a pane's writer can
+ * change mid-window (park/reveal), which main never needs to handle.
  */
+import {
+  COMMAND_CODE_OUTPUT_DONE_SETTLE_MS,
+  _resetCommandCodeDoneSettlesForTest as _resetSharedCommandCodeDoneSettlesForTest,
+  cancelCommandCodeDoneSettle,
+  openCommandCodeDoneSettle as openSharedCommandCodeDoneSettle
+} from '../../../../shared/command-code-output-done-settle-window'
 
-// Mirrors the mounted and parked policies: the settle window must be identical
-// whether the pane is mounted or parked, or park/reveal changes completion timing.
-export const COMMAND_CODE_OUTPUT_DONE_SETTLE_MS = 1500
+export { COMMAND_CODE_OUTPUT_DONE_SETTLE_MS, cancelCommandCodeDoneSettle }
 
 type CommandCodeDoneSettleExecutor = (normalizedPrompt: string) => void
 
 const executorByPaneKey = new Map<string, CommandCodeDoneSettleExecutor>()
-const timerByPaneKey = new Map<string, ReturnType<typeof setTimeout>>()
 
 /** Registers the current writer for this pane; returns its release.
  *  Last registrant wins by design: park and reveal each hand the pane to a new
@@ -35,30 +43,14 @@ export function setCommandCodeDoneSettleExecutor(
 }
 
 export function openCommandCodeDoneSettle(paneKey: string, normalizedPrompt: string): void {
-  cancelCommandCodeDoneSettle(paneKey)
-  timerByPaneKey.set(
-    paneKey,
-    setTimeout(() => {
-      timerByPaneKey.delete(paneKey)
-      // Why optional: a pane torn down with no successor has no row worth completing.
-      executorByPaneKey.get(paneKey)?.(normalizedPrompt)
-    }, COMMAND_CODE_OUTPUT_DONE_SETTLE_MS)
-  )
-}
-
-export function cancelCommandCodeDoneSettle(paneKey: string): void {
-  const timer = timerByPaneKey.get(paneKey)
-  if (timer !== undefined) {
-    clearTimeout(timer)
-    timerByPaneKey.delete(paneKey)
-  }
+  openSharedCommandCodeDoneSettle(paneKey, () => {
+    // Why optional: a pane torn down with no successor has no row worth completing.
+    executorByPaneKey.get(paneKey)?.(normalizedPrompt)
+  })
 }
 
 /** Test-only: drops every pending window so suites cannot leak timers across cases. */
 export function _resetCommandCodeDoneSettlesForTest(): void {
-  for (const timer of timerByPaneKey.values()) {
-    clearTimeout(timer)
-  }
-  timerByPaneKey.clear()
+  _resetSharedCommandCodeDoneSettlesForTest()
   executorByPaneKey.clear()
 }

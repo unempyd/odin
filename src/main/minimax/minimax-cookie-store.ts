@@ -1,7 +1,7 @@
 import { existsSync, readFileSync, rmSync } from 'node:fs'
 import { homedir } from 'node:os'
 import { join } from 'node:path'
-import { getSecretStore } from '../../shared/secret-store'
+import { getSecretStoreOrUnavailable } from '../../shared/secret-store'
 import { hardenExistingSecureFile, writeSecureFile } from '../../shared/secure-file'
 
 const MINIMAX_COOKIE_FILE = 'minimax-session-cookie.enc'
@@ -71,16 +71,16 @@ function readEnvelope(envelope: MiniMaxCookieEnvelope): string {
   if (envelope.kind === 'plaintext') {
     return envelope.payload.toString('utf8')
   }
-  if (!getSecretStore().isEncryptionAvailable()) {
+  if (!getSecretStoreOrUnavailable().isEncryptionAvailable()) {
     throw new Error('MiniMax session cookie could not be decrypted')
   }
-  return getSecretStore().decryptString(envelope.payload)
+  return getSecretStoreOrUnavailable().decryptString(envelope.payload)
 }
 
 function readLegacyCookie(raw: Buffer): string {
-  if (getSecretStore().isEncryptionAvailable()) {
+  if (getSecretStoreOrUnavailable().isEncryptionAvailable()) {
     try {
-      return getSecretStore().decryptString(raw)
+      return getSecretStoreOrUnavailable().decryptString(raw)
     } catch {
       const plaintext = raw.toString('utf8')
       if (looksLikeCookieHeader(plaintext)) {
@@ -117,10 +117,10 @@ export function saveMiniMaxSessionCookie(cookie: string): void {
   if (!trimmed) {
     throw new Error('MiniMax session cookie is required')
   }
-  if (getSecretStore().isEncryptionAvailable()) {
+  if (getSecretStoreOrUnavailable().isEncryptionAvailable()) {
     writeSecureFile(
       getMiniMaxCookiePath(),
-      encodeCookieEnvelope('encrypted', getSecretStore().encryptString(trimmed))
+      encodeCookieEnvelope('encrypted', getSecretStoreOrUnavailable().encryptString(trimmed))
     )
     cachedMiniMaxCookie = trimmed
     return

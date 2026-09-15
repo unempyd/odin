@@ -5,9 +5,11 @@
  * OSC pipeline (pty-connection `shouldOwnAgentStatusInRenderer`) and the
  * mirrored host `session.tabs` snapshot. Without a fence they overwrite each
  * other on every publication and the tab flaps between "working + generated
- * title" and "done + Terminal". Registration marks the claim (decided once at
- * transport creation); the first byte-derived write proves it, so a mirrored
- * pane that never produced status keeps ceding to the host.
+ * title" and "done + Terminal". Registration marks the claim (re-evaluated
+ * whenever a capability probe resolves — see `trackRemoteAgentStatusOwnership`
+ * below — not just once at transport creation); the first byte-derived write
+ * proves it, so a mirrored pane that never produced status keeps ceding to
+ * the host.
  */
 type RendererOwnedAgentStatusPane = {
   environmentId: string
@@ -59,4 +61,48 @@ export function _getRendererOwnedAgentStatusPaneCountForTest(): number {
 
 export function resetRendererOwnedAgentStatusPanesForTests(): void {
   panesByPaneKey.clear()
+}
+
+/**
+ * Wires a remote-runtime pane's ownership claim to every later capability-probe resolution for
+ * its environment, not just the value known at connection time (odin(status-cache-revisit)): a
+ * cold-start pane that started "keep writing" flips to host-owned (and releases the claim) the
+ * moment a probe proves the host owns it, and a pane that started host-owned flips back (and
+ * re-claims) if a later probe answers false — a host downgraded mid-session.
+ */
+export function trackRemoteAgentStatusOwnership(args: {
+  paneKey: string
+  environmentId: string
+  cachedHostOwns: boolean
+  onOwnershipChange: (shouldOwnAgentStatusInRenderer: boolean) => void
+  subscribeToHostOwnsChanges: (
+    environmentId: string,
+    listener: (hostOwns: boolean) => void
+  ) => () => void
+}): { shouldOwnAgentStatusInRenderer: boolean; dispose: () => void } {
+  let shouldOwn = !args.cachedHostOwns
+  let release = shouldOwn
+    ? registerRendererOwnedAgentStatusPane(args.paneKey, args.environmentId)
+    : null
+  const unsubscribe = args.subscribeToHostOwnsChanges(args.environmentId, (hostOwns) => {
+    const nextShouldOwn = !hostOwns
+    if (nextShouldOwn === shouldOwn) {
+      return
+    }
+    shouldOwn = nextShouldOwn
+    if (shouldOwn) {
+      release = registerRendererOwnedAgentStatusPane(args.paneKey, args.environmentId)
+    } else {
+      release?.()
+      release = null
+    }
+    args.onOwnershipChange(shouldOwn)
+  })
+  return {
+    shouldOwnAgentStatusInRenderer: shouldOwn,
+    dispose: () => {
+      release?.()
+      unsubscribe()
+    }
+  }
 }

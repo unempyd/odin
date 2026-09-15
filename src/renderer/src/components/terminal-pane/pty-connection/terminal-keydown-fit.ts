@@ -146,7 +146,10 @@ export function installTerminalKeydownFit(session: ConnectPanePtySession): void 
               onCommandCodeWorking: session.seedCommandCodeOutputWorkingStatus,
               onCommandCodeDone: session.scheduleCommandCodeOutputDoneStatus
             }),
-        ...(session.shouldOwnAgentStatusInRenderer
+        // Why gated on remote-runtime-ness, not the ownership decision itself:
+        // that decision can flip after this consumer registers, so the live
+        // verdict is read inside the handler at call time.
+        ...(session.runtimeEnvironmentId !== null
           ? { onAgentStatus: (payload) => session.handleRendererOwnedAgentStatus(payload) }
           : {}),
         // Why: gated hidden panes never see the subscribe bytes; the fact

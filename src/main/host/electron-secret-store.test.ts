@@ -9,11 +9,13 @@ const safeStorageMock = vi.hoisted(() => ({
 
 vi.mock('electron', () => ({ safeStorage: safeStorageMock }))
 
-const { ElectronSecretStore } = await import('./electron-secret-store')
+const { ElectronSecretStore, _resetWindowlessSecretsGuardWarningForTest } =
+  await import('./electron-secret-store')
 
 describe('ElectronSecretStore', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    _resetWindowlessSecretsGuardWarningForTest()
     safeStorageMock.isEncryptionAvailable.mockReturnValue(true)
     safeStorageMock.getSelectedStorageBackend.mockReturnValue('gnome_libsecret')
   })
@@ -151,14 +153,55 @@ describe('ElectronSecretStore', () => {
 
     it('reports unavailable without calling safeStorage.isEncryptionAvailable', () => {
       process.env.ORCA_BACKGROUND_LAUNCH = '1'
-      expect(new ElectronSecretStore().isEncryptionAvailable()).toBe(false)
+      withPlatform('darwin', () => {
+        expect(new ElectronSecretStore().isEncryptionAvailable()).toBe(false)
+      })
       expect(safeStorageMock.isEncryptionAvailable).not.toHaveBeenCalled()
     })
 
     it('describeProtectionGap also short-circuits instead of calling safeStorage', () => {
       process.env.ORCA_BACKGROUND_LAUNCH = '1'
-      expect(new ElectronSecretStore().describeProtectionGap()).toMatch(/unencrypted/)
+      withPlatform('darwin', () => {
+        expect(new ElectronSecretStore().describeProtectionGap()).toMatch(/unencrypted/)
+      })
       expect(safeStorageMock.isEncryptionAvailable).not.toHaveBeenCalled()
+    })
+
+    // odin(secrets-guard-scope): the macOS Keychain-prompt hang this guard exists for cannot
+    // happen on Linux/Windows, so tripping it there would degrade real at-rest protection for
+    // no reason.
+    it.each(['linux', 'win32'] as const)(
+      'does not guard a windowless launch on %s — the Keychain hang cannot happen there',
+      (platform) => {
+        process.env.ORCA_BACKGROUND_LAUNCH = '1'
+        withPlatform(platform, () => {
+          expect(new ElectronSecretStore().isEncryptionAvailable()).toBe(true)
+        })
+        expect(safeStorageMock.isEncryptionAvailable).toHaveBeenCalled()
+      }
+    )
+
+    it('warns once naming the cause and consequences when the guard trips, not again on repeat calls', () => {
+      process.env.ORCA_BACKGROUND_LAUNCH = '1'
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+      try {
+        withPlatform('darwin', () => {
+          const store = new ElectronSecretStore()
+          store.isEncryptionAvailable()
+          store.isEncryptionAvailable()
+          store.describeProtectionGap()
+        })
+        expect(warn).toHaveBeenCalledTimes(1)
+        const [message] = warn.mock.calls[0]!
+        expect(message).toMatch(/windowless launch/i)
+        expect(message).toMatch(/ORCA_BACKGROUND_LAUNCH/)
+        expect(message).toMatch(/plaintext/)
+        expect(message).toMatch(/decrypt-failed/)
+        expect(message).toMatch(/refuse/)
+        expect(message).toMatch(/not persisted/)
+      } finally {
+        warn.mockRestore()
+      }
     })
   })
 

@@ -123,10 +123,16 @@ vi.mock('./remote-runtime-pty-transport', () => ({
 
 const mockCachedHostOwnsRemoteAgentStatus = vi.fn((_environmentId: string) => false)
 const mockPrimeHostOwnsRemoteAgentStatusCache = vi.fn((_environmentId: string) => {})
+// Why no-op: this suite exercises attach/adopt behavior, not a live probe
+// resolution — no test here needs its subscription to ever fire.
+const mockSubscribeToHostOwnsRemoteAgentStatusChanges = vi.fn(
+  (_environmentId: string, _listener: (owns: boolean) => void) => () => {}
+)
 
 vi.mock('@/runtime/agent-status-host-osc-ingest-capability', () => ({
   cachedHostOwnsRemoteAgentStatus: mockCachedHostOwnsRemoteAgentStatus,
-  primeHostOwnsRemoteAgentStatusCache: mockPrimeHostOwnsRemoteAgentStatusCache
+  primeHostOwnsRemoteAgentStatusCache: mockPrimeHostOwnsRemoteAgentStatusCache,
+  subscribeToHostOwnsRemoteAgentStatusChanges: mockSubscribeToHostOwnsRemoteAgentStatusChanges
 }))
 
 // Why: stub only getEagerPtyBufferHandle so tests can simulate a live eager buffer (adopt path) without standing up the real IPC dispatcher.
@@ -263,6 +269,10 @@ describe('connectPanePty', () => {
 
   // status-C: the client must probe, never assume
   // (docs/reference/remote-wire-compatibility.md rule 3).
+  // odin(status-cache-revisit): the callback is now wired unconditionally for
+  // every remote-runtime pane, since the ownership verdict can flip after this
+  // transport is created and the transport itself is never rewired — the live
+  // decision is read inside the handler at call time instead.
   it('stops writing its own OSC-derived status when the paired host advertises the ingest capability', async () => {
     mockCachedHostOwnsRemoteAgentStatus.mockReturnValue(true)
     const { connectPanePty } = await import('./pty-connection')
@@ -295,7 +305,12 @@ describe('connectPanePty', () => {
 
     expect(mockCachedHostOwnsRemoteAgentStatus).toHaveBeenCalledWith('env-1')
     expect(mockPrimeHostOwnsRemoteAgentStatusCache).toHaveBeenCalledWith('env-1')
-    expect(createdTransportOptions[0]?.onAgentStatus).toBeUndefined()
+    const onAgentStatus = createdTransportOptions[0]?.onAgentStatus as
+      | ((payload: { state: string; agentType: string }) => void)
+      | undefined
+    expect(onAgentStatus).toEqual(expect.any(Function))
+    onAgentStatus?.({ state: 'working', agentType: 'claude' })
+    expect(mockStoreState.setAgentStatus).not.toHaveBeenCalled()
   })
 
   it('keeps writing its own OSC-derived status when the paired host predates the ingest capability', async () => {

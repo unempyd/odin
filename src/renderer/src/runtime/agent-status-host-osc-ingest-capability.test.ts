@@ -29,6 +29,11 @@ describe('hostOwnsRemoteAgentStatus', () => {
     runtimeEnvironmentSupportsCapability.mockResolvedValue(false)
     expect(await hostOwnsRemoteAgentStatus('env-legacy')).toBe(false)
   })
+
+  it('resolves false, never rejects, when the probe itself fails', async () => {
+    runtimeEnvironmentSupportsCapability.mockRejectedValue(new Error('rpc timeout'))
+    await expect(hostOwnsRemoteAgentStatus('env-unreachable')).resolves.toBe(false)
+  })
 })
 
 describe('cachedHostOwnsRemoteAgentStatus', () => {
