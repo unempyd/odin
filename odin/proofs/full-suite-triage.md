@@ -112,3 +112,7 @@ identically across two independent full-batch re-runs after the fixes.
 ## Correction after merge (2026-09-15)
 
 `src/main/runtime/orchestration-cli-subprocess.test.ts` ("emits newline-flushed JSON keepalives") was listed as Odin-caused because the upstream comparison run had no `out/cli` build and skipped it. Rebuilding the CLI at the upstream commit (`tsc -p config/tsconfig.cli.json`) in a scratch worktree and running the test there fails identically (exit 1 in ~400 ms: `stable_pane_required`, "Terminal term_nobody has no live pane bound to a Run"). Class (c): pre-existing, the test predates upstream's Run-bound inbox check; Odin did not touch `run-scope.ts` or the messaging methods. After the fix-suite commits, every other Odin-caused file passes (20/20 rerun on the merged tree).
+
+## Addendum 2026-09-15 (after I3)
+
+| `src/main/runtime/rpc/methods/orchestration/federation/federation-agent-launch.test.ts` | Odin-caused pin | Expected a federated cursor worker's `effective` to equal `requested`; since I3 made cursor probeable, a federated launch (host never probed from the coordinator) yields `effective: null, source: 'unverified'` per I1. Pin updated to the Odin contract. |
