@@ -18,6 +18,15 @@ found and fixed (§Deviations 1–3); §Deviation 3 — the connect handshake ne
 product level (`src/main/host/electron-secret-store.ts`), not worked around in the driver. See
 §Deviation 3 for the exact stuck call, the evidence trail, and the fix.
 
+**Caveat added since this run (review round 3 item 14 / unproven claims 1–3):** phases 4 and 7's
+`ok` above was satisfied by a single early sample that had not yet observed the loss at all, not by
+observing `unverifiable`/no-exit-claim *during* an actually-detected disconnect, and a rejected
+`terminal.wait` was silently dropped from the JSON rather than recorded. The driver
+(`odin/proof/ssh-boundary.mjs`) has since been strengthened to close both gaps — see the driver
+contract update in §Phases 3–7 below — but that stronger assertion has not itself been re-run
+against the real VPS yet, so the phases-4/7 "pass" recorded above should be read under the old,
+weaker check until a fresh run exists.
+
 ## Phase 1 — desktop-mode host boot, target + repo registration
 
 **What ran.** `odin/proof/real-session-host.mjs`'s `Host` launches Electron with `--serve`
@@ -294,19 +303,44 @@ verdicts are now recorded as evidence rather than gating `ok` — see the note o
 ## Phases 3–7 — worktree/terminal on the SSH host, the loss-of-contact matrix
 
 **Recorded artifact:** `odin/proofs/ssh-boundary.2026-09-14T21-46-07-872Z.json` (`ok: true`, all
-seven phases `ok: true`).
+seven phases `ok: true`). **This artifact predates the driver-contract update below** and was
+produced under the weaker assertions each bullet describes inline; it has not been re-run.
+
+**Driver contract update (review round 3 item 14 / unproven claims 1–3; not yet re-run — no result
+text below reflects it).** Phases 4 and 7 originally sampled `terminal show` exactly once, 10s
+after inducing the loss, and passed `ok` on that single sample still reading `connected: true` —
+i.e. before the client had observed the loss at all. `odin/proof/ssh-boundary.mjs` now:
+
+- polls `terminal show` every 5s, for up to 90s, until `connected` is actually observed to flip
+  `false`, then takes one more confirming sample (`pollUntilDisconnected`), recording every sample;
+- requires for `ok` that (a) `connected: false` was actually observed and confirmed by a
+  subsequent sample, (b) no sample — before, during, or after — ever carried `exitCause` or any
+  exited claim, and (c) a `terminal wait --for exit` run with a 30s budget *during* the loss
+  RESOLVED (did not reject) with `satisfied: false, evidence: 'silence'` — the `wait-silence` fix's
+  contract (see below);
+- keeps the wait outcome in the JSON even when it rejects, as `{ rejected: <message> }`, instead of
+  silently dropping the key (`terminalWaitExit`, previously returned `undefined` on rejection, which
+  `JSON.stringify` drops);
+- for phase 6, records the driver's own out-of-band `ssh ps -p <shellPid>` liveness check as
+  `outOfBandShellState`, next to `ok`, so the narrative can say plainly which check — Orca's verdict
+  or the driver's out-of-band probe — actually proved death.
 
 - **Phase 3 — baseline.** `worktree create` + `terminal create` on the connected `ssh:` target,
   `terminal send 'sleep 600'`. `terminal show` reports `connected: true`, no `exitCause`; the real
   `sleep 600` process is confirmed alive on the VPS via `ps`. **Proven.**
-- **Phase 4 — loss of contact (variant C, transport drop).** A self-healing VPS-side `iptables -I
+- **Phase 4 — loss of contact (variant C, transport drop).** *Result text below is from the run
+  under the old single-sample check (see the driver contract update above) and predates the
+  strengthened assertion; it has not been re-run.* A self-healing VPS-side `iptables -I
   INPUT -s <mac-ip> -j DROP` (auto-removed after 75s by the same command) blacks out the transport.
   10s in, `terminal show` still reports **no `exitCause`** — the boundary contract's core claim
   (loss of contact is never reported as exited) holds. `terminal.wait --for exit` was also tried
   here as corroborating evidence but is **not proof-bearing** in this run — see the `terminal.wait`
   note below — so `ok` rests on `terminal show` alone. **Proven** (the claim the phase exists to
   test); **not fully proven** (the `evidence: 'silence'` shape from `docs/reference/
-  ssh-execution-boundary.md`, which needs the wait path fixed first — see below).
+  ssh-execution-boundary.md`, which needs the wait path fixed first — see below). The unproven part
+  — whether `connected` is ever actually observed to flip `false` on a real drop, rather than the
+  window simply ending before the client noticed — is exactly what the strengthened assertion above
+  now requires and a re-run must demonstrate.
 - **Phase 5 — reconnect re-adopts.** After the `iptables` rule self-removes, a second `ssh.connect`
   reconnects; `terminal show` shows the *same* PTY (`connected: true`, no `exitCause`) and the VPS
   confirms the *same* `sleep 600` PID survived throughout. **Proven.**
@@ -315,12 +349,19 @@ seven phases `ok: true`).
   produces a real `terminal.wait --for exit` resolution: `satisfied: true, status: 'exited',
   exitCause: {kind: 'unknown', reason: 'cause_unreported'}` — correctly conservative per
   `src/shared/terminal-exit-cause.ts`'s own doc comment (an SSH relay reports a code but no cause,
-  so nothing here claims more than that). **Proven.**
-- **Phase 7 — variant B, relay `SIGKILL` + relaunch.** A second worktree/terminal is created, then
-  the relay process on the VPS is `kill -9`'d directly. `terminal show` on the affected terminal
-  still reports **no `exitCause`** while the relay is gone — the same core claim as phase 4, holding
-  through total loss of the remote daemon, not just the transport. A subsequent `ssh.connect`
-  relaunches the relay and reaches `status: "connected"` again. **Proven.**
+  so nothing here claims more than that). The actual proof of death is the driver's own
+  out-of-band `ssh` check (`shellStillAliveOnHost: "dead"` in this recorded run; the driver now
+  names this field `outOfBandShellState`, next to `ok`, per the contract update above), not Orca's
+  `exitCode: 0`. **Proven** (a real exit happened and was confirmed out-of-band); **read the
+  `exitCode`/`exitCause` pair as Odin's own conservative verdict, not as the evidence of death**.
+- **Phase 7 — variant B, relay `SIGKILL` + relaunch.** *Result text below predates the
+  strengthened assertion (see the driver contract update above); it has not been re-run.* A second
+  worktree/terminal is created, then the relay process on the VPS is `kill -9`'d directly.
+  `terminal show` on the affected terminal still reports **no `exitCause`** while the relay is gone
+  — the same core claim as phase 4, holding through total loss of the remote daemon, not just the
+  transport. A subsequent `ssh.connect` relaunches the relay and reaches `status: "connected"`
+  again. **Proven** under the old single-sample check; the strengthened poll-until-disconnected
+  assertion has not yet been exercised against a real relay kill.
 
 **`terminal.wait --for exit` note (a second, narrower finding, distinct from Deviation 3) — verdict
 shape now fixed, still unproven end-to-end (later worktree, `wait-silence`):** at the time of this
@@ -344,11 +385,16 @@ at wait-start) instead of rejecting; a `tui-idle` timeout is unchanged and still
 has **not** been re-run against a real transport drop the way this SSH proof drives one, so
 `docs/reference/ssh-execution-boundary.md`'s "`terminal wait --for exit`'s immediate
 `satisfied:false, evidence:'silence'`" claim is proven at the unit level, not proven end-to-end
-against a real host. The driver still records `ok` for phases 4/7 from `terminal show`'s
-`exitCause` absence alone (the boundary's actual load-bearing claim) and keeps `terminal.wait`'s
-outcome as evidence rather than a gate; re-running `odin/proof/ssh-boundary.mjs` against a real VPS
-transport drop with the fixed binary, and confirming `terminal.wait` itself now resolves instead of
-throwing, remains the open item.
+against a real host.
+
+**This is now a gate, not just evidence.** Per the driver contract update in §Phases 3–7 above,
+`odin/proof/ssh-boundary.mjs` no longer treats `terminal.wait`'s outcome during phases 4/7 as
+corroborating-only: `ok` for those phases now requires the wait to RESOLVE `{satisfied: false,
+evidence: 'silence'}` during the loss, and a rejection is recorded verbatim (`{rejected:
+<message>}`) rather than dropped. Re-running `odin/proof/ssh-boundary.mjs` against a real VPS
+transport drop with the `wait-silence`-fixed binary, and confirming `terminal.wait` itself now
+resolves instead of throwing, remains the open item — the difference is that a re-run failing this
+now fails the phase outright instead of being noted as an evidence gap.
 
 ## Residuals this run exercises (per the design plan, §3)
 
@@ -367,14 +413,29 @@ throwing, remains the open item.
 ## Unproven claims (explicit, updated)
 
 - Of the four boundary verdicts from `docs/reference/ssh-execution-boundary.md`: **`terminal show`
-  never `exited` on transport loss** is now proven against a real host (phases 4 and 7). The other
-  three (`worktree ps`'s "not covered" scope note, `worker-show`'s
+  never `exited` on transport loss** is now proven against a real host (phases 4 and 7) — under the
+  old single-sample check (see the driver contract update in §Phases 3–7); it does **not** show
+  that the `unverifiable` verdict was ever reached on a real drop, only that nothing changed in the
+  window sampled. The strengthened `pollUntilDisconnected`/`lossOfContactOk` assertion closes this
+  gap at the driver level (it now requires actually observing `connected: false`), but that
+  assertion has not itself been exercised against the real VPS yet — a re-run is the open item. The
+  other three verdicts (`worktree ps`'s "not covered" scope note, `worker-show`'s
   `unverifiable`/`missing_liveness_verdict`, and `terminal wait --for exit`'s immediate
   `satisfied:false, evidence:'silence'`) remain proven only by the unit tests
   (`odin/proofs/*.after.txt`), not by this run — the wait-path finding above is the reason the third
   one specifically still isn't. The `wait-silence` fix (above) closes the verdict-shape gap the
   finding names, at the unit level only; this run has not been repeated against the fixed binary,
-  so "proven only by unit tests, not by this run" still holds for that third verdict.
+  so "proven only by unit tests, not by this run" still holds for that third verdict — and, as of
+  the driver contract update, a re-run that fails to observe `terminal.wait` resolving
+  `satisfied:false, evidence:'silence'` during a real drop now fails phases 4/7 outright rather than
+  being noted as an evidence gap.
+- **Phase 6's "yields a proven exit" reads stronger than what the run shows**: the recorded verdict
+  is `exitCode: 0` with `exitCause: {kind: 'unknown', reason: 'cause_unreported'}` for a SIGKILLed
+  shell; actual death was established by the driver's own out-of-band `ssh ps -p` check, not by
+  Orca. The driver now records that check as `outOfBandShellState`, next to `ok`, specifically so
+  this distinction is visible in the JSON and not just in prose — the underlying `exitCode`/
+  `exitCause` semantics are unchanged (see `src/shared/terminal-exit-cause.ts:114-138`) and are not
+  what this update claims to fix.
 - Whether the SSH dead-link `TIMEOUT_MS` window should be shorter is a separate open follow-up —
   not attempted here; it is a distinct question from both Deviation 3 and `wait-silence`.
 

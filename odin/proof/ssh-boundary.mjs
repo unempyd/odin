@@ -16,7 +16,8 @@
  *
  * Phases: see docs/reference/ssh-execution-boundary.md and odin/proofs/ssh-boundary.md for the
  * narrated results. Output: NDJSON on stdout, summary JSON written to
- * odin/proofs/ssh-boundary.<ts>.json.
+ * odin/proofs/ssh-boundary.<ts>.json. Run `--plan` to print the phase list and exit without
+ * touching the VPS, the CLI build, or Electron.
  */
 import { spawn, spawnSync } from 'node:child_process'
 import {
@@ -43,6 +44,46 @@ const SHUTDOWN_TIMEOUT_MS = 15_000
 const REMOTE_ROOT = '/root/odin-proof'
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
+
+// ─── --plan: dry parse, no connection ───────────────────────────────────────
+// Prints the phase list and exits before touching the VPS, the CLI build, or Electron — a smoke
+// test for the driver's own JS (argument parsing, module load) without a real host.
+const PLAN = [
+  { phase: 'phase1', does: 'seed VPS repo + sshTargets/repos on disk; boot desktop-mode host' },
+  { phase: 'phase2', does: 'orca host list; ssh.connect (real relay deploy) against claw-vps' },
+  {
+    phase: 'phase3',
+    does: 'worktree + terminal create on the ssh: host; `sleep 600`; baseline terminal show connected'
+  },
+  {
+    phase: 'phase4',
+    does:
+      'loss of contact (iptables DROP, self-healing): poll `terminal show` every 5s up to 90s ' +
+      'until connected:false is observed plus one confirming sample; assert no sample ever ' +
+      'carries exitCause; `terminal wait --for exit` (30s budget, run during the loss) must ' +
+      'RESOLVE satisfied:false evidence:silence, not reject'
+  },
+  {
+    phase: 'phase5',
+    does: 'reconnect after the iptables rule self-removes; same PTY/pid re-adopted'
+  },
+  {
+    phase: 'phase6',
+    does:
+      'owner-proven exit: SIGKILL the login shell; terminal show/wait report exitCause; the ' +
+      "driver's out-of-band `ssh ps -p` check is recorded as outOfBandShellState next to ok"
+  },
+  {
+    phase: 'phase7',
+    does:
+      'variant B: relay SIGKILL — same poll-until-disconnected + wait-during-loss assertions as ' +
+      'phase4, then relaunch via ssh.connect'
+  }
+]
+if (process.argv.includes('--plan')) {
+  console.log(JSON.stringify({ plan: PLAN }, null, 2))
+  process.exit(0)
+}
 
 // ─── Remote (VPS) command helpers ───────────────────────────────────────────
 
@@ -381,6 +422,13 @@ function terminalClaimsExit(show) {
 function worktreePs(host) {
   return orca(host, ['worktree', 'ps'], { allowFailure: true }).json?.result
 }
+// Returns the resolved `{satisfied, status, exitCode, evidence, exitCause?}` wait result, or
+// `{rejected: <message>}` when the RPC rejected instead of resolving — the CLI's own `--json`
+// error envelope (src/cli/cli-error.ts) on a plain rejection, or the raw process output if even
+// that didn't parse. Review round 3 item 14 finding 2: the previous version returned `undefined`
+// on rejection, which `JSON.stringify` then silently drops from the checked-in record, so a
+// rejected wait left no trace at all of what `terminal wait --for exit` actually did. Every call
+// site now gets a key here unconditionally.
 function terminalWaitExit(host, term, timeoutMs = 15_000) {
   const r = orca(
     host,
@@ -389,10 +437,61 @@ function terminalWaitExit(host, term, timeoutMs = 15_000) {
       allowFailure: true
     }
   )
-  if (!r.json?.result?.wait) {
-    log('terminalWaitExit.raw', { status: r.status, raw: r.raw })
+  if (r.json?.result?.wait) {
+    return r.json.result.wait
   }
-  return r.json?.result?.wait
+  const rejected = r.json?.error?.message ?? r.raw ?? `exit ${r.status}`
+  log('terminalWaitExit.rejected', { status: r.status, raw: r.raw })
+  return { rejected }
+}
+
+// Review round 3 item 14 / unproven claim 1: the original phase4/phase7 verdicts sampled
+// `terminal show` exactly once, 10s after inducing the loss, and passed on the strength of that
+// single sample still reading `connected:true` — i.e. before the client had observed anything at
+// all. Polls every `intervalMs` (default 5s) until `connected` is observed false, then takes
+// `samplesAfterDisconnect` (default 1) more samples to confirm it holds, or gives up at `maxMs`
+// (default 90s — the SSH relay's own dead-link window, TIMEOUT_MS = 20_000 in
+// src/relay/protocol.ts, times four, plus margin for RPC round-trips). Every sample is recorded;
+// nothing here decides `ok` — callers assert on the returned samples.
+async function pollUntilDisconnected(
+  host,
+  term,
+  { intervalMs = 5_000, maxMs = 90_000, samplesAfterDisconnect = 1 } = {}
+) {
+  const samples = []
+  let disconnectedAt = null
+  const deadline = Date.now() + maxMs
+  for (;;) {
+    const show = terminalShow(host, term)
+    samples.push({ at: new Date().toISOString(), show })
+    if (show?.connected === false && disconnectedAt === null) {
+      disconnectedAt = samples.length - 1
+    }
+    const gotEnoughAfterDisconnect =
+      disconnectedAt !== null && samples.length - 1 - disconnectedAt >= samplesAfterDisconnect
+    if (gotEnoughAfterDisconnect || Date.now() >= deadline) {
+      break
+    }
+    await sleep(intervalMs)
+  }
+  return { samples, disconnectedAt }
+}
+// `ok` for a loss-of-contact phase: (a) polling actually observed `connected:false` and took at
+// least one more sample after that (not just a single early guess), (b) no sample — before,
+// during, or after the observed disconnect — ever carried `exitCause` or any exited claim, and
+// (c) a `terminal wait --for exit` run during the loss RESOLVED (not `rejected`) with
+// `satisfied:false, evidence:'silence'` — the `wait-silence` fix's contract
+// (src/main/runtime/runtime-terminal-wait.ts, odin/proofs/ssh-boundary.md).
+function lossOfContactOk(pollResult, waitDuringLoss) {
+  const sawDisconnectThenConfirmed =
+    pollResult.disconnectedAt !== null && pollResult.samples.length > pollResult.disconnectedAt + 1
+  const neverClaimedExit = pollResult.samples.every((s) => !terminalClaimsExit(s.show))
+  const waitResolvedSilent =
+    waitDuringLoss &&
+    !('rejected' in waitDuringLoss) &&
+    waitDuringLoss.satisfied === false &&
+    waitDuringLoss.evidence === 'silence'
+  return sawDisconnectThenConfirmed && neverClaimedExit && waitResolvedSilent
 }
 
 // ─── Main ─────────────────────────────────────────────────────────────────
@@ -517,30 +616,45 @@ async function main() {
     }
 
     // ── Phase 4: loss of contact — variant C, self-healing iptables from the VPS ────────
-    const blockWindowSec = 75
+    // Window sized for the strengthened assertion below: up to 90s of 5s-interval polling
+    // (pollUntilDisconnected) to actually observe `connected` flip false, then a 30s
+    // `terminal wait --for exit` run *during* the loss, then margin before the rule self-heals.
+    const blockWindowSec = 150
     ssh(
       `nohup sh -c 'iptables -I INPUT -s ${macIp} -j DROP; sleep ${blockWindowSec}; iptables -D INPUT -s ${macIp} -j DROP' >/dev/null 2>&1 & disown; echo armed`
     )
     log('phase4.rule-armed', { macIp, blockWindowSec })
-    await sleep(10_000)
-    const duringShow = terminalShow(host, term.handle)
+    const pollStart = Date.now()
+    // Review round 3 item 14 / unproven claim 1: poll instead of sampling once — `ok` below
+    // requires actually observing `connected:false`, not merely a window in which nothing was
+    // observed yet.
+    const duringPoll = await pollUntilDisconnected(host, term.handle)
     const duringPs = worktreePs(host)
+    // Run the exit-wait *during* the loss (transport still down at this point — the rule doesn't
+    // self-heal for another `blockWindowSec` seconds from when it was armed). Review round 3 item
+    // 14 / unproven claim 2 and the `wait-silence` fix
+    // (src/main/runtime/runtime-terminal-wait.ts): this must now RESOLVE `{satisfied:false,
+    // evidence:'silence'}` instead of rejecting with a bare `Error('timeout')`; the previous
+    // version of this driver treated a rejection as "no verdict, not proof-bearing" and excluded
+    // it from `ok` entirely — now a rejection here is itself a finding, not a shrug, and gates `ok`.
     const duringWait = terminalWaitExit(host, term.handle, 30_000)
-    // Why `ok` rests on `duringShow` alone: `terminal.wait` rejects with a bare `Error('timeout')`
-    // (not a resolved `{satisfied:false}`) when the SSH transport's own dead-link detection
-    // (TIMEOUT_MS, src/relay/protocol.ts) has not yet flipped `pty.connected` by the time our
-    // requested wait budget elapses — a real race, not a hang. `duringWait` is recorded as
-    // evidence; the core boundary contract under test is `terminal show` never claiming `exited`.
     record.phases.phase4 = {
-      ok: !terminalClaimsExit(duringShow),
-      duringShow,
+      ok: lossOfContactOk(duringPoll, duringWait),
+      samples: duringPoll.samples,
+      disconnectedAt: duringPoll.disconnectedAt,
       duringPs,
       duringWait
     }
-    log('phase4.verdicts', record.phases.phase4)
+    log('phase4.verdicts', {
+      ok: record.phases.phase4.ok,
+      disconnectedAt: duringPoll.disconnectedAt,
+      sampleCount: duringPoll.samples.length,
+      duringWait
+    })
 
     // Wait out the rest of the self-healing window before reconnect.
-    const remaining = blockWindowSec * 1000 + 5000 - 10_000
+    const elapsedMs = Date.now() - pollStart
+    const remaining = blockWindowSec * 1000 + 5000 - elapsedMs
     if (remaining > 0) {
       await sleep(remaining)
     }
@@ -588,15 +702,23 @@ async function main() {
       await sleep(5000)
       exitedShowAfterWait = terminalShow(host, term.handle)
     }
-    const shellStillAliveOnHost = ssh(
+    // Review round 3 item 14 / unproven claim 3: recorded next to `ok`, under its own name, so the
+    // narrative can say plainly which check actually proved death. Orca's own verdict
+    // (`exitedShowAfterWait.exitCause`) is deliberately conservative — `exitCode: 0` with
+    // `exitCause: {kind:'unknown', reason:'cause_unreported'}` for a SIGKILLed shell is coherent
+    // with `isProvenProcessExit`/`resolveUnreportedExitCause`
+    // (src/shared/terminal-exit-cause.ts:114-138) but reads stronger than it is on its own; this
+    // out-of-band `ssh ps -p` check is what actually establishes the shell is dead, independent of
+    // anything Orca reports.
+    const outOfBandShellState = ssh(
       `ps -p ${shellPid} >/dev/null 2>&1 && echo alive || echo dead`
     ).stdout
     record.phases.phase6 = {
       ok: terminalClaimsExit(exitedShowAfterWait),
+      outOfBandShellState,
       exitedShow,
       exitedWait,
-      exitedShowAfterWait,
-      shellStillAliveOnHost
+      exitedShowAfterWait
     }
     log('phase6.verdicts', record.phases.phase6)
 
@@ -623,20 +745,28 @@ async function main() {
     await sleep(2000)
     const relayPidBefore = ssh('pgrep -f "relay\\.js --detached"', { allowFailure: true }).stdout
     ssh('pkill -9 -f "relay\\.js --detached"', { allowFailure: true })
-    await sleep(5000)
-    const bShow = terminalShow(host, term2.handle)
+    // Same strengthened assertion as phase 4 (review round 3 item 14 / unproven claims 1-2), on a
+    // killed relay instead of a dropped transport: poll until `connected` is actually observed
+    // false (up to 90s) plus a confirming sample, assert no sample ever claims exit, and require a
+    // `terminal wait --for exit` run during the loss to resolve `{satisfied:false,
+    // evidence:'silence'}` rather than reject.
+    const bPoll = await pollUntilDisconnected(host, term2.handle)
     const bPs = worktreePs(host)
-    const bWait = terminalWaitExit(host, term2.handle, 20_000)
-    // Why `ok` rests on `bShow` alone: see the phase4 note above — same `terminal.wait` rejection
-    // shape on a lost relay.
+    const bWait = terminalWaitExit(host, term2.handle, 30_000)
     record.phases.phase7 = {
-      ok: !terminalClaimsExit(bShow),
+      ok: lossOfContactOk(bPoll, bWait),
       relayPidBefore,
-      bShow,
+      samples: bPoll.samples,
+      disconnectedAt: bPoll.disconnectedAt,
       bPs,
       bWait
     }
-    log('phase7.b-verdicts', record.phases.phase7)
+    log('phase7.b-verdicts', {
+      ok: record.phases.phase7.ok,
+      disconnectedAt: bPoll.disconnectedAt,
+      sampleCount: bPoll.samples.length,
+      bWait
+    })
     const relaunch = await rpcCall(userDataDir, 'ssh.connect', { targetId }).catch((e) => ({
       error: String(e)
     }))
