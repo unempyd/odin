@@ -44,9 +44,27 @@ operator's Claude config auto-approves; the argv still carries no flag from
 Odin. Odin controls what Orca launches with — it does not, and cannot,
 control what an agent's own configuration decides once it is running.
 
+## Linux and SSH
+
+Every manifest proof reproduces at upstream and closes on Odin inside a
+`node:24-bookworm` container, and the twelve process-ownership test files that
+read a real `ps` and `/proc` pass there; the run is re-derivable with the
+checked-in `odin/proof/run-proofs-linux.sh`, which writes
+`odin/proofs/linux-proofs.<sha>.txt`.
+
+`odin/proof/ssh-boundary.mjs` drives a real desktop-mode host against a real
+VPS: SSH target and repo registration surfaced through the real RPC, an
+`ssh.connect` relay deploy reaching `connected`, and a loss-of-contact matrix
+(transport drop, relay `SIGKILL`, reconnect re-adoption, owner-proven exit)
+whose strengthened form requires the client to actually observe the loss, no
+sample to claim an exit, and `terminal wait --for exit` to resolve during the
+outage. The first strengthened run failed that row and exposed the
+**show-contact-loss** residual; the run after the fix passes it. Full diagnosis:
+`odin/proofs/ssh-boundary.md`.
+
 ## Not covered
 
-Windows and Linux hosts (macOS only), a third agent settling to compare
-against Claude and Codex (Grok's quota was exhausted), and Orca's mobile app
-paired against an Odin host. These gaps are named again, with their cost, in
+Windows hosts, a third agent settling to compare against Claude and Codex
+(Grok's quota was exhausted), and Orca's mobile app paired against an Odin host.
+These gaps are named again, with their cost, in
 [Deviations](/docs/odin/deviations).

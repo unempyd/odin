@@ -1,6 +1,6 @@
 ---
 title: Independent review
-description: Two reviewers, two rounds, against a brief that asked them not to rubber-stamp — every material finding closed with its own failing-first proof.
+description: Independent reviewers, four rounds, against a brief that asked them not to rubber-stamp — every material finding closed with its own failing-first proof.
 ---
 
 import { Callout } from '@/components/docs/prose'
@@ -8,7 +8,7 @@ import { Callout } from '@/components/docs/prose'
 Two independent reviewers were given the same brief
 ([`odin/REVIEW_BRIEF.md`](https://github.com/unempyd/odin/blob/main/odin/REVIEW_BRIEF.md)):
 review this repository against `odin/DIRECTION.md` and `odin/AGENTS.md`, do
-not rubber-stamp. Two rounds ran.
+not rubber-stamp. Four rounds have run.
 
 **Round one.** Codex (`codex exec`, read-only) returned **NOT FINISHED**
 with concrete file:line findings. A Claude review covered the consent and
@@ -70,6 +70,69 @@ tests and one unlisted renderer writer.
   migration (reconciled to the chosen contract).
 - `odin/OPEN.md` omitted the command-code title writer (now enumerated).
 
+## Round three, on the tree after v0.1.0
+
+Scope: the renderer-writer increments, the SSH boundary run, exit waits on
+timeout, the Linux proofs, the upstream pull requests, and the CI and dependency
+changes (brief items 13–18). **Both reviewers returned FINISHED WITH MATERIAL
+DEVIATIONS.** Every item became a commit with its own proof:
+
+- Operator maintenance that closes no residual was undisclosed — hence the
+  "Outside the contract" section, `odin/outside-contract.json`, and a drift
+  ratchet that fails on any future change outside `odin/`, `src/`,
+  `docs/reference/` or the README. The README also stopped claiming "nothing
+  else changed" of a diff that includes a docs-site migration.
+- `odin/OPEN.md`'s renderer-writer enumeration was incomplete — every
+  `setAgentStatus(` call site is now classified and the `title-spawn-bell.ts`
+  launch seeds are named.
+- A failed status-ownership probe could fail the launch, and the remote-runtime
+  ownership verdict was never re-evaluated after the probe resolved, in either
+  direction.
+- The command-code done-settle window existed in two copies — now one shared
+  module plus a ratchet.
+- The `safeStorage` windowless guard threw before install and was not
+  platform-scoped — now darwin-only, one warning, with the degradation written
+  into [Deviations](/docs/odin/deviations) and `docs/reference/`.
+- An exit wait still rejected on absence instead of resolving the silence
+  verdict.
+- The command-code reader-side precedence rule was undisclosed.
+- Four things the tree did not admit to: no cost/token accounting anywhere in
+  the orchestration tree, two adjacent local liveness vocabularies,
+  `terminal_gone` carrying two evidentiary strengths, the surviving
+  `stateStartedAt` clock comparison, and an M proof file name that did not match
+  the test.
+- The proof runner mis-parsed `--only` and wrote per-run debug logs into the
+  tracked proofs tree; two `.after.txt` notes claimed a `tc:web` baseline that
+  was not true.
+- The SSH driver's phases 4/6/7 could pass without the client ever observing the
+  loss, and the Linux run had no checked-in runner.
+
+Fixing those surfaced five further residuals, each with its own manifest entry
+and failing-first proof: **I3** (Cursor's launch receipt was never checked
+against the installed CLI), **I4** (a static-catalog fallback labelled
+`source: 'probe'`, and memoised probe failures), **O3a** / **O3b** (a structured
+worker's own host-owned `unverifiable` treated as absent on release;
+`terminal_gone` overloaded across four unrelated failures), **N2** (the
+schema-skew probe never registered v42's `exit_code` column), **G3** (the
+credential mirror's no-consent branch still read and persisted the credential;
+revocation deleted a retained pane's own file), and **show-contact-loss** —
+found against a real VPS, not by inspection, when the strengthened SSH driver
+ran and `terminal show` kept answering `connected: true` through a 90-second
+transport drop.
+
+## Round four
+
+Scope: the round-three closures, the residuals found since, the evidence on the
+tree under review, and the amended upstream pull requests (brief items 19–22).
+Pullfrog's review of
+[#20682](https://github.com/stablyai/orca/pull/20682) raised one further
+residual during this round — the execution host's federation observer minted
+`missing` from a thrown `showTerminal` failure, the twin the local observer's
+gate never covered — closed by one shared `isOwnerProvenTerminalAbsence` gate
+for both observers (residual **O4**).
+
+**Verdict: <<ROUND4-VERDICT>>.**
+
 ## Findings raised but deliberately not changed
 
 With the reason each time:
@@ -82,5 +145,5 @@ With the reason each time:
   agent paints — remains tier-1 evidence.
 
 These are the same items named in [Deviations](/docs/odin/deviations),
-stated there as the record of what remains open at v0.1.0 by decision
+stated there as the record of what remains open at v1.0.0 by decision
 rather than by oversight.
