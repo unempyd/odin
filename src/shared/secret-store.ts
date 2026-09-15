@@ -64,7 +64,55 @@ export function hasSecretStore(): boolean {
   return read() !== null
 }
 
+const UNAVAILABLE_SECRET_STORE_STUB: SecretStore = {
+  isEncryptionAvailable: () => false,
+  encryptString: () => {
+    throw new Error('SecretStore not initialized; encryption is unavailable')
+  },
+  decryptString: () => {
+    throw new Error('SecretStore not initialized; encryption is unavailable')
+  },
+  describeProtectionGap: () =>
+    'The secret store has not started yet, so this secret cannot be sealed.'
+}
+
+const WARNED_UNINSTALLED_SLOT = Symbol.for('orca.host.secretStore.warnedUninstalled')
+
+type WarnedUninstalledSlot = { [WARNED_UNINSTALLED_SLOT]?: boolean }
+
+function warnedUninstalledSlot(): WarnedUninstalledSlot {
+  return globalThis as unknown as WarnedUninstalledSlot
+}
+
+/**
+ * Same contract as `getSecretStore()`, for a caller reachable before `setSecretStore()` runs
+ * during startup (`main-process-preflight.ts`, `orcad-entry.ts`): the four safeStorage-backed
+ * stores routed through `getSecretStore()` by odin(secrets-guard) — MiniMax API key/cookie,
+ * plugin secrets, cloud session — used to call `safeStorage` directly and degrade gracefully;
+ * routing them through the throwing `getSecretStore()` turned a race into an uncaught error.
+ * Falls back to reporting "unavailable" instead, with the same one-time warning discipline as
+ * the windowless-launch guard (electron-secret-store.ts).
+ */
+export function getSecretStoreOrUnavailable(): SecretStore {
+  const current = read()
+  if (current) {
+    return current
+  }
+  if (!warnedUninstalledSlot()[WARNED_UNINSTALLED_SLOT]) {
+    warnedUninstalledSlot()[WARNED_UNINSTALLED_SLOT] = true
+    console.warn(
+      '[secrets] SecretStore read before setSecretStore() ran during startup — treating ' +
+        'encryption as unavailable for this call instead of throwing. Consequences: protected ' +
+        'settings and SSH PTY owner leases are not persisted; the MiniMax API key/cookie are ' +
+        'written in plaintext; plugin secrets refuse to read or write; a saved cloud session ' +
+        'reads back as decrypt-failed.'
+    )
+  }
+  return UNAVAILABLE_SECRET_STORE_STUB
+}
+
 /** Test-only: drop the installed store so suites do not leak one across files. */
 export function _resetSecretStoreForTests(): void {
   slot()[SLOT] = null
+  warnedUninstalledSlot()[WARNED_UNINSTALLED_SLOT] = false
 }
