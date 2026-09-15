@@ -130,7 +130,7 @@ Every contract above is offered back to Orca as a single-commit pull request wit
 | A, A-relay | [stablyai/orca#20666](https://github.com/stablyai/orca/pull/20666) |
 | B | [stablyai/orca#20679](https://github.com/stablyai/orca/pull/20679) |
 | C (exit-wait subset) | [stablyai/orca#20681](https://github.com/stablyai/orca/pull/20681) |
-| O1, O2 | [stablyai/orca#20682](https://github.com/stablyai/orca/pull/20682) |
+| O1, O2, O3, O4 | [stablyai/orca#20682](https://github.com/stablyai/orca/pull/20682) |
 | N | [stablyai/orca#20683](https://github.com/stablyai/orca/pull/20683) |
 | M | [stablyai/orca#20684](https://github.com/stablyai/orca/pull/20684) |
 | G | [stablyai/orca#20689](https://github.com/stablyai/orca/pull/20689) |
@@ -140,7 +140,7 @@ Every contract above is offered back to Orca as a single-commit pull request wit
 | I | [stablyai/orca#20693](https://github.com/stablyai/orca/pull/20693) |
 | K | [stablyai/orca#20697](https://github.com/stablyai/orca/pull/20697) |
 
-Where a PR differs from the Odin commit, the PR body says why: the C PR carries only the exit-wait gate, not the wire `evidence` field; the M PR includes the minimal O1 classification it depends on. The first PR's review surfaced a real defect in the original diff (an exit replayed synchronously during session construction); it is fixed in both the PR and Odin (`adb4b039ae`).
+Where a PR differs from the Odin commit, the PR body says why: the C PR carries only the exit-wait gate, not the wire `evidence` field; the M PR includes the O1/O2/O3a classification it depends on. The first PR's review surfaced a real defect in the original diff (an exit replayed synchronously during session construction); it is fixed in both the PR and Odin (`adb4b039ae`). After Pullfrog's reviews on 2026-09-15, six PRs were amended in place to the fixed contracts, each body carrying a "Review fix" section: #20682 (O3a, O3b and the O4 federation twin that review surfaced; head `28f3d99cd1`), #20683 (N2; `62830a5b36`), #20684 (O3a plus the returned sweep error; `f8cd95c014`), #20689 (G3; `5bdd8973f3`), #20693 (I3, I4; `2c310acf5d`), #20697 (K2; `6c0285b615`). #20684's `worker-observation.ts` differs from #20682's only by the O4 gate extraction, which #20684 does not need.
 
 ## How to read the proofs
 
