@@ -159,7 +159,7 @@ export class OrcaRuntimeWithActivateManagedWorktree extends OrcaRuntimeWithListM
     agent: TuiAgent,
     workspacePath: string
   ): Promise<void> {
-    await markLocalWorktreeTrusted(agent, workspacePath)
+    await markLocalWorktreeTrusted(agent, workspacePath, this.store?.getSettings() ?? null)
   }
 
   protected async markWorkspaceTrustedForAgent(
@@ -179,7 +179,12 @@ export class OrcaRuntimeWithActivateManagedWorktree extends OrcaRuntimeWithListM
     connectionId: string,
     workspacePath: string
   ): Promise<void> {
-    await markRemoteWorktreeTrusted(agent, connectionId, workspacePath)
+    await markRemoteWorktreeTrusted(
+      agent,
+      connectionId,
+      workspacePath,
+      this.store?.getSettings() ?? null
+    )
   }
 
   protected recordCreatedWorktreeLineage(

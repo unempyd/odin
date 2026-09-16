@@ -149,6 +149,22 @@
       "tests": ["src/main/runtime/show-contact-loss.test.ts"],
       "reproduce": "expected true to be false",
       "note": "Found against a real host (odin/proofs/ssh-boundary.2026-09-15T01-39-52-596Z.json phase4): after the transport was iptables-dropped, `[ssh] Relay channel ... lost; reconnect attempt 1/6` and `Keepalive timeout` fired, yet `terminal show` kept answering connected:true/writable:true with no exitCause for all 17 samples over 90s. buildPtyTerminalSummary/buildTerminalSummary (src/main/runtime/orca-runtime-build-pty-terminal-summary.ts, orca-runtime-write-orchestration-pointer-pty.ts) read pty.connected straight off the record, which only a PTY data/exit event or an inventory sweep updates -- never the relay-lost/reconnect callbacks in src/main/ipc/ssh-relay-session-callbacks.ts. Fix reuses the existing SSH connection-state registry (getRegisteredSshState) rather than adding a second tracker: while the owning target's status is not 'connected', connected/writable are forced false and a new RuntimeTerminalSummary.liveness field reports {status:'unverifiable', reason:'reconnecting'|'transport_lost'} -- never exitCause/exited. A genuine owner-proven exit (pty.lastExitCause already set) is never overridden."
+    },
+    {
+      "id": "O2",
+      "title": "Trust presets into other tools' user-global configs require the same explicit opt-in as managed hooks",
+      "commit": "odin(consent) -- see git log --grep consent",
+      "tests": ["src/main/runtime/runtime-worktree-agent-startup.test.ts"],
+      "reproduce": "expected \"vi\\.fn\\(\\)\" to not be called at all",
+      "note": "Round-4 review finding (material deviation 2): src/main/agent-trust-presets.ts and src/main/remote-agent-trust-presets.ts write ~/.cursor/projects/<slug>/.workspace-trusted, ~/.copilot/config.json trustedFolders, and the user's real ~/.codex/config.toml [projects.\"<realpath>\"] trust_level = \"trusted\", fired automatically on agent launch by markLocalWorktreeTrusted / markRemoteWorktreeTrusted with no consent gate. Fixed by reusing the agent-status-hooks consent (isAgentStatusHooksEnabled) as the opt-in for these cross-tool trust-preset writes."
+    },
+    {
+      "id": "O10",
+      "title": "Codex logout marker path requires the same mirror consent and clears the live re-stamp baseline on revocation",
+      "commit": "odin(consent) -- see git log --grep consent",
+      "tests": ["src/main/codex-accounts/runtime-home-restore-consent-gate.test.ts"],
+      "reproduce": "expected .* to be null",
+      "note": "Round-4 review finding (material deviation 10): src/main/codex-accounts/runtime-home-service-sync.ts:99-101 called persistRuntimeLogoutMarker() with no consent check when a prior consented sync had set lastWrittenAuthJson; the default argument readSystemDefaultAuth() copied ~/.codex/auth.json into system-default-runtime-logout.json. Fixed by gating the branch on hasCredentialMirrorConsent() and passing null when consent is absent; also wired clearMirroredCodexCredentials to drop the live runtime-home instance's lastWrittenAuthJson baseline so a later sync cannot re-stamp a deleted marker."
     }
   ],
   "closedByConstruction": [

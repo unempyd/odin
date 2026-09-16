@@ -1,15 +1,19 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { existsSync, readFileSync, writeFileSync } from 'node:fs'
+import { existsSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { join } from 'node:path'
 import { createSettings } from './runtime-home-settings-test-fixtures'
 import {
   createStore,
   getRuntimeCodexAuthPath,
-  getRuntimeLogoutMarkerPath,
   getSystemCodexAuthPath,
   setupRuntimeHomeTest,
   teardownRuntimeHomeTest,
   testState
 } from './runtime-home-service-test-harness'
+
+function getRuntimeLogoutMarkerPath(): string {
+  return join(testState.userDataDir, 'codex-runtime-home', 'system-default-runtime-logout.json')
+}
 
 vi.mock('electron', () => ({
   app: {
@@ -86,6 +90,32 @@ describe('CodexRuntimeHomeService restoreSystemDefaultSnapshot consent gate (G1)
     ;(service as unknown as RestoreSystemDefaultSnapshotAccessible).restoreSystemDefaultSnapshot({
       detectExternalLogin: true
     })
+
+    const markerPath = getRuntimeLogoutMarkerPath()
+    expect(existsSync(markerPath)).toBe(true)
+    const marker: { systemDefaultAuthJson: string | null } = JSON.parse(
+      readFileSync(markerPath, 'utf-8')
+    )
+    expect(marker.systemDefaultAuthJson).toBeNull()
+  })
+
+  // Finding 10 (round4-opus, material deviation 10): syncForCurrentSelection's sibling branch
+  // (reached once a prior consented sync already set lastWrittenAuthJson) called
+  // persistRuntimeLogoutMarker() with no consent check at all, unlike the branch six lines above
+  // it (passes null explicitly) and the one below it (gated on hasCredentialMirrorConsent()).
+  it('never persists the real ~/.codex credential into the logout marker on a later sync after consent is revoked', async () => {
+    writeFileSync(getSystemCodexAuthPath(), '{"tokens":{"refresh_token":"top-secret"}}\n', 'utf-8')
+    const store = createStore(createSettings({ codexCredentialMirrorConsent: true }))
+
+    const { CodexRuntimeHomeService } = await import('./runtime-home-service')
+    const service = new CodexRuntimeHomeService(store as never)
+    const runtimeAuthPath = getRuntimeCodexAuthPath()
+    // Why: a prior consented sync (construction, above) seeded lastWrittenAuthJson.
+    expect(existsSync(runtimeAuthPath)).toBe(true)
+
+    store.updateSettings({ codexCredentialMirrorConsent: false })
+    rmSync(runtimeAuthPath, { force: true })
+    service.syncForCurrentSelection()
 
     const markerPath = getRuntimeLogoutMarkerPath()
     expect(existsSync(markerPath)).toBe(true)

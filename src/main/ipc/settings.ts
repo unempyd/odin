@@ -240,7 +240,7 @@ export function registerSettingsHandlers(
           shouldContinue: (agent) => {
             const settings = store.getSettings()
             return (
-              settings.agentStatusHooksEnabled !== false &&
+              settings.agentStatusHooksEnabled === true &&
               !settings.disabledTuiAgents.includes(agent)
             )
           }

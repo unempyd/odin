@@ -95,6 +95,11 @@ function installRuntimeRpc(
   state.runtimeRpc = runtimeRpc
   // Why: lets revoking network exposure consent re-close a live wide listener (see runtime-client-settings.ts).
   runtime.setNetworkExposureNarrower(() => runtimeRpc.narrowWebSocketBindToLoopback())
+  // Why: lets revoking codex credential mirror consent also drop the live runtime-home's
+  // lastWrittenAuthJson baseline, so a later sync can't re-stamp a deleted logout marker (G3 gap).
+  runtime.setCodexRuntimeHomeMirrorBaselineClearer(() =>
+    state.codexRuntimeHome?.clearLastWrittenAuthJson()
+  )
   registerMobileHandlers(runtimeRpc, {
     getRelayStatus: getDesktopRelayStatus,
     consumePendingUnpairedDeviceAuthFailure: (webContentsId) => {
