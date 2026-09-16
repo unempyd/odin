@@ -20,10 +20,10 @@ profile, and records the run.
 
 | Phase | Claude | Codex | Grok | Artifact |
 |---|---|---|---|---|
-| **Safe default** — a fresh profile launches every worker with no bypass flag in its argv (`ps` captured live, full command lines) | no bypass; completes because this operator's own Claude config auto-approves | no bypass; stays `dispatched`, never settles | no bypass; the worker fails to start | `real-sessions.2026-09-14T14-29-05-741Z.json` |
-| **Settle** — with the operator's per-agent grant recorded in the profile, the worker reports `worker_done` and the dispatch row settles `completed` with `dispatchedAt`, `completedAt`, `wallclockMs` | 8.7 s | 4.6 s | not run: the operator's Grok account is at its free usage limit | `real-sessions.2026-09-14T15-08-32-250Z.json` |
+| **Safe default** — a fresh profile launches every worker with no bypass flag in its argv (`ps` captured live command lines, truncated at 200 characters in the cited artifact) | no bypass; completes because this operator's own Claude config auto-approves | no bypass; stays `dispatched`, never settles | no bypass; the worker fails to start | `real-sessions.2026-09-14T14-29-05-741Z.json` |
+| **Settle** — with the operator's per-agent grant recorded in the profile, the worker reports `worker_done` and the dispatch row settles `completed` with `dispatchedAt`, `completedAt`, `wallclockMs` | 8.7 s | 4.6 s | not included in the cited artifact | `real-sessions.2026-09-14T15-08-32-250Z.json` |
 | **Concurrent** — two workers started in parallel both settle | 8.6 s | 5.3 s | — | same file |
-| **Crash** — the host is SIGKILLed after `worker-start` has returned (the send is delivered, the receipt completed, the task unsettled) and restarted on the same profile; replaying the same `--retry-request` returns the identical dispatch (one row, no second worker); the worker is still `dispatched`, never falsely exited or completed | pass | pass | pass | `real-sessions.2026-09-14T14-49-45-377Z.json` |
+| **Crash** — the host is SIGKILLed after `worker-start` has returned (the send is delivered, the receipt completed, the task unsettled) and restarted on the same profile; replaying the same `--retry-request` returns the identical dispatch (one row, no second worker); the worker is still `dispatched`, never falsely exited or completed | pass | pass | failed to start before the crash; the dispatch-count check passes | `real-sessions.2026-09-14T14-49-45-377Z.json` |
 
 The other honest crash-path answer, `operation_unknown` for a receipt still
 pending at the crash, is pinned by upstream's own unit tests (see
@@ -32,10 +32,10 @@ not by this driver.
 
 ## Two things a unit test can't show
 
-**The [H](/docs/odin/residuals) contract acting on a real profile.** A run
-whose grants were written without `agentBypassDefaultsReviewed` had them
-cleared on load because they equal Orca's former automatic values verbatim,
-and the Codex worker parked on its approval prompt instead of settling
+**The [H](/docs/odin/residuals) contract acting on a real profile.** The same
+artifact that shows a settled Claude/Codex run also shows a Codex worker parked
+on its approval prompt when the profile's grants were written without
+`agentBypassDefaultsReviewed`
 (`real-sessions.2026-09-14T15-05-30-764Z.json`, kept as evidence).
 
 **The operator's own agent configuration is outside Odin's contract.** The

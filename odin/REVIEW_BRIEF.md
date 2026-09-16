@@ -1,6 +1,6 @@
 # Independent review brief — Odin (fork of stablyai/orca)
 
-Repository: /Users/briankeeny/Desktop/odin-fork, branch `odin`. Upstream is stablyai/orca at commit 539d4d1f32 (v1.4.197). Every Odin change is a commit on top of that; `git log --first-parent 539d4d1f32..odin` lists them, `git diff 539d4d1f32..odin --stat` shows the whole surface.
+Repository: the odin-fork checkout, branch `odin`. Upstream is stablyai/orca at commit 539d4d1f32 (v1.4.197). Every Odin change is a commit on top of that; `git log --first-parent 539d4d1f32..odin` lists them, `git diff 539d4d1f32..odin --stat` shows the whole surface.
 
 You are an independent reviewer with no stake in the outcome. Be adversarial and specific; cite file:line for every claim. Do not rubber-stamp.
 

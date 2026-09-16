@@ -8,12 +8,13 @@ tests** — and then every failing file was rerun both here and at the
 upstream commit (`539d4d1f32`) to separate what Odin changed from what was
 already broken.
 
-## Twenty files fail only on Odin
+## Twenty-nine files were in the failing set
 
-All twenty are tests pinned to behaviour Odin deliberately changed: bypass
-flags in launch and resume commands, sub-agent row state, and liveness
-verdicts. Each was updated to the new contract with a reason recorded on
-the change; no production code changed to make a test pass.
+Twenty-one failed only on Odin in the first run: eighteen were genuine
+contract pins and are now fixed, and three were build-state or concurrency
+flakes that pass on re-run. Each genuine pin was updated to the new contract
+with a reason recorded on the change; no production code changed to make a
+test pass.
 
 ## Eight files fail identically at upstream
 
@@ -29,7 +30,9 @@ These are environment-bound, not Odin- or Orca-specific:
 
 The full classification, file by file, with evidence for each row, is
 [`odin/proofs/full-suite-triage.md`](https://github.com/unempyd/odin/blob/main/odin/proofs/full-suite-triage.md)
-in the repository.
+in the repository. The final re-run after the fixes reports twenty-one passing,
+one skipped (no `out/cli` build), and seven failing — all seven class (c),
+identical at upstream.
 
 ## Typecheck
 

@@ -69,7 +69,7 @@ it.
 ## The three ways to verify this
 
 ```
-odin/proof/run-proofs.sh        # reruns every proof test at the upstream commit (must fail) and on Odin (must pass)
+odin/proof/run-proofs.sh        # reruns every upstream-reproduced proof test at the upstream commit (must fail) and on Odin (must pass); closed-by-construction entries are exercised on Odin only
 odin/proof/real-sessions.mjs    # drives real claude / codex / grok workers through Orca's own orchestration on a headless host
 git log --first-parent odin     # one commit per residual, message = residual (file:line) → contract → proof files
 ```
