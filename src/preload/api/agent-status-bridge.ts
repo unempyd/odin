@@ -46,7 +46,7 @@ export const agentStatusApi = {
   onLegacyWorkerTerminalRecovery: (
     callback: (data: {
       paneKey: string
-      resolution: 'adopted' | 'exited' | 'rolled_back'
+      resolution: 'adopted' | 'unverifiable' | 'rolled_back'
       ptyId?: string
     }) => void
   ): (() => void) => {
@@ -54,7 +54,7 @@ export const agentStatusApi = {
       _event: Electron.IpcRendererEvent,
       data: {
         paneKey: string
-        resolution: 'adopted' | 'exited' | 'rolled_back'
+        resolution: 'adopted' | 'unverifiable' | 'rolled_back'
         ptyId?: string
       }
     ) => callback(data)

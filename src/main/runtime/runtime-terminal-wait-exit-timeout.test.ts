@@ -18,11 +18,11 @@ const HANDLE = 'terminal-1'
 function createWait(options: {
   pty?: RuntimePtyWorktreeRecord
   leaf?: RuntimeLeafRecord
-  /** Simulates the handle vanishing between registration and the deadline: the first
-   *  getLivePty/getLiveLeaf call (the synchronous registration check) returns the given
-   *  record; every call after that reports it gone (null, or a throw for the leaf path,
-   *  which never returns null). */
-  goesStaleAfterRegistration?: boolean
+  /** Simulates the handle vanishing after a fixed number of reads. An exit wait legitimately
+   *  re-reads the live record once at the top of wait() and once inside the promise executor's
+   *  registration check before any timer can fire, so `staleAfterCall: 2` makes the record go
+   *  away by the deadline while `staleAfterCall: 1` makes it vanish in the registration gap. */
+  staleAfterCall?: number
 }) {
   const waiters = new RuntimeTerminalWaiterRegistry()
   const shared = {
@@ -47,20 +47,14 @@ function createWait(options: {
       defaultTimeoutMs: 60_000,
       getLivePty: () => {
         ptyCalls += 1
-        // Why 2, not 1: an exit wait legitimately re-reads the live record once at the
-        // very top of wait() and once more inside the promise executor's registration
-        // check, both before the timer can ever fire.
-        if (options.goesStaleAfterRegistration && ptyCalls > 2) {
+        if (options.staleAfterCall !== undefined && ptyCalls > options.staleAfterCall) {
           return null
         }
         return options.pty ? { pty: options.pty } : null
       },
       getLiveLeaf: () => {
         leafCalls += 1
-        // Why 2, not 1: an exit wait legitimately re-reads the live leaf once at the very
-        // top of wait() and once more inside the promise executor's registration check,
-        // both before the timer can ever fire.
-        if (options.goesStaleAfterRegistration && leafCalls > 2) {
+        if (options.staleAfterCall !== undefined && leafCalls > options.staleAfterCall) {
           throw new Error('terminal_handle_stale')
         }
         return { leaf: options.leaf ?? makeTuiIdleLeaf() }
@@ -145,7 +139,7 @@ describe('RuntimeTerminalWait exit-condition timeout', () => {
   // with a bare 'terminal_handle_stale'.
   it('resolves the silence verdict from the last known record when the PTY handle goes stale before the deadline', async () => {
     const pty = makeTuiIdlePty({ connected: true })
-    const { wait } = createWait({ pty, goesStaleAfterRegistration: true })
+    const { wait } = createWait({ pty, staleAfterCall: 2 })
 
     const settled = watch(wait.wait(HANDLE, { condition: 'exit', timeoutMs: 1000 }))
     await vi.advanceTimersByTimeAsync(1000)
@@ -164,10 +158,52 @@ describe('RuntimeTerminalWait exit-condition timeout', () => {
 
   it('resolves the silence verdict from the last known record when getLiveLeaf throws before the deadline', async () => {
     const leaf = makeTuiIdleLeaf({ connected: true })
-    const { wait } = createWait({ leaf, goesStaleAfterRegistration: true })
+    const { wait } = createWait({ leaf, staleAfterCall: 2 })
 
     const settled = watch(wait.wait(HANDLE, { condition: 'exit', timeoutMs: 1000 }))
     await vi.advanceTimersByTimeAsync(1000)
+
+    expect(settled).toHaveBeenCalledExactlyOnceWith({
+      ok: {
+        handle: HANDLE,
+        condition: 'exit',
+        satisfied: false,
+        status: 'running',
+        exitCode: null,
+        evidence: 'silence'
+      }
+    })
+  })
+
+  // odin(wait-absence-registration-gap): O2 fixed the deadline case; U1 is the registration
+  // gap — a wait is created between spawn and registration. The handle is not yet known, so the
+  // live lookup fails immediately. An exit wait must still resolve 'silence', not reject with
+  // 'terminal_handle_stale'.
+  it('resolves the silence verdict when a PTY exit wait is created before registration', async () => {
+    const pty = makeTuiIdlePty({ connected: true })
+    const { wait } = createWait({ pty, staleAfterCall: 1 })
+
+    const settled = watch(wait.wait(HANDLE, { condition: 'exit', timeoutMs: 1000 }))
+    await vi.advanceTimersByTimeAsync(0)
+
+    expect(settled).toHaveBeenCalledExactlyOnceWith({
+      ok: {
+        handle: HANDLE,
+        condition: 'exit',
+        satisfied: false,
+        status: 'running',
+        exitCode: null,
+        evidence: 'silence'
+      }
+    })
+  })
+
+  it('resolves the silence verdict when a leaf exit wait is created before registration', async () => {
+    const leaf = makeTuiIdleLeaf({ connected: true })
+    const { wait } = createWait({ leaf, staleAfterCall: 1 })
+
+    const settled = watch(wait.wait(HANDLE, { condition: 'exit', timeoutMs: 1000 }))
+    await vi.advanceTimersByTimeAsync(0)
 
     expect(settled).toHaveBeenCalledExactlyOnceWith({
       ok: {

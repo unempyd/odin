@@ -1,0 +1,223 @@
+
+ RUN  v4.1.11 /private/var/folders/08/tsc21p4n41ndkvcxq1kl0htw0000gn/T/odin-upstream-EHfFve
+
+ ❯ src/main/runtime/runtime-terminal-wait-exit-timeout.test.ts (7 tests | 6 failed) 24ms
+     × resolves the silence verdict instead of rejecting when a PTY exit wait times out 12ms
+     × resolves the silence verdict instead of rejecting when a leaf exit wait times out 2ms
+     × resolves the silence verdict from the last known record when the PTY handle goes stale before the deadline 2ms
+     × resolves the silence verdict from the last known record when getLiveLeaf throws before the deadline 1ms
+     × resolves the silence verdict when a PTY exit wait is created before registration 1ms
+     × resolves the silence verdict when a leaf exit wait is created before registration 1ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 6 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/main/runtime/runtime-terminal-wait-exit-timeout.test.ts > RuntimeTerminalWait exit-condition timeout > resolves the silence verdict instead of rejecting when a PTY exit wait times out
+AssertionError: expected "vi.fn()" to be called once with arguments: [ { ok: { …(6) } } ]
+
+Received:
+
+  1st vi.fn() call:
+
+  [
+    {
+-     "ok": {
+-       "condition": "exit",
+-       "evidence": "silence",
+-       "exitCode": null,
+-       "handle": "terminal-1",
+-       "satisfied": false,
+-       "status": "running",
+-     },
++     "error": "timeout",
+    },
+  ]
+
+
+Number of calls: 1
+
+ ❯ src/main/runtime/runtime-terminal-wait-exit-timeout.test.ts:95:21
+     93|     await vi.advanceTimersByTimeAsync(1000)
+     94|
+     95|     expect(settled).toHaveBeenCalledExactlyOnceWith({
+       |                     ^
+     96|       ok: {
+     97|         handle: HANDLE,
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/6]⎯
+
+ FAIL  src/main/runtime/runtime-terminal-wait-exit-timeout.test.ts > RuntimeTerminalWait exit-condition timeout > resolves the silence verdict instead of rejecting when a leaf exit wait times out
+AssertionError: expected "vi.fn()" to be called once with arguments: [ { ok: { …(6) } } ]
+
+Received:
+
+  1st vi.fn() call:
+
+  [
+    {
+-     "ok": {
+-       "condition": "exit",
+-       "evidence": "silence",
+-       "exitCode": null,
+-       "handle": "terminal-1",
+-       "satisfied": false,
+-       "status": "running",
+-     },
++     "error": "timeout",
+    },
+  ]
+
+
+Number of calls: 1
+
+ ❯ src/main/runtime/runtime-terminal-wait-exit-timeout.test.ts:114:21
+    112|     await vi.advanceTimersByTimeAsync(1000)
+    113|
+    114|     expect(settled).toHaveBeenCalledExactlyOnceWith({
+       |                     ^
+    115|       ok: {
+    116|         handle: HANDLE,
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/6]⎯
+
+ FAIL  src/main/runtime/runtime-terminal-wait-exit-timeout.test.ts > RuntimeTerminalWait exit-condition timeout > resolves the silence verdict from the last known record when the PTY handle goes stale before the deadline
+AssertionError: expected "vi.fn()" to be called once with arguments: [ { ok: { …(6) } } ]
+
+Received:
+
+  1st vi.fn() call:
+
+  [
+    {
+-     "ok": {
+-       "condition": "exit",
+-       "evidence": "silence",
+-       "exitCode": null,
+-       "handle": "terminal-1",
+-       "satisfied": false,
+-       "status": "running",
+-     },
++     "error": "timeout",
+    },
+  ]
+
+
+Number of calls: 1
+
+ ❯ src/main/runtime/runtime-terminal-wait-exit-timeout.test.ts:147:21
+    145|     await vi.advanceTimersByTimeAsync(1000)
+    146|
+    147|     expect(settled).toHaveBeenCalledExactlyOnceWith({
+       |                     ^
+    148|       ok: {
+    149|         handle: HANDLE,
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/6]⎯
+
+ FAIL  src/main/runtime/runtime-terminal-wait-exit-timeout.test.ts > RuntimeTerminalWait exit-condition timeout > resolves the silence verdict from the last known record when getLiveLeaf throws before the deadline
+AssertionError: expected "vi.fn()" to be called once with arguments: [ { ok: { …(6) } } ]
+
+Received:
+
+  1st vi.fn() call:
+
+  [
+    {
+-     "ok": {
+-       "condition": "exit",
+-       "evidence": "silence",
+-       "exitCode": null,
+-       "handle": "terminal-1",
+-       "satisfied": false,
+-       "status": "running",
+-     },
++     "error": "timeout",
+    },
+  ]
+
+
+Number of calls: 1
+
+ ❯ src/main/runtime/runtime-terminal-wait-exit-timeout.test.ts:166:21
+    164|     await vi.advanceTimersByTimeAsync(1000)
+    165|
+    166|     expect(settled).toHaveBeenCalledExactlyOnceWith({
+       |                     ^
+    167|       ok: {
+    168|         handle: HANDLE,
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/6]⎯
+
+ FAIL  src/main/runtime/runtime-terminal-wait-exit-timeout.test.ts > RuntimeTerminalWait exit-condition timeout > resolves the silence verdict when a PTY exit wait is created before registration
+AssertionError: expected "vi.fn()" to be called once with arguments: [ { ok: { …(6) } } ]
+
+Received:
+
+  1st vi.fn() call:
+
+  [
+    {
+-     "ok": {
+-       "condition": "exit",
+-       "evidence": "silence",
+-       "exitCode": null,
+-       "handle": "terminal-1",
+-       "satisfied": false,
+-       "status": "running",
+-     },
++     "error": "terminal_handle_stale",
+    },
+  ]
+
+
+Number of calls: 1
+
+ ❯ src/main/runtime/runtime-terminal-wait-exit-timeout.test.ts:189:21
+    187|     await vi.advanceTimersByTimeAsync(0)
+    188|
+    189|     expect(settled).toHaveBeenCalledExactlyOnceWith({
+       |                     ^
+    190|       ok: {
+    191|         handle: HANDLE,
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/6]⎯
+
+ FAIL  src/main/runtime/runtime-terminal-wait-exit-timeout.test.ts > RuntimeTerminalWait exit-condition timeout > resolves the silence verdict when a leaf exit wait is created before registration
+AssertionError: expected "vi.fn()" to be called once with arguments: [ { ok: { …(6) } } ]
+
+Received:
+
+  1st vi.fn() call:
+
+  [
+    {
+-     "ok": {
+-       "condition": "exit",
+-       "evidence": "silence",
+-       "exitCode": null,
+-       "handle": "terminal-1",
+-       "satisfied": false,
+-       "status": "running",
+-     },
++     "error": "terminal_handle_stale",
+    },
+  ]
+
+
+Number of calls: 1
+
+ ❯ src/main/runtime/runtime-terminal-wait-exit-timeout.test.ts:208:21
+    206|     await vi.advanceTimersByTimeAsync(0)
+    207|
+    208|     expect(settled).toHaveBeenCalledExactlyOnceWith({
+       |                     ^
+    209|       ok: {
+    210|         handle: HANDLE,
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/6]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  6 failed | 1 passed (7)
+   Start at  13:25:18
+   Duration  13.02s (transform 9.63s, setup 68ms, import 12.71s, tests 24ms, environment 0ms)
+

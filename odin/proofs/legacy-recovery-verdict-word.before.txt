@@ -1,0 +1,35 @@
+
+ RUN  v4.1.11 /private/var/folders/08/tsc21p4n41ndkvcxq1kl0htw0000gn/T/odin-upstream-IdEd0D
+
+ ❯ src/main/runtime/runtime-legacy-worker-terminal-recovery-runner.test.ts (2 tests | 1 failed) 12ms
+     × fails a Dispatch whose PTY is no longer in the live inventory, headless (no materializeRenderer) 8ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/main/runtime/runtime-legacy-worker-terminal-recovery-runner.test.ts > runLegacyWorkerTerminalRecovery without a renderer (residual L) > fails a Dispatch whose PTY is no longer in the live inventory, headless (no materializeRenderer)
+AssertionError: expected undefined to deeply equal [ 'ctx-1' ]
+
+- Expected:
+[
+  "ctx-1",
+]
+
++ Received:
+undefined
+
+ ❯ src/main/runtime/runtime-legacy-worker-terminal-recovery-runner.test.ts:80:44
+     78|     const result = await controller.reconcile({})
+     79|
+     80|     expect(result.unverifiableDispatchIds).toEqual(['ctx-1'])
+       |                                            ^
+     81|     expect(result.deferredDispatchIds).toEqual([])
+     82|     expect(ports.reconcileMissing).toHaveBeenCalledWith(
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 1 passed (2)
+   Start at  13:24:55
+   Duration  321ms (transform 83ms, setup 68ms, import 44ms, tests 12ms, environment 0ms)
+

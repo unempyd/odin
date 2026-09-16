@@ -228,6 +228,47 @@
         "src/main/host/outside-contract-src-clusters-ratchet.test.ts"
       ],
       "reproduce": "outside-contract\\.json is missing|src clusters are not declared"
+    },
+    {
+      "id": "listing-omission-exit",
+      "title": "stopAndWaitPtyFromRuntimeController: a post-stop listing omission is unverifiable, never a proven exited",
+      "commit": "b8a26959ec",
+      "tests": [
+        "src/main/ipc/pty/runtime/kill.test.ts"
+      ],
+      "reproduce": "expected true to be false"
+    },
+    {
+      "id": "legacy-recovery-verdict-word",
+      "title": "Legacy worker terminal recovery classifies listing absence and identity mismatch as unverifiable, never exited",
+      "commit": "b8a26959ec",
+      "tests": [
+        "src/main/runtime/runtime-legacy-worker-terminal-recovery-runner.test.ts",
+        "src/main/runtime/orca-runtime-tests/terminal-output-and-worker-recovery-part-02.spec.ts",
+        "src/main/runtime/orca-runtime-tests/terminal-output-and-worker-recovery-part-03.spec.ts",
+        "src/main/runtime/orca-runtime-tests/terminal-output-and-worker-recovery-part-04.spec.ts",
+        "src/main/runtime/orca-runtime-tests/terminal-output-and-worker-recovery-part-05.spec.ts",
+        "src/main/runtime/orca-runtime-tests/terminal-output-and-worker-recovery-part-06.spec.ts"
+      ],
+      "reproduce": "expected undefined to deeply equal"
+    },
+    {
+      "id": "worker-start-unobserved-missing-prompt",
+      "title": "worker-start turn observation classifies a missing prompt-delivery record as unobserved, not unsupported",
+      "commit": "b8a26959ec",
+      "tests": [
+        "src/main/runtime/rpc/methods/orchestration/worker/worker-start-turn-observation.test.ts"
+      ],
+      "reproduce": "expected \\{ verdict: 'unsupported' \\} to deeply equal \\{ verdict: 'unobserved' \\}"
+    },
+    {
+      "id": "wait-silence-registration-gap",
+      "title": "RuntimeTerminalWait resolves the silence verdict for exit waits registered in the spawn-to-registration gap",
+      "commit": "b8a26959ec",
+      "tests": [
+        "src/main/runtime/runtime-terminal-wait-exit-timeout.test.ts"
+      ],
+      "reproduce": "expected \"vi\\.fn\\(\\)\" to be called once with arguments"
     }
   ],
   "closedByConstruction": [

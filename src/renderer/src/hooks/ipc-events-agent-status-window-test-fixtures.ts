@@ -10,7 +10,7 @@ export function buildWindowApi(args: {
   onSet: (cb: (data: AgentStatusSetData) => void) => () => void
   onClear?: (cb: (data: AgentStatusClearIpcPayload) => void) => () => void
   onLegacyWorkerTerminalRecovery?: (
-    cb: (data: { paneKey: string; resolution: 'adopted' | 'exited' }) => void
+    cb: (data: { paneKey: string; resolution: 'adopted' | 'unverifiable' }) => void
   ) => () => void
   getSnapshot?: () => Promise<AgentStatusSetData[]>
   getMigrationUnsupportedSnapshot?: () => Promise<MigrationUnsupportedPtyEntry[]>

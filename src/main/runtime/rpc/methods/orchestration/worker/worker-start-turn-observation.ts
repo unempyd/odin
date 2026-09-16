@@ -10,9 +10,10 @@ import type { OrcaRuntimeService } from '../../../../orca-runtime'
  *   but the turn is blocked on a human.
  * - 'unsupported': this provider exposes no turn-start signal; the accepted write is the
  *   strongest receipt that can exist. Never treated as failure.
- * - 'unobserved': observation IS supported and no turn started within the window. This is
- *   `unverifiable`, never evidence of death — the bytes were written, but the agent may be
- *   wedged at startup or holding the spec unsent in its composer.
+ * - 'unobserved': either observation is supported and no turn started within the window, or
+ *   there is no prompt-delivery record at all to classify. This is `unverifiable`, never
+ *   evidence of death — the bytes were written, but the agent may be wedged at startup or
+ *   holding the spec unsent in its composer.
  */
 export type WorkerTurnStartVerdict = 'observed' | 'permission' | 'unsupported' | 'unobserved'
 
@@ -50,7 +51,10 @@ export async function observeWorkerTurnStart(args: {
   timeoutMs?: number
 }): Promise<WorkerTurnStartObservation> {
   if (!args.prompt) {
-    return { verdict: 'unsupported' }
+    // Why not 'unsupported': that word is for an old host's real capability gap (see
+    // classifyPromptDelivery). This same-process send returning no record at all is a
+    // capable host with no evidence, which must block readiness like any other silence.
+    return { verdict: 'unobserved' }
   }
   const verdict = classifyPromptDelivery(args.prompt)
   if (verdict !== 'unobserved') {

@@ -149,6 +149,12 @@ export class RuntimeTerminalWait {
         const live = this.deps.getLivePty(handle)
         if (!live) {
           this.waiters.remove(waiter)
+          // wait-absence-verdict: an exit wait registered in the gap between the entry read
+          // and the registration re-check is an absence, not proof of death.
+          if (condition === 'exit') {
+            resolve(buildPtyTerminalWaitResult(handle, condition, pty.pty))
+            return
+          }
           reject(new Error('terminal_handle_stale'))
         } else if (condition === 'exit' && !live.pty.connected) {
           this.waiters.resolve(waiter, buildPtyTerminalWaitResult(handle, condition, live.pty))
@@ -306,6 +312,12 @@ export class RuntimeTerminalWait {
         }
       } catch (error) {
         this.waiters.remove(waiter)
+        // wait-absence-verdict: an exit wait registered in the gap between the entry read
+        // and the registration re-check is an absence, not proof of death.
+        if (condition === 'exit') {
+          resolve(buildTerminalWaitResult(handle, condition, leaf))
+          return
+        }
         reject(error instanceof Error ? error : new Error(String(error)))
       }
     })

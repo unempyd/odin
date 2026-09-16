@@ -143,7 +143,7 @@ describe('OrcaRuntimeService', () => {
 
     await expect(runtime.reconcileLegacyWorkerTerminals()).resolves.toMatchObject({
       adoptedDispatchIds: [],
-      exitedDispatchIds: ['dispatch-wrong-handle', 'dispatch-wrong-incarnation'],
+      unverifiableDispatchIds: ['dispatch-wrong-handle', 'dispatch-wrong-incarnation'],
       deferredDispatchIds: ['dispatch-missing', 'dispatch-ambiguous']
     })
     expect(listProcesses).toHaveBeenCalledOnce()
@@ -244,7 +244,7 @@ describe('OrcaRuntimeService', () => {
       runtime.reconcileLegacyWorkerTerminals({ materializeRenderer: true })
     ).resolves.toMatchObject({
       adoptedDispatchIds: ['dispatch-folder'],
-      exitedDispatchIds: [],
+      unverifiableDispatchIds: [],
       deferredDispatchIds: []
     })
     expect(getSession().tabsByWorktree[TEST_FOLDER_WORKSPACE_KEY]).toContainEqual(
@@ -381,7 +381,7 @@ describe('OrcaRuntimeService', () => {
         })
       ).resolves.toMatchObject({
         adoptedDispatchIds: ['dispatch-ssh-folder'],
-        exitedDispatchIds: [],
+        unverifiableDispatchIds: [],
         deferredDispatchIds: []
       })
     } finally {
