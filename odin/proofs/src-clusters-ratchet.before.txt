@@ -1,0 +1,26 @@
+
+ RUN  v4.1.11 /private/var/folders/08/tsc21p4n41ndkvcxq1kl0htw0000gn/T/odin-upstream-arLl4R
+
+ ❯ src/main/host/outside-contract-src-clusters-ratchet.test.ts (0 test)
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/main/host/outside-contract-src-clusters-ratchet.test.ts [ src/main/host/outside-contract-src-clusters-ratchet.test.ts ]
+Error: outside-contract.json is missing — src clusters are not declared
+ ❯ readAllowList src/main/host/outside-contract-src-clusters-ratchet.test.ts:24:13
+     22|   } catch (err) {
+     23|     if ((err as NodeJS.ErrnoException).code === 'ENOENT') {
+     24|       throw new Error('outside-contract.json is missing — src clusters…
+       |             ^
+     25|     }
+     26|     throw err
+ ❯ src/main/host/outside-contract-src-clusters-ratchet.test.ts:30:19
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  no tests
+   Start at  13:01:58
+   Duration  394ms (transform 65ms, setup 85ms, import 0ms, tests 0ms, environment 0ms)
+

@@ -53,10 +53,17 @@ export class ElectronSecretStore implements SecretStore {
 //  - Protected slots (ProtectedSecretPersistence: opencodeSessionCookie, httpProxyUrl,
 //    browserKagiSessionLink, SSH PTY owner leases): the prior ciphertext is kept, but a NEW value
 //    is silently not persisted (`degraded: true`, blob unchanged).
-//  - MiniMax API key / cookie (minimax-api-key-store.ts, minimax-cookie-store.ts): written to disk
-//    in PLAINTEXT, with a console.warn at the call site.
+//  - MiniMax API key / cookie (minimax-api-key-store.ts, minimax-cookie-store.ts), Linear API
+//    token (linear-token-store.ts), Jira API token (site-credential-store.ts), Bitbucket
+//    credential (integration-credential-file.ts), OpenAI speech API key (openai-api-key-store.ts):
+//    written to disk in PLAINTEXT, with a console.warn at the call site.
 //  - Plugin secrets (plugin-secrets-store.ts): reads and writes both REFUSE.
 //  - Cloud session (profile-cloud-session-store.ts): reads back as `decrypt-failed`.
+//
+// The last four above never changed for this guard — they already called the plain,
+// throwing getSecretStore() and inherit the degraded answer for free. See
+// secret-store-consumer-inventory.test.ts, which fails if a future getSecretStore()/
+// getSecretStoreOrUnavailable() caller goes unlisted here.
 function encryptionAvailableGuarded(): boolean {
   if (process.platform === 'darwin' && isWindowlessLaunch()) {
     warnWindowlessSecretsGuardTripped()
@@ -77,8 +84,9 @@ function warnWindowlessSecretsGuardTripped(): void {
     '[secrets] Windowless launch (ORCA_BACKGROUND_LAUNCH or E2E-headless) — refusing to touch ' +
       'the macOS Keychain to avoid an unattended hang with no window to authorize its prompt. ' +
       'Consequences for this run: protected settings and SSH PTY owner leases are not persisted; ' +
-      'the MiniMax API key/cookie are written in plaintext; plugin secrets refuse to read or ' +
-      'write; a saved cloud session reads back as decrypt-failed.'
+      'the MiniMax API key/cookie, Linear token, Jira token, Bitbucket credential, and OpenAI ' +
+      'speech API key are written in plaintext; plugin secrets refuse to read or write; a saved ' +
+      'cloud session reads back as decrypt-failed.'
   )
 }
 
