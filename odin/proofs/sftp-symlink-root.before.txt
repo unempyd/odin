@@ -1,0 +1,31 @@
+
+ RUN  v4.1.11 /private/var/folders/08/tsc21p4n41ndkvcxq1kl0htw0000gn/T/odin-upstream-arLl4R
+
+ ❯ src/main/ssh/sftp-upload.test.ts (10 tests | 1 failed) 216ms
+     × does not reject the root itself when the root is a symlink 7ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/main/ssh/sftp-upload.test.ts > uploadDirectory with a symlinked root > does not reject the root itself when the root is a symlink
+AssertionError: promise rejected "Error: Path escaped upload root: /var/fol…" instead of resolving
+ ❯ src/main/ssh/sftp-upload.test.ts:226:8
+    224|       await expect(
+    225|         uploadDirectory(sftp, symlinkedRoot, '/remote/relay', symlinke…
+    226|       ).resolves.toBeUndefined()
+       |        ^
+    227|       expect(sftp.createWriteStream).toHaveBeenCalledWith(
+    228|         '/remote/relay/relay.js',
+
+Caused by: Error: Path escaped upload root: /var/folders/08/tsc21p4n41ndkvcxq1kl0htw0000gn/T/orca-sftp-symlink-root-link-29025
+ ❯ assertLocalUploadPathInsideRoot src/main/ssh/sftp-upload.ts:319:11
+ ❯ uploadDirectory src/main/ssh/sftp-upload.ts:225:3
+ ❯ src/main/ssh/sftp-upload.test.ts:224:7
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 9 passed (10)
+   Start at  13:01:55
+   Duration  558ms (transform 79ms, setup 73ms, import 36ms, tests 216ms, environment 0ms)
+

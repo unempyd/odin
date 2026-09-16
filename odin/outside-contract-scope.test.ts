@@ -1,5 +1,5 @@
 import { execFileSync } from 'node:child_process'
-import { readFileSync } from 'node:fs'
+import { existsSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 
@@ -13,16 +13,28 @@ import { describe, expect, it } from 'vitest'
  * outside odin/, src/, docs/reference/, or isn't README.md itself must be named in
  * odin/outside-contract.json's allow-list, built from the diff at the time of this fix. Future
  * drift of this shape must be declared there too, or this test fails.
+ *
+ * Round-4 review (Fable, material deviation 3): a src/-scoped cluster (the safeStorage
+ * windowless-launch guard) closes no residual either, but CONTRACT_ROOT_PATTERN below treats all
+ * of src/ as in-contract, so the check above never sees it. srcClusters is the narrower fix: it
+ * lets such a cluster be declared for the record without scanning every src/ diff for drift
+ * (which would flag every ordinary residual fix) -- it only asserts each declared path still
+ * exists, so a declared cluster cannot silently vanish from a documented location.
  */
 const ROOT = join(__dirname, '..')
 
 type OutsideContractCluster = { name: string; files: string[] }
-type OutsideContractAllowList = { upstreamRef: string; clusters: OutsideContractCluster[] }
+type OutsideContractAllowList = {
+  upstreamRef: string
+  clusters: OutsideContractCluster[]
+  srcClusters?: OutsideContractCluster[]
+}
 
 const allowList: OutsideContractAllowList = JSON.parse(
   readFileSync(join(__dirname, 'outside-contract.json'), 'utf8')
 )
 const allowedFiles = new Set(allowList.clusters.flatMap((cluster) => cluster.files))
+const declaredSrcFiles = (allowList.srcClusters ?? []).flatMap((cluster) => cluster.files)
 
 function filesChangedSinceUpstream(): string[] {
   return execFileSync('git', ['diff', `${allowList.upstreamRef}..HEAD`, '--name-only'], {
@@ -47,5 +59,20 @@ describe('outside-contract scope', () => {
     const changed = new Set(filesChangedSinceUpstream())
     const stale = [...allowedFiles].filter((file) => !changed.has(file))
     expect(stale).toEqual([])
+  })
+
+  it('only declares src/ paths in srcClusters', () => {
+    const misplaced = declaredSrcFiles.filter((file) => !file.startsWith('src/'))
+    expect(misplaced).toEqual([])
+  })
+
+  it('keeps every declared srcClusters path on disk', () => {
+    const missing = declaredSrcFiles.filter((file) => !existsSync(join(ROOT, file)))
+    expect(missing).toEqual([])
+  })
+
+  it('declares the safeStorage windowless-launch guard src cluster', () => {
+    const names = (allowList.srcClusters ?? []).map((cluster) => cluster.name)
+    expect(names).toContain('safe-storage-windowless-launch-guard')
   })
 })

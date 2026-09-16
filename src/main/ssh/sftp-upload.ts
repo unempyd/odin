@@ -310,8 +310,13 @@ async function assertLocalUploadPathInsideRoot(
   rootRealPath: string,
   candidatePath: string
 ): Promise<void> {
-  const candidateRealPath = await realpath(candidatePath)
-  const relativeToRoot = relative(rootRealPath, candidateRealPath)
+  // Why realpath both sides: a symlinked root (e.g. a git-worktree's out/) resolves the
+  // candidate but not itself, so a legitimate child compares as outside its own root.
+  const [resolvedRootPath, candidateRealPath] = await Promise.all([
+    realpath(rootRealPath),
+    realpath(candidatePath)
+  ])
+  const relativeToRoot = relative(resolvedRootPath, candidateRealPath)
   if (
     relativeToRoot !== '' &&
     (relativeToRoot === '..' || relativeToRoot.startsWith(`..${sep}`) || isAbsolute(relativeToRoot))

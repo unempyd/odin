@@ -1,6 +1,6 @@
 {
   "upstreamRef": "539d4d1f32b4",
-  "note": "Files changed on this branch relative to upstream that sit outside odin/, src/, docs/reference/, and README.md. None of these close a residual from DIRECTION.md or a manifest.json id -- see README's \"Outside the contract\" section. odin/outside-contract-scope.test.ts fails if a new file outside those roots appears here undeclared.",
+  "note": "Files changed on this branch relative to upstream that sit outside odin/, src/, docs/reference/, and README.md. None of these close a residual from DIRECTION.md or a manifest.json id -- see README's \"Outside the contract\" section. odin/outside-contract-scope.test.ts fails if a new file outside those roots appears here undeclared. srcClusters is a separate, narrower list: src/ paths that also close no residual, declared for the record because CONTRACT_ROOT_PATTERN otherwise treats all of src/ as in-contract and never checks it -- the test only asserts every path listed there still exists, it does not scan src/ for undeclared drift.",
   "clusters": [
     {
       "name": "github-steward-agent-brief",
@@ -113,6 +113,21 @@
       "purpose": "run-proofs.sh's per-run debug logs (<id>.run.log/<id>.upstream.log) moved out of the tracked odin/proofs/ directory into odin/proofs/logs/, explicitly gitignored -- odin/ proof-runner infrastructure, not out-of-contract work.",
       "commits": ["(this commit -- see git log -1 -- .gitignore)"],
       "files": [".gitignore"]
+    }
+  ],
+  "srcClusters": [
+    {
+      "name": "safe-storage-windowless-launch-guard",
+      "purpose": "Round-4 review (Fable, material deviation 3): safeStorage's synchronous macOS Keychain call can hang a windowless launch (ORCA_BACKGROUND_LAUNCH/E2E-headless) forever with no timeout (odin/proofs/ssh-boundary.md Deviation 3) -- fixed by reporting encryption unavailable up front instead of calling into safeStorage. This closes no DIRECTION.md residual or manifest.json id; its only reachable trigger is the proof/test launch flag, documented at docs/reference/windowless-launch-secret-storage.md. Declared here, not in the main clusters array above, because those files sit under src/ -- outside-contract-scope.test.ts's CONTRACT_ROOT_PATTERN already treats src/ as in-contract and never reads this list; it only asserts every path named here still exists.",
+      "commits": ["da89b6b5b8", "dfb1ea2919", "f59cb1052b"],
+      "files": [
+        "src/main/host/electron-secret-store.ts",
+        "src/shared/secret-store.ts",
+        "src/main/minimax/minimax-api-key-store.ts",
+        "src/main/minimax/minimax-cookie-store.ts",
+        "src/main/orca-profiles/profile-cloud-session-store.ts",
+        "src/main/plugins/plugin-secrets-store.ts"
+      ]
     }
   ]
 }

@@ -149,6 +149,27 @@
       "tests": ["src/main/runtime/show-contact-loss.test.ts"],
       "reproduce": "expected true to be false",
       "note": "Found against a real host (odin/proofs/ssh-boundary.2026-09-15T01-39-52-596Z.json phase4): after the transport was iptables-dropped, `[ssh] Relay channel ... lost; reconnect attempt 1/6` and `Keepalive timeout` fired, yet `terminal show` kept answering connected:true/writable:true with no exitCause for all 17 samples over 90s. buildPtyTerminalSummary/buildTerminalSummary (src/main/runtime/orca-runtime-build-pty-terminal-summary.ts, orca-runtime-write-orchestration-pointer-pty.ts) read pty.connected straight off the record, which only a PTY data/exit event or an inventory sweep updates -- never the relay-lost/reconnect callbacks in src/main/ipc/ssh-relay-session-callbacks.ts. Fix reuses the existing SSH connection-state registry (getRegisteredSshState) rather than adding a second tracker: while the owning target's status is not 'connected', connected/writable are forced false and a new RuntimeTerminalSummary.liveness field reports {status:'unverifiable', reason:'reconnecting'|'transport_lost'} -- never exitCause/exited. A genuine owner-proven exit (pty.lastExitCause already set) is never overridden."
+    },
+    {
+      "id": "secret-store-inventory",
+      "title": "Windowless-launch secret store consumer inventory: every getSecretStore() caller under src/main is disclosed in the reference doc and named in the tripped guard warning",
+      "commit": "odin(O5) -- see git log --grep O5",
+      "tests": ["src/main/host/secret-store-consumer-inventory.test.ts"],
+      "reproduce": "linear-token-store\\.ts|site-credential-store\\.ts|integration-credential-file\\.ts|openai-api-key-store\\.ts|minimax-api-key-store\\.ts|minimax-cookie-store\\.ts|plugin-secrets-store\\.ts|profile-cloud-session-store\\.ts|protected-secret-persistence\\.ts"
+    },
+    {
+      "id": "sftp-symlink-root",
+      "title": "SFTP upload directory path-containment allows a symlinked project root",
+      "commit": "odin(F4) -- see git log --grep F4",
+      "tests": ["src/main/ssh/sftp-upload.test.ts"],
+      "reproduce": "Path escaped upload root"
+    },
+    {
+      "id": "src-clusters-ratchet",
+      "title": "Outside-contract ratchet also declares and preserves the safeStorage windowless-launch guard src cluster",
+      "commit": "odin(F3) -- see git log --grep F3",
+      "tests": ["src/main/host/outside-contract-src-clusters-ratchet.test.ts"],
+      "reproduce": "outside-contract\\.json is missing|src clusters are not declared"
     }
   ],
   "closedByConstruction": [

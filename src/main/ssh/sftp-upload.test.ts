@@ -207,3 +207,49 @@ describe('sftp-upload', () => {
     expect(sftp.rmdir).toHaveBeenNthCalledWith(2, '/remote/assets', expect.any(Function))
   })
 })
+
+describe('uploadDirectory with a symlinked root', () => {
+  // Why: found via odin/proof/ssh-boundary.mjs against a real VPS -- ORCA_RELAY_PATH pointed at a
+  // git-worktree symlink (out/relay), and realpath()-ing only the candidate (not the symlinked
+  // root) made a legitimate child compare as outside its own root (odin/proofs/ssh-boundary.md,
+  // Deviation 1's second-order bug). ssh-connection.ts:524 calls uploadDirectory with the same
+  // path for localDir and rootRealPath, exactly as reproduced below.
+  it('does not reject the root itself when the root is a symlink', async () => {
+    const realRoot = await mkdtemp(join(tmpdir(), 'orca-sftp-symlink-root-'))
+    await writeFile(join(realRoot, 'relay.js'), 'contents')
+    const symlinkedRoot = join(tmpdir(), `orca-sftp-symlink-root-link-${process.pid}`)
+    await symlink(realRoot, symlinkedRoot, process.platform === 'win32' ? 'junction' : undefined)
+    const sftp = createSftpMock()
+    try {
+      await expect(
+        uploadDirectory(sftp, symlinkedRoot, '/remote/relay', symlinkedRoot)
+      ).resolves.toBeUndefined()
+      expect(sftp.createWriteStream).toHaveBeenCalledWith(
+        '/remote/relay/relay.js',
+        expect.anything()
+      )
+    } finally {
+      await rm(symlinkedRoot, { force: true })
+      await rm(realRoot, { recursive: true, force: true })
+    }
+  })
+
+  it('still rejects a directory outside the root when the root is a symlink', async () => {
+    const realRoot = await mkdtemp(join(tmpdir(), 'orca-sftp-symlink-root-'))
+    const symlinkedRoot = join(tmpdir(), `orca-sftp-symlink-root-link-${process.pid}`)
+    await symlink(realRoot, symlinkedRoot, process.platform === 'win32' ? 'junction' : undefined)
+    const outsideDir = await mkdtemp(join(tmpdir(), 'orca-sftp-outside-'))
+    await writeFile(join(outsideDir, 'evil.js'), 'contents')
+    const sftp = createSftpMock()
+    try {
+      await expect(
+        uploadDirectory(sftp, outsideDir, '/remote/relay', symlinkedRoot)
+      ).rejects.toThrow('Path escaped upload root')
+      expect(sftp.createWriteStream).not.toHaveBeenCalled()
+    } finally {
+      await rm(symlinkedRoot, { force: true })
+      await rm(realRoot, { recursive: true, force: true })
+      await rm(outsideDir, { recursive: true, force: true })
+    }
+  })
+})

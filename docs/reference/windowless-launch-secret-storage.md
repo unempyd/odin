@@ -48,12 +48,22 @@ it more than once.
 This is **not** one uniform fallback — each caller has its own
 unavailable-branch behavior:
 
-| Consumer                                                | Behavior when encryption is unavailable                          |
-| -------------------------------------------------------- | ------------------------------------------------------------------ |
-| Protected slots (`ProtectedSecretPersistence`: `opencodeSessionCookie`, `httpProxyUrl`, `browserKagiSessionLink`, SSH PTY owner leases) | Prior ciphertext is retained; a **new** value is silently **not persisted** (`degraded: true`). |
-| MiniMax API key / cookie (`minimax-api-key-store.ts`, `minimax-cookie-store.ts`) | Written to disk in **plaintext**, with a `console.warn` at the call site. |
-| Plugin secrets (`plugin-secrets-store.ts`)               | Reads and writes both **refuse**.                                   |
-| Cloud session (`profile-cloud-session-store.ts`)          | Reads back as `decrypt-failed`.                                     |
+| Consumer                                                                                                                                                                    | Behavior when encryption is unavailable                                                         |
+| --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| Protected slots (`protected-secret-persistence.ts`'s `ProtectedSecretPersistence`: `opencodeSessionCookie`, `httpProxyUrl`, `browserKagiSessionLink`, SSH PTY owner leases) | Prior ciphertext is retained; a **new** value is silently **not persisted** (`degraded: true`). |
+| MiniMax API key / cookie (`minimax-api-key-store.ts`, `minimax-cookie-store.ts`)                                                                                            | Written to disk in **plaintext**, with a `console.warn` at the call site.                       |
+| Plugin secrets (`plugin-secrets-store.ts`)                                                                                                                                  | Reads and writes both **refuse**.                                                               |
+| Cloud session (`profile-cloud-session-store.ts`)                                                                                                                            | Reads back as `decrypt-failed`.                                                                 |
+| Linear API token (`linear-token-store.ts`)                                                                                                                                  | Written to disk in **plaintext**, with a `console.warn` at the call site.                       |
+| Jira API token (`site-credential-store.ts`)                                                                                                                                 | Written to disk in **plaintext**, with a `console.warn` at the call site.                       |
+| Bitbucket credential (`integration-credential-file.ts`, used by `bitbucket/credential-store.ts`)                                                                            | Written to disk in **plaintext**, with a `console.warn` at the call site.                       |
+| OpenAI speech API key (`openai-api-key-store.ts`)                                                                                                                           | Written to disk in **plaintext**, with a `console.warn` at the call site.                       |
+
+The last four rows above are pre-existing upstream call sites that already used the plain,
+throwing `getSecretStore()` (`d07ce15cff`) — this guard was never added to them; they simply
+inherit its `isEncryptionAvailable()` answer. `secret-store-consumer-inventory.test.ts` discovers
+every `getSecretStore()`/`getSecretStoreOrUnavailable()` caller under `src/main` and fails if this
+table or the runtime warning (`electron-secret-store.ts`) omits one.
 
 ## The uninstalled-store race
 
