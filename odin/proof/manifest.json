@@ -5,7 +5,9 @@
       "id": "S",
       "title": "Agent status: host rows are never outranked by a client wall clock",
       "commit": "f6ce5d565f",
-      "tests": ["src/renderer/src/runtime/web-session-tabs-sync-host-authority.test.ts"],
+      "tests": [
+        "src/renderer/src/runtime/web-session-tabs-sync-host-authority.test.ts"
+      ],
       "reproduce": "expected 'working' to be '(blocked|done)'"
     },
     {
@@ -31,7 +33,9 @@
       "id": "K",
       "title": "Sub-agent identity is first-class, never a fabricated dispatch",
       "commit": "d7e67780a8",
-      "tests": ["src/renderer/src/components/sidebar/worktree-subagent-child-rows.test.ts"],
+      "tests": [
+        "src/renderer/src/components/sidebar/worktree-subagent-child-rows.test.ts"
+      ],
       "reproduce": "expected undefined to deeply equal \\{ id: 'child-1'"
     },
     {
@@ -67,14 +71,18 @@
       "id": "B",
       "title": "Worker liveness: an empty or non-enumerating host answer is unverifiable, never exited",
       "commit": "cfc277f2b1",
-      "tests": ["src/main/runtime/orchestration/worker-terminal-process-liveness.test.ts"],
+      "tests": [
+        "src/main/runtime/orchestration/worker-terminal-process-liveness.test.ts"
+      ],
       "reproduce": "expected 'exited' to be 'unverifiable'"
     },
     {
       "id": "O3b",
       "title": "classifyTerminalProcessInspectionFailure gives terminal_handle_stale/terminal_exited/no_connected_pty/a PTY-not-found message their own reasons instead of the host-proven terminal_gone",
       "commit": "382bf626a9",
-      "tests": ["src/shared/terminal-process-inspection.test.ts"],
+      "tests": [
+        "src/shared/terminal-process-inspection.test.ts"
+      ],
       "reproduce": "expected 'terminal_gone' to be 'terminal_handle_stale'",
       "note": "docs/reference/ssh-execution-boundary.md's own 'terminal_gone is overloaded' paragraph names this exact bug: classifyTerminalProcessInspectionFailure (shared/terminal-process-inspection.ts:83-95) bucketed a client-side registry miss (stale handle, exited entry, no connected pty, a 'PTY \"<id>\" not found' message) under the same 'terminal_gone' string as the host's own relay-side tombstone claim. This function and its bucketing are byte-identical at upstream 539d4d1f32b4 (verified by diff) -- a genuine inherited Orca residual, not Odin-introduced -- so it is recorded in the existing hash-cited shape once the fix commit exists."
     },
@@ -93,14 +101,18 @@
       "id": "A",
       "title": "Retired-incarnation tombstone never mints a proven exit from an absent status",
       "commit": "731c49c558",
-      "tests": ["src/main/daemon/terminal-host-process-inspection.test.ts"],
+      "tests": [
+        "src/main/daemon/terminal-host-process-inspection.test.ts"
+      ],
       "reproduce": "to match object \\{ verdict: 'unverifiable'"
     },
     {
       "id": "C",
       "title": "tui-idle waits never settle on silence; evidence is carried on the wire",
       "commit": "07522244e6",
-      "tests": ["src/main/runtime/terminal-wait-name-only-idle.test.ts"],
+      "tests": [
+        "src/main/runtime/terminal-wait-name-only-idle.test.ts"
+      ],
       "reproduce": "expected \"vi\\.fn\\(\\)\" to be called with arguments",
       "note": "The wait-path test drives upstream's real terminal.wait on a quiesced name-only Codex title; the unit test for resolveTuiIdleVerdict (tui-idle-evidence.test.ts) cannot run upstream because the verdict function is new, so it is not used as the reproduction."
     },
@@ -118,45 +130,77 @@
       "id": "E",
       "title": "Managed hooks into other tools' configs require explicit opt-in (fail-closed)",
       "commit": "29624f65b9",
-      "tests": ["src/main/agent-hooks/managed-agent-hook-controls.test.ts"],
+      "tests": [
+        "src/main/agent-hooks/managed-agent-hook-controls.test.ts"
+      ],
       "reproduce": "expected 'install' to be 'skip'"
     },
     {
       "id": "F",
       "title": "Fresh installs are opted out of telemetry by default",
       "commit": "aacecbdaf4",
-      "tests": ["src/main/persistence-cohort-and-identity-migration.test.ts"],
+      "tests": [
+        "src/main/persistence-cohort-and-identity-migration.test.ts"
+      ],
       "reproduce": "expected true to be false"
     },
     {
       "id": "G",
       "title": "Mirroring ~/.codex/auth.json into a runtime home requires consent; revocation clears it",
       "commit": "f14f8249f9",
-      "tests": ["src/main/codex-accounts/runtime-home-system-default-mirror-readback.test.ts"],
+      "tests": [
+        "src/main/codex-accounts/runtime-home-system-default-mirror-readback.test.ts"
+      ],
       "reproduce": "expected true to be false"
     },
     {
       "id": "D",
       "title": "Runtime WS listener stays on loopback unless a live consent record exists; revocation re-closes",
       "commit": "6d10576a71",
-      "tests": ["src/main/runtime/runtime-rpc-websocket-bind-host.test.ts"],
+      "tests": [
+        "src/main/runtime/runtime-rpc-websocket-bind-host.test.ts"
+      ],
       "reproduce": "expected '0.0.0.0' to be '127.0.0.1'"
     },
     {
       "id": "show-contact-loss",
       "title": "terminal show forces connected/writable false and an unverifiable liveness verdict while the owning SSH target's relay is lost or reconnecting, instead of reading a stale connected:true",
       "commit": "f707829826",
-      "tests": ["src/main/runtime/show-contact-loss.test.ts"],
+      "tests": [
+        "src/main/runtime/show-contact-loss.test.ts"
+      ],
       "reproduce": "expected true to be false",
       "note": "Found against a real host (odin/proofs/ssh-boundary.2026-09-15T01-39-52-596Z.json phase4): after the transport was iptables-dropped, `[ssh] Relay channel ... lost; reconnect attempt 1/6` and `Keepalive timeout` fired, yet `terminal show` kept answering connected:true/writable:true with no exitCause for all 17 samples over 90s. buildPtyTerminalSummary/buildTerminalSummary (src/main/runtime/orca-runtime-build-pty-terminal-summary.ts, orca-runtime-write-orchestration-pointer-pty.ts) read pty.connected straight off the record, which only a PTY data/exit event or an inventory sweep updates -- never the relay-lost/reconnect callbacks in src/main/ipc/ssh-relay-session-callbacks.ts. Fix reuses the existing SSH connection-state registry (getRegisteredSshState) rather than adding a second tracker: while the owning target's status is not 'connected', connected/writable are forced false and a new RuntimeTerminalSummary.liveness field reports {status:'unverifiable', reason:'reconnecting'|'transport_lost'} -- never exitCause/exited. A genuine owner-proven exit (pty.lastExitCause already set) is never overridden."
     },
     {
       "id": "tui-idle-heuristic-carveout",
       "title": "The name-only idle carve-out is a named allowlist (grok/copilot/aider/mimo-code/antigravity/opencode), not \"has no synthetic-title profile\" -- Claude, Gemini and an unresolvable pane no longer get observed-idle off a bare quiet title",
-      "commit": "odin(residual-C) -- see git log --grep tui-idle-heuristic-carveout",
-      "tests": ["src/main/runtime/terminal-wait-name-only-idle.test.ts"],
+      "commit": "a80a30033b",
+      "tests": [
+        "src/main/runtime/terminal-wait-name-only-idle.test.ts"
+      ],
       "reproduce": "does not settle a quiesced name-only idle for (claude|gemini|a pane whose agent cannot be resolved)",
       "note": "Round-4 Opus review, material deviation 1 (O1): nameOnlyIdleNeedsCorroboration read getSyntheticAgentTerminalTitle(resolved, 'done') !== null -- true only for the seven agents with a synthetic-title profile (codex, cursor, pi, omp, droid, hermes, devin), so every other agent (Claude, Gemini, ~25 more, and any pane whose agent could not be resolved) fell through to the permissive branch and settled 'observed-idle' on a bare quiet title after the quiescence window alone, with no first-party corroboration. README row C and the module header at tui-idle-evidence.ts:29 both assert the carve-out is a closed six-agent allowlist naming exactly who gets it (grok, copilot, aider, mimo, agy, opencode); the shipped predicate was its complement -- a blocklist of seven, closed for those seven agents only, open for the rest of the tree. Fixed by replacing the synthetic-title-profile lookup with an explicit NAME_ONLY_IDLE_AGENTS set (tui-idle-evidence.ts) matching the six named agents, so nameOnlyIdleNeedsCorroboration returns true (held to tier-3 'silence', never promoted) for every agent outside that set, including an unresolvable pane. At upstream 539d4d1f32b4 the carve-out does not exist at all (nameOnlyIdleNeedsCorroboration and resolveTuiIdleVerdict are Odin residual-C additions), so a name-only Claude/Gemini/unresolved title quiesced past its OSC-title idle marker settles the wait as 'observed-idle'/satisfied:true there too, for a different reason (no verdict funnel at all) -- terminal-wait-name-only-idle.test.ts is the shared reproduction surface across both defects, same as residual C itself; tui-idle-evidence.test.ts's unit coverage for resolveTuiIdleVerdict is not part of this manifest entry because the function itself is new and does not exist upstream (same exclusion residual C's own note documents)."
+    },
+    {
+      "id": "O2",
+      "title": "Trust presets into other tools' user-global configs require the same explicit opt-in as managed hooks",
+      "commit": "bb563d954d",
+      "tests": [
+        "src/main/runtime/runtime-worktree-agent-startup.test.ts"
+      ],
+      "reproduce": "expected \"vi\\.fn\\(\\)\" to not be called at all",
+      "note": "Round-4 review finding (material deviation 2): src/main/agent-trust-presets.ts and src/main/remote-agent-trust-presets.ts write ~/.cursor/projects/<slug>/.workspace-trusted, ~/.copilot/config.json trustedFolders, and the user's real ~/.codex/config.toml [projects.\"<realpath>\"] trust_level = \"trusted\", fired automatically on agent launch by markLocalWorktreeTrusted / markRemoteWorktreeTrusted with no consent gate. Fixed by reusing the agent-status-hooks consent (isAgentStatusHooksEnabled) as the opt-in for these cross-tool trust-preset writes."
+    },
+    {
+      "id": "O10",
+      "title": "Codex logout marker path requires the same mirror consent and clears the live re-stamp baseline on revocation",
+      "commit": "bb563d954d",
+      "tests": [
+        "src/main/codex-accounts/runtime-home-restore-consent-gate.test.ts"
+      ],
+      "reproduce": "expected .* to be null",
+      "note": "Round-4 review finding (material deviation 10): src/main/codex-accounts/runtime-home-service-sync.ts:99-101 called persistRuntimeLogoutMarker() with no consent check when a prior consented sync had set lastWrittenAuthJson; the default argument readSystemDefaultAuth() copied ~/.codex/auth.json into system-default-runtime-logout.json. Fixed by gating the branch on hasCredentialMirrorConsent() and passing null when consent is absent; also wired clearMirroredCodexCredentials to drop the live runtime-home instance's lastWrittenAuthJson baseline so a later sync cannot re-stamp a deleted marker."
     }
   ],
   "closedByConstruction": [
@@ -164,14 +208,18 @@
       "id": "A-relay",
       "title": "Relay tombstone applies the same proof gate (record-torn-down is not a death)",
       "commit": "013965c537",
-      "tests": ["src/shared/retired-pty-incarnations.test.ts"],
+      "tests": [
+        "src/shared/retired-pty-incarnations.test.ts"
+      ],
       "note": "Closed by construction, not mechanically reproduced: upstream src/relay/pty-handler.ts:2412 hard-codes code: 0 in reapExitedPty even for evidence 'record-torn-down' (its own docblock at :2395-2402 says that is not a death), and :2632-2656 publishes verdict 'exited' from it. Odin routes the code through resolveRetiredPtyIncarnationCode (UNVERIFIED_PROCESS_EXIT_CODE unless the evidence is a proven exit) and the consumer applies the same isProvenProcessExit gate as the daemon (A). The race has no deterministic harness in the relay test surface, so its test pins the extracted mapping rather than reproducing the upstream path."
     },
     {
       "id": "N2",
       "title": "Schema-skew probe registers the v42 exit_code column",
       "commit": "321f902830",
-      "tests": ["src/main/runtime/orchestration/orchestration-version-skew-migration.test.ts"],
+      "tests": [
+        "src/main/runtime/orchestration/orchestration-version-skew-migration.test.ts"
+      ],
       "note": "Closed by construction, not mechanically reproduced against upstream 539d4d1f32b4: schema v42 and dispatch_contexts.exit_code are Odin's own additions (residual N, commit 07184d77d6) with no upstream counterpart, so this defect cannot exist there. VERSIONED_POST_V6_COLUMNS in orchestration-schema-version-skew.ts never registered the v42 column migrate-v42.ts adds, so a database already stamped user_version=42 without it read as schema-complete and the column was never repaired. The added test pins resolveOrchestrationMigrationStartVersion falling back to the v6 floor (and the column being restored) for a v42-stamped database missing it; N2.before.txt / N2.after.txt show the test failing then passing across the fix."
     },
     {

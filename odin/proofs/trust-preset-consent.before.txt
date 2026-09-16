@@ -1,0 +1,92 @@
+
+ RUN  v4.1.11 /private/var/folders/08/tsc21p4n41ndkvcxq1kl0htw0000gn/T/odin-upstream-FWJ9AL
+
+ ❯ src/main/runtime/runtime-worktree-agent-startup.test.ts (12 tests | 3 failed) 22ms
+     × does not write the local Codex trust preset when consent is absent 6ms
+     × does not write the local Codex trust preset when consent is false 1ms
+     × does not write the remote trust preset when consent is absent 1ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/main/runtime/runtime-worktree-agent-startup.test.ts > trust preset writes require the agent-status-hooks consent > does not write the local Codex trust preset when consent is absent
+AssertionError: expected "vi.fn()" to not be called at all, but actually been called 1 times
+
+Received:
+
+  1st vi.fn() call:
+
+    Array [
+      "/workspace/app",
+    ]
+
+
+Number of calls: 1
+
+ ❯ src/main/runtime/runtime-worktree-agent-startup.test.ts:163:47
+    161|   it('does not write the local Codex trust preset when consent is abse…
+    162|     await markLocalWorktreeTrusted('codex', '/workspace/app', null)
+    163|     expect(mocks.markCodexProjectTrusted).not.toHaveBeenCalled()
+       |                                               ^
+    164|   })
+    165|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  src/main/runtime/runtime-worktree-agent-startup.test.ts > trust preset writes require the agent-status-hooks consent > does not write the local Codex trust preset when consent is false
+AssertionError: expected "vi.fn()" to not be called at all, but actually been called 1 times
+
+Received:
+
+  1st vi.fn() call:
+
+    Array [
+      "/workspace/app",
+    ]
+
+
+Number of calls: 1
+
+ ❯ src/main/runtime/runtime-worktree-agent-startup.test.ts:168:47
+    166|   it('does not write the local Codex trust preset when consent is fals…
+    167|     await markLocalWorktreeTrusted('codex', '/workspace/app', { agentS…
+    168|     expect(mocks.markCodexProjectTrusted).not.toHaveBeenCalled()
+       |                                               ^
+    169|   })
+    170|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+ FAIL  src/main/runtime/runtime-worktree-agent-startup.test.ts > trust preset writes require the agent-status-hooks consent > does not write the remote trust preset when consent is absent
+AssertionError: expected "vi.fn()" to not be called at all, but actually been called 1 times
+
+Received:
+
+  1st vi.fn() call:
+
+    Array [
+      Object {
+        "connectionId": "ssh-1",
+        "preset": "codex",
+        "workspacePath": "/workspace/app",
+      },
+    ]
+
+
+Number of calls: 1
+
+ ❯ src/main/runtime/runtime-worktree-agent-startup.test.ts:173:55
+    171|   it('does not write the remote trust preset when consent is absent', …
+    172|     await markRemoteWorktreeTrusted('codex', 'ssh-1', '/workspace/app'…
+    173|     expect(mocks.markRemoteAgentWorkspaceTrusted).not.toHaveBeenCalled…
+       |                                                       ^
+    174|   })
+    175|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  3 failed | 9 passed (12)
+   Start at  12:53:44
+   Duration  758ms (transform 365ms, setup 92ms, import 375ms, tests 22ms, environment 0ms)
+

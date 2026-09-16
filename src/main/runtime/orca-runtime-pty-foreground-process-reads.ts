@@ -207,6 +207,12 @@ export class OrcaRuntimeWithPtyForegroundProcessReads extends OrcaRuntimeWithSta
     this.clientSettings.setNetworkExposureNarrower(narrow)
   }
 
+  // Why: wired post-construction from main-process-runtime-launch.ts, so revoking codex
+  // credential mirror consent can also drop the live runtime-home's re-stamp baseline.
+  setCodexRuntimeHomeMirrorBaselineClearer(clear: (() => void) | undefined): void {
+    this.clientSettings.setCodexRuntimeHomeMirrorBaselineClearer(clear)
+  }
+
   async updateClientSettings(updates: RuntimeClientSettingsUpdate) {
     return await this.clientSettings.update(updates)
   }

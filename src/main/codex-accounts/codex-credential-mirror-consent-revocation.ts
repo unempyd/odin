@@ -26,7 +26,9 @@ function isManagedOwnedProvenance(provenancePath: string): boolean {
 }
 
 // Why: revoking mirror consent must remove the credential copies it already made, not just stop future ones.
-export function clearMirroredCodexCredentials(): void {
+// `onCleared` lets the live runtime-home instance drop its `lastWrittenAuthJson` baseline too, so a
+// later sync can't treat a deleted file as "already mirrored" and re-stamp the logout marker (G3 gap).
+export function clearMirroredCodexCredentials(onCleared?: () => void): void {
   const provenancePath = join(
     getOrcaUserDataPath(),
     'codex-runtime-home',
@@ -47,4 +49,5 @@ export function clearMirroredCodexCredentials(): void {
   rmSync(join(getOrcaUserDataPath(), 'codex-runtime-home', 'system-default-runtime-logout.json'), {
     force: true
   })
+  onCleared?.()
 }

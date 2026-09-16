@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
@@ -80,5 +80,16 @@ describe('clearMirroredCodexCredentials provenance scrub (G2)', () => {
     expect(existsSync(provenancePath)).toBe(true)
     expect(JSON.parse(readFileSync(provenancePath, 'utf-8'))).toEqual(managedProvenance)
     expect(existsSync(managedAuthPath)).toBe(true)
+  })
+
+  // Finding 10 (round4-opus, material deviation 10): deleting the files without clearing the live
+  // runtime-home instance's lastWrittenAuthJson left the next sync's ungated persistRuntimeLogoutMarker()
+  // branch reachable, re-stamping the marker from a prior, consented sync's baseline.
+  it('invokes the onCleared callback so a caller can drop its in-memory mirror baseline', () => {
+    const onCleared = vi.fn()
+
+    clearMirroredCodexCredentials(onCleared)
+
+    expect(onCleared).toHaveBeenCalledTimes(1)
   })
 })

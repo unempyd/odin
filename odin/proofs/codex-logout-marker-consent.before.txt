@@ -1,0 +1,94 @@
+
+ RUN  v4.1.11 /private/var/folders/08/tsc21p4n41ndkvcxq1kl0htw0000gn/T/odin-upstream-eyabyh
+
+ ❯ src/main/codex-accounts/runtime-home-restore-consent-gate.test.ts (4 tests | 4 failed) 1026ms
+     × leaves runtime auth.json absent, never copied, when switching away without consent 892ms
+     × does not copy the system-default auth into the runtime home on a system-default-changed marker without consent 53ms
+     × never persists the real ~/.codex credential into the logout marker without consent 37ms
+     × never persists the real ~/.codex credential into the logout marker on a later sync after consent is revoked 40ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/main/codex-accounts/runtime-home-restore-consent-gate.test.ts > CodexRuntimeHomeService restoreSystemDefaultSnapshot consent gate (G1) > leaves runtime auth.json absent, never copied, when switching away without consent
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ src/main/codex-accounts/runtime-home-restore-consent-gate.test.ts:62:41
+     60|     })
+     61|
+     62|     expect(existsSync(runtimeAuthPath)).toBe(false)
+       |                                         ^
+     63|   })
+     64|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/4]⎯
+
+ FAIL  src/main/codex-accounts/runtime-home-restore-consent-gate.test.ts > CodexRuntimeHomeService restoreSystemDefaultSnapshot consent gate (G1) > does not copy the system-default auth into the runtime home on a system-default-changed marker without consent
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ src/main/codex-accounts/runtime-home-restore-consent-gate.test.ts:77:41
+     75|     })
+     76|
+     77|     expect(existsSync(runtimeAuthPath)).toBe(false)
+       |                                         ^
+     78|   })
+     79|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/4]⎯
+
+ FAIL  src/main/codex-accounts/runtime-home-restore-consent-gate.test.ts > CodexRuntimeHomeService restoreSystemDefaultSnapshot consent gate (G1) > never persists the real ~/.codex credential into the logout marker without consent
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ src/main/codex-accounts/runtime-home-restore-consent-gate.test.ts:95:36
+     93|
+     94|     const markerPath = getRuntimeLogoutMarkerPath()
+     95|     expect(existsSync(markerPath)).toBe(true)
+       |                                    ^
+     96|     const marker: { systemDefaultAuthJson: string | null } = JSON.pars…
+     97|       readFileSync(markerPath, 'utf-8')
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/4]⎯
+
+ FAIL  src/main/codex-accounts/runtime-home-restore-consent-gate.test.ts > CodexRuntimeHomeService restoreSystemDefaultSnapshot consent gate (G1) > never persists the real ~/.codex credential into the logout marker on a later sync after consent is revoked
+AssertionError: expected '{"tokens":{"refresh_token":"top-secre…' to be null
+
+- Expected:
+null
+
++ Received:
+"{\"tokens\":{\"refresh_token\":\"top-secret\"}}
+"
+
+ ❯ src/main/codex-accounts/runtime-home-restore-consent-gate.test.ts:125:42
+    123|       readFileSync(markerPath, 'utf-8')
+    124|     )
+    125|     expect(marker.systemDefaultAuthJson).toBeNull()
+       |                                          ^
+    126|   })
+    127| })
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/4]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  4 failed (4)
+   Start at  12:55:13
+   Duration  1.78s (transform 995ms, setup 88ms, import 418ms, tests 1.03s, environment 0ms)
+

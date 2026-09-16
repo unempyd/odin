@@ -12,6 +12,7 @@ import {
 } from '../../shared/tui-agent-launch-defaults'
 import { buildAgentDraftLaunchPlan, buildAgentStartupPlan } from '../../shared/tui-agent-startup'
 import { resolveLocalWindowsAgentStartupShell } from '../../shared/windows-terminal-shell'
+import { isAgentStatusHooksEnabled } from '../agent-hooks/managed-agent-hook-controls'
 import {
   markCodexProjectTrusted,
   markCopilotFolderTrusted,
@@ -185,10 +186,13 @@ export function buildWorktreeStartupForAgent(
 
 export async function markLocalWorktreeTrusted(
   agent: TuiAgent,
-  workspacePath: string
+  workspacePath: string,
+  settings: Parameters<typeof isAgentStatusHooksEnabled>[0]
 ): Promise<void> {
   const preset = TUI_AGENT_CONFIG[agent].preflightTrust
-  if (!preset) {
+  // Why: writes into another tool's user-global config need the same explicit
+  // opt-in as Orca's own managed hooks — no setting, no silent write.
+  if (!preset || !isAgentStatusHooksEnabled(settings)) {
     return
   }
   try {
@@ -208,10 +212,11 @@ export async function markLocalWorktreeTrusted(
 export async function markRemoteWorktreeTrusted(
   agent: TuiAgent,
   connectionId: string,
-  workspacePath: string
+  workspacePath: string,
+  settings: Parameters<typeof isAgentStatusHooksEnabled>[0]
 ): Promise<void> {
   const preset = TUI_AGENT_CONFIG[agent].preflightTrust
-  if (!preset) {
+  if (!preset || !isAgentStatusHooksEnabled(settings)) {
     return
   }
   try {

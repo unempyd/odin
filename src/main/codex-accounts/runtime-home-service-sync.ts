@@ -96,8 +96,12 @@ export abstract class CodexRuntimeHomeSync extends CodexRuntimeHomeWsl {
         if (this.hasCredentialMirrorConsent()) {
           this.restoreSystemDefaultSnapshot({ detectExternalLogin: false })
         }
-      } else {
+      } else if (this.hasCredentialMirrorConsent()) {
         this.persistRuntimeLogoutMarker()
+      } else {
+        // Why: without consent, the marker's default-arg readSystemDefaultAuth() must
+        // never run — pass null explicitly, same as restoreSystemDefaultSnapshot's gate.
+        this.persistRuntimeLogoutMarker(null)
       }
     } else {
       this.clearRuntimeLogoutMarker()

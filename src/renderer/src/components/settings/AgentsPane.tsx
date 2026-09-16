@@ -282,7 +282,7 @@ export function AgentsPane({
 }
 
 export function AgentStatusHooksSetting({ settings, updateSettings }: AgentsPaneProps) {
-  const enabled = settings.agentStatusHooksEnabled !== false
+  const enabled = settings.agentStatusHooksEnabled === true
   return (
     <section className="space-y-3">
       <SettingsSwitchRow

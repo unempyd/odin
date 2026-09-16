@@ -1,10 +1,11 @@
-import { describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { Repo } from '../../shared/repo-types'
 
 const mocks = vi.hoisted(() => ({
   markCodexProjectTrusted: vi.fn(),
   markCopilotFolderTrusted: vi.fn(),
   markCursorWorkspaceTrusted: vi.fn(),
+  markRemoteAgentWorkspaceTrusted: vi.fn(),
   detectRemoteAgents: vi.fn(),
   detectInstalledAgentsWithShellPathHydration: vi.fn()
 }))
@@ -15,6 +16,10 @@ vi.mock('../agent-trust-presets', () => ({
   markCursorWorkspaceTrusted: mocks.markCursorWorkspaceTrusted
 }))
 
+vi.mock('../remote-agent-trust-presets', () => ({
+  markRemoteAgentWorkspaceTrusted: mocks.markRemoteAgentWorkspaceTrusted
+}))
+
 vi.mock('../preflight/agent-detection', () => ({
   detectRemoteAgents: mocks.detectRemoteAgents,
   detectInstalledAgentsWithShellPathHydration: mocks.detectInstalledAgentsWithShellPathHydration
@@ -23,7 +28,8 @@ vi.mock('../preflight/agent-detection', () => ({
 import {
   buildWorktreeStartupForAgent,
   buildWorktreeStartupForDraft,
-  markLocalWorktreeTrusted
+  markLocalWorktreeTrusted,
+  markRemoteWorktreeTrusted
 } from './runtime-worktree-agent-startup'
 
 function makeRepo(fields: Partial<Repo>): Repo {
@@ -124,7 +130,9 @@ describe('markLocalWorktreeTrusted', () => {
       })
     )
     let settled = false
-    const marking = markLocalWorktreeTrusted('codex', '/workspace/app').then(() => {
+    const marking = markLocalWorktreeTrusted('codex', '/workspace/app', {
+      agentStatusHooksEnabled: true
+    }).then(() => {
       settled = true
     })
 
@@ -138,6 +146,42 @@ describe('markLocalWorktreeTrusted', () => {
   it('contains a rejected Codex trust write', async () => {
     mocks.markCodexProjectTrusted.mockRejectedValueOnce(new Error('write failed'))
 
-    await expect(markLocalWorktreeTrusted('codex', '/workspace/app')).resolves.toBeUndefined()
+    await expect(
+      markLocalWorktreeTrusted('codex', '/workspace/app', { agentStatusHooksEnabled: true })
+    ).resolves.toBeUndefined()
+  })
+})
+
+describe('trust preset writes require the agent-status-hooks consent', () => {
+  beforeEach(() => {
+    mocks.markCodexProjectTrusted.mockClear()
+    mocks.markRemoteAgentWorkspaceTrusted.mockClear()
+  })
+
+  it('does not write the local Codex trust preset when consent is absent', async () => {
+    await markLocalWorktreeTrusted('codex', '/workspace/app', null)
+    expect(mocks.markCodexProjectTrusted).not.toHaveBeenCalled()
+  })
+
+  it('does not write the local Codex trust preset when consent is false', async () => {
+    await markLocalWorktreeTrusted('codex', '/workspace/app', { agentStatusHooksEnabled: false })
+    expect(mocks.markCodexProjectTrusted).not.toHaveBeenCalled()
+  })
+
+  it('does not write the remote trust preset when consent is absent', async () => {
+    await markRemoteWorktreeTrusted('codex', 'ssh-1', '/workspace/app', undefined)
+    expect(mocks.markRemoteAgentWorkspaceTrusted).not.toHaveBeenCalled()
+  })
+
+  it('writes the remote trust preset once consent is granted', async () => {
+    mocks.markRemoteAgentWorkspaceTrusted.mockResolvedValueOnce(undefined)
+    await markRemoteWorktreeTrusted('codex', 'ssh-1', '/workspace/app', {
+      agentStatusHooksEnabled: true
+    })
+    expect(mocks.markRemoteAgentWorkspaceTrusted).toHaveBeenCalledWith({
+      preset: 'codex',
+      connectionId: 'ssh-1',
+      workspacePath: '/workspace/app'
+    })
   })
 })

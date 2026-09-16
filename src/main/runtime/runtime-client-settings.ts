@@ -88,6 +88,10 @@ export class RuntimeClientSettingsController {
   // Why: set post-construction from main-process-runtime-launch.ts once the live RPC server
   // exists, so a consent revocation here can re-close its listener without a circular dependency.
   private narrowNetworkExposure: (() => Promise<void>) | undefined
+  // Why: same wiring seam as narrowNetworkExposure, so revoking mirror consent can also clear
+  // the live runtime-home instance's lastWrittenAuthJson baseline (G3 gap) without a circular
+  // dependency on codex-accounts/runtime-home-service.ts.
+  private clearCodexRuntimeHomeMirrorBaseline: (() => void) | undefined
 
   constructor(
     private readonly store: RuntimeStore | null,
@@ -96,6 +100,10 @@ export class RuntimeClientSettingsController {
 
   setNetworkExposureNarrower(narrow: (() => Promise<void>) | undefined): void {
     this.narrowNetworkExposure = narrow
+  }
+
+  setCodexRuntimeHomeMirrorBaselineClearer(clear: (() => void) | undefined): void {
+    this.clearCodexRuntimeHomeMirrorBaseline = clear
   }
 
   get(): RuntimeClientSettings {
@@ -168,7 +176,7 @@ export class RuntimeClientSettingsController {
     // idempotent (rmSync with force), and gating on the true->false edge meant an interrupted
     // clear never retried on a later false->false apply, leaving orphaned copies (G1).
     if (updates.codexCredentialMirrorConsent === false) {
-      clearMirroredCodexCredentials()
+      clearMirroredCodexCredentials(this.clearCodexRuntimeHomeMirrorBaseline)
     }
     // Why: revoking network exposure consent must re-close a live wide listener, not just refuse future widens.
     if (networkExposureConsentBefore && updates.networkExposureConsent === false) {
