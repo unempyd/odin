@@ -5,6 +5,37 @@ description: Odin is Orca with a small set of patches at the exact sites where O
 
 import { Callout } from '@/components/docs/prose'
 
+Arriving cold: Orca is an application for running agent CLIs — Claude, Codex,
+Cursor, Grok and 32 others — across terminals, git worktrees and SSH hosts, and
+Odin keeps all of it. What Odin changes is the handful of places where Orca
+answered a question it had not actually observed, or acted on the operator's
+machine without being asked. Three of them, concretely, each a row in
+[Residuals](/docs/odin/residuals):
+
+- **A worker nobody had seen die was reported as a clean exit.** When the
+  terminal host could not look up an exiting session it stamped
+  `code: session.exitCode ?? 0` and the consumer published `verdict: 'exited'`
+  regardless of the code — the shared module beside it
+  (`terminal-exit-cause.ts:36-45`) forbids exactly that — and the renderer fired
+  a completion notification on the result (residual **A**).
+- **Silence was read as "ready".** A worker that simply went quiet satisfied
+  `tui-idle`'s tier-3 "sustained title idle", which that module's own header
+  calls "ABSENCE, a last resort", and the wait returned the same `true` as real
+  on-screen evidence — so a silent worker was declared ready and an automation
+  run declared completed (residual **C**,
+  [#6011](https://github.com/stablyai/orca/issues/6011)).
+- **Hooks, credentials and permission-bypass flags were applied without a
+  recorded grant.** On boot Orca wrote agent-status hooks into 14 other tools'
+  user-global configs behind a fail-open check, copied `~/.codex/auth.json` into
+  an Orca-owned runtime home on every launch and account switch with no setting
+  or prompt, and shipped permission-bypass flags as the default launch argv for
+  26 agents (residuals **E**, **G**, **H**).
+
+The rule for every change is the same one: the test that proves it fails at
+upstream `539d4d1f32` and passes on Odin, and `odin/proof/run-proofs.sh` reruns
+that check for every residual in one command. Nothing in these pages is asserted
+that the script or an artifact under `odin/proofs/` does not back.
+
 Everything else in these docs — worktrees, terminals, SSH, mobile, the agent
 picker, orchestration — is **Orca's own product surface, unchanged**. Odin is
 a surgical derivative: the same application, with a bounded set of patches at
@@ -38,7 +69,7 @@ it.
 ## The three ways to verify this
 
 ```
-odin/proof/run-proofs.sh        # reruns every proof test at the upstream commit (must fail) and on Odin (must pass)
+odin/proof/run-proofs.sh        # reruns every upstream-reproduced proof test at the upstream commit (must fail) and on Odin (must pass); closed-by-construction entries are exercised on Odin only
 odin/proof/real-sessions.mjs    # drives real claude / codex / grok workers through Orca's own orchestration on a headless host
 git log --first-parent odin     # one commit per residual, message = residual (file:line) → contract → proof files
 ```
@@ -64,9 +95,10 @@ so a future change cannot regress them silently.
 
 One residual is left open by decision, with the exact plan and cost written
 down: the renderer is still a second writer of agent status for
-remote-runtime and structured panes whose bytes never transit the host. See
-[Deviations](/docs/odin/deviations) for this and seven other named
-trade-offs at v0.1.0.
+remote-runtime panes whose bytes never transit the host, on a host too old to
+advertise the `agent-status.host-osc-ingest.v1` capability. See
+[Deviations](/docs/odin/deviations) for this and the eleven other named
+trade-offs at v1.0.0.
 
 ## Credits and licence
 

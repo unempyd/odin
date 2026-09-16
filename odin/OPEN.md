@@ -60,16 +60,18 @@ remote-runtime (status-D-fix), and one gated on that same capability
   `setAgentStatus` from the client's own OSC parse, but only when
   `shouldOwnAgentStatusInRenderer` is true, which is now
   `runtimeEnvironmentId !== null && !cachedHostOwnsRemoteAgentStatus(id)`.
-  Unlike the two sites above, this decision is made once, **synchronously**,
-  at transport creation (never revisited for the pane's lifetime), while the
-  capability probe is async — so it reads a small last-known-verdict cache
-  (`cachedHostOwnsRemoteAgentStatus`, `agent-status-host-osc-ingest-capability.ts`)
-  that defaults to `false` (client keeps writing — today's behavior) until a
-  probe resolves, and fires a fresh probe (`primeHostOwnsRemoteAgentStatusCache`)
-  so the *next* pane connecting to that environment (or a reconnect) reads a
-  warm verdict. The registry fence (`renderer-owned-agent-status-registry.ts`)
-  is claimed only when the pane actually owns writing, so a capable host's
-  mirror is never fenced out by a pane that stopped claiming it.
+  Unlike the two sites above, this path's initial decision is made **synchronously**
+  at transport creation because the wiring cannot be rewired mid-session, but the
+  live verdict is re-evaluated on every later probe resolution for that environment
+  (`trackRemoteAgentStatusOwnership`, `renderer-owned-agent-status-registry.ts`):
+  the registry claim is released when a probe proves the host capable and
+  re-claimed when a later probe answers false. It reads a small last-known-verdict
+  cache (`cachedHostOwnsRemoteAgentStatus`, `agent-status-host-osc-ingest-capability.ts`)
+  that defaults to `false` (client keeps writing — today's behavior) until the first
+  probe resolves, and primes the cache so the *next* pane or reconnect starts from
+  a warm verdict. The registry fence is claimed only when the pane actually owns
+  writing, so a capable host's mirror is never fenced out by a pane that stopped
+  claiming it.
 
 ### status-A — structured sessions are host-published
 
@@ -127,16 +129,19 @@ stream, once the host advertises the capability.
 Closes the last of the four call sites. `shouldOwnAgentStatusInRenderer`
 (`direct-ssh-retry-status.ts:146`) is now
 `runtimeEnvironmentId !== null && !cachedHostOwnsRemoteAgentStatus(id)`
-instead of unconditionally `runtimeEnvironmentId !== null`. Because this
-decision is made once, synchronously, at transport creation — and a
-capability probe is async — `agent-status-host-osc-ingest-capability.ts`
-gained a small last-known-verdict cache: `cachedHostOwnsRemoteAgentStatus`
-reads it (default `false`, i.e. keep writing, until a probe resolves once for
-that environment) and `primeHostOwnsRemoteAgentStatusCache` fires the real
-probe so a later pane or reconnect reads a warm verdict. Defaulting to
-"unknown → keep writing" rather than the other way is deliberate: the plan's
-own caution is that assuming capability on a cold probe would starve a pane
-on a healthy remote host that just hasn't answered yet. The registry fence
+instead of unconditionally `runtimeEnvironmentId !== null`. The wiring decision
+is made once, synchronously, at transport creation, but the live ownership
+verdict is re-evaluated on every later probe resolution for that environment
+(`trackRemoteAgentStatusOwnership`), releasing the registry claim when a probe
+proves the host capable and re-claiming it when a later probe answers false.
+`agent-status-host-osc-ingest-capability.ts` therefore gained a small
+last-known-verdict cache: `cachedHostOwnsRemoteAgentStatus` reads it (default
+`false`, i.e. keep writing, until a probe resolves once for that environment)
+and `primeHostOwnsRemoteAgentStatusCache` fires the real probe so the *next*
+pane or reconnect reads a warm verdict. Defaulting to "unknown → keep writing"
+rather than the other way is deliberate: the plan's own caution is that
+assuming capability on a cold probe would starve a pane on a healthy remote
+host that just hasn't answered yet. The registry fence
 (`registerRendererOwnedAgentStatusPane`) is claimed only when
 `shouldOwnAgentStatusInRenderer` is true, so a capable host's `session.tabs`
 mirror is never fenced out by a pane that no longer claims the pane key.
@@ -168,7 +173,7 @@ lane in `src/main/runtime/runtime-worktree-status-projection.ts:60`
 reconstruct status by pattern-matching terminal titles instead of reading the
 store. `tui-idle` evidence is already de-authorized from that lane — see the
 tier ranking in `src/main/runtime/tui-idle-evidence.ts` (tier 1/2 vs. the
-tier-3 name-only-title hold-out at `:62-96`).
+tier-3 name-only-title hold-out at `:102-110`).
 
 ### Full writer enumeration (corrected 2026-09-15)
 
@@ -187,7 +192,7 @@ true by construction instead of by assertion.
 | `agent-status-event-applicator.ts:284` | store-derived | The one sink the closing plan feeds: applies a host-published `agentStatus:set` IPC event to the app store. Not a producer. |
 | `agent-status-runtime.ts:108` | store-derived | `applyBatchedAgentStatusUpdate`'s internal call to the same store action while batching; not an independent producer. |
 | `StructuredAgentSessionStatusBridge.tsx:140` | closed (status-A) | Forwards a host-published structured row. `projectStatus` is a no-op for a locally-owned worktree; unchanged for a remote-owned one, since local IPC is that row's only channel. |
-| `direct-ssh-retry-status.ts:211,222` (`handleRendererOwnedAgentStatus`) | gated (status-C) | Writes only while `shouldOwnAgentStatusInRenderer` — `runtimeEnvironmentId !== null && !cachedHostOwnsRemoteAgentStatus(id)` — is true. A capable host's row makes this a no-op. |
+| `direct-ssh-retry-status.ts:225,236` (`handleRendererOwnedAgentStatus`) | gated (status-C) | Writes only while `shouldOwnAgentStatusInRenderer` — `runtimeEnvironmentId !== null && !cachedHostOwnsRemoteAgentStatus(id)` — is true. A capable host's row makes this a no-op. |
 | `automation-session-observer.ts:42` | gated (status-D-fix) | Closed outright for local/SSH panes (main's unconditional OSC ingest already covers them); restores the write only for a remote-runtime pty whose bytes never transit local main, per `await hostOwnsRemoteAgentStatus`. |
 | `background-agent-status-consumer.ts:55` | gated (status-D-fix) | Same gate and reasoning as the row above. |
 | `title-spawn-bell.ts:148`, `:189` (`seedCommandCodeOutputWorkingStatus` and the done-settle callback) | kept-with-reason | Command-code output-scrape family. The only writer for a kill-switch-off local pane and for a remote-runtime pane (`direct-ssh-retry-status.ts`'s `commandCodeOutputStatusDetector`) — `odin(status-D)`'s judgement call #1, below. |

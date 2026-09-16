@@ -12,11 +12,13 @@ kept for the historical record of §Deviations 1–3 below) and
 All seven phases now pass end to end against the real VPS: desktop-mode host boot, `ssh.connect`
 authenticating/deploying/reaching `status: "connected"`, worktree + terminal creation on the SSH
 host, the loss-of-contact matrix (transport drop via `iptables`, reconnect re-adoption,
-owner-proven exit, relay `SIGKILL` + relaunch). Three real, previously-unknown Odin/Orca bugs were
-found and fixed (§Deviations 1–3); §Deviation 3 — the connect handshake never reaching
-`status: "connected"` — was the blocker for phases 3–7 and is now root-caused and fixed at the
-product level (`src/main/host/electron-secret-store.ts`), not worked around in the driver. See
-§Deviation 3 for the exact stuck call, the evidence trail, and the fix.
+owner-proven exit, relay `SIGKILL` + relaunch). Two real, previously-unknown Odin/Orca bugs were
+found and fixed in product code (§Deviations 2–3); §Deviation 3 — the connect handshake never
+reaching `status: "connected"` — was the blocker for phases 3–7 and is now root-caused and fixed
+at the product level (`src/main/host/electron-secret-store.ts`). §Deviation 1, the dev-mode
+relay-path resolution gap, remains worked around in the driver with `ORCA_RELAY_PATH`; it has no
+reproducible fix without a packaged relay layout. See §Deviation 3 for the exact stuck call, the
+evidence trail, and the fix.
 
 **Caveat added since this run (review round 3 item 14 / unproven claims 1–3):** phases 4 and 7's
 `ok` above was satisfied by a single early sample that had not yet observed the loss at all, not by
@@ -91,17 +93,16 @@ Because `real-session-host.mjs`'s existing driver only ever runs `--serve` (whic
 this code path per the design note above), this bug had never been hit by any prior proof.
 
 **Fix applied in the driver** (not product code): set `ORCA_RELAY_PATH` — the one documented
-override `getLocalRelayCandidates` checks first (`ssh-relay-deploy.ts:1657-1659`).
+override `getLocalRelayCandidates` checks first (`ssh-relay-deploy.ts:1657-1659`). The driver also
+resolves `ORCA_RELAY_PATH` through `realpathSync` so the relay bundle is handed to the upload by
+its canonical path.
 
-**A second-order bug this exposed once the first was patched**: pointing `ORCA_RELAY_PATH` at the
-worktree path (`/Users/…/odin-wt-ssh/out/relay`) got past `getLocalRelayPath`, but the upload
-step's own path-containment guard then rejected it: `Error: Path escaped upload root:
-/Users/…/odin-wt-ssh/out/relay/linux-x64` (`assertLocalUploadPathInsideRoot`,
-`src/main/ssh/sftp-upload.ts:308-320`), because the worktree's `out/` is a symlink and the guard's
-containment check does not agree with itself across a symlinked root. The fix is to hand it the
-resolved, non-symlinked path: `ORCA_RELAY_PATH: realpathSync(join(projectDir, 'out', 'relay'))`.
-This does not weaken the guard — it points at the identical on-disk files by their real path
-instead of asking the guard to reason about a symlink.
+**A second-order bug this exposed once the first was patched** was the upload step's
+path-containment guard rejecting a symlinked project root (`assertLocalUploadPathInsideRoot`,
+`src/main/ssh/sftp-upload.ts:308-320`). That guard now canonicalises the upload root itself
+(`src/main/ssh/sftp-upload.ts`), so the product accepts a symlinked root without any driver-side
+realpath workaround; the driver's `realpathSync` is retained only as belt-and-suspenders for the
+relay-path override.
 
 **With both fixes applied, the deploy completes for real, end to end, against claw-vps**, observed
 twice (once against a from-scratch install, once reusing an already-installed relay):
