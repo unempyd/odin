@@ -46,7 +46,7 @@
     {
       "id": "I3",
       "title": "Launch receipt effective for Cursor also comes from the installed CLI, not the catalog-only clone",
-      "commit": "odin(I3) -- see git log --grep I3",
+      "commit": "61dbafb53c",
       "tests": [
         "src/main/runtime/rpc/methods/orchestration/worker/worker-launch-preferences.test.ts"
       ],
@@ -56,7 +56,7 @@
     {
       "id": "I4",
       "title": "source: 'probe' requires the discovery answer's own catalogOrigin; a failed probe is not memoised past its own call",
-      "commit": "odin(I4) -- see git log --grep I4",
+      "commit": "8b7a7affe7",
       "tests": [
         "src/main/runtime/rpc/methods/orchestration/worker/worker-launch-preferences.test.ts"
       ],
@@ -81,7 +81,7 @@
     {
       "id": "O4",
       "title": "inspectRemoteAttachment (the execution host's federation twin of inspectWorkerTerminal) reports a thrown showTerminal failure as unverifiable, never owner-proven missing; recovery release keeps that answer pending instead of reverting it",
-      "commit": "odin(O4) -- see git log --grep O4",
+      "commit": "54a2be6382",
       "tests": [
         "src/main/runtime/rpc/methods/orchestration/federation/federation-attachment-observation.test.ts",
         "src/main/runtime/rpc/methods/orchestration/federation/federated-worker-release-host-unverifiable-recovery.test.ts"
@@ -145,7 +145,7 @@
     {
       "id": "show-contact-loss",
       "title": "terminal show forces connected/writable false and an unverifiable liveness verdict while the owning SSH target's relay is lost or reconnecting, instead of reading a stale connected:true",
-      "commit": "odin(show-contact-loss) -- see git log --grep show-contact-loss",
+      "commit": "f707829826",
       "tests": ["src/main/runtime/show-contact-loss.test.ts"],
       "reproduce": "expected true to be false",
       "note": "Found against a real host (odin/proofs/ssh-boundary.2026-09-15T01-39-52-596Z.json phase4): after the transport was iptables-dropped, `[ssh] Relay channel ... lost; reconnect attempt 1/6` and `Keepalive timeout` fired, yet `terminal show` kept answering connected:true/writable:true with no exitCause for all 17 samples over 90s. buildPtyTerminalSummary/buildTerminalSummary (src/main/runtime/orca-runtime-build-pty-terminal-summary.ts, orca-runtime-write-orchestration-pointer-pty.ts) read pty.connected straight off the record, which only a PTY data/exit event or an inventory sweep updates -- never the relay-lost/reconnect callbacks in src/main/ipc/ssh-relay-session-callbacks.ts. Fix reuses the existing SSH connection-state registry (getRegisteredSshState) rather than adding a second tracker: while the owning target's status is not 'connected', connected/writable are forced false and a new RuntimeTerminalSummary.liveness field reports {status:'unverifiable', reason:'reconnecting'|'transport_lost'} -- never exitCause/exited. A genuine owner-proven exit (pty.lastExitCause already set) is never overridden."
@@ -187,7 +187,7 @@
     {
       "id": "O3a",
       "title": "A structured worker's own host-owned unverifiable is never treated as absent on release",
-      "commit": "odin(O3a) -- see git log --grep O3a",
+      "commit": "382bf626a9",
       "tests": [
         "src/main/runtime/rpc/methods/orchestration/worker/worker-release-structured-unverifiable.test.ts"
       ],

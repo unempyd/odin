@@ -1,0 +1,13 @@
+# Round-4 retroactive after-proof for commit e7d2138916
+# (odin(done-settle-shared): move the command-code done-settle window to one
+# shared module)
+# Same test file, run on this worktree's HEAD (fix applied; the shared module
+# now exists).
+
+ RUN  v4.1.11 /Users/briankeeny/Desktop/odin-wt-fix5e
+
+
+ Test Files  1 passed (1)
+      Tests  8 passed (8)
+   Start at  18:34:02
+   Duration  6.49s (transform 84ms, setup 98ms, import 1.19s, tests 4.85s, environment 0ms)

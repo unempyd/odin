@@ -1,0 +1,11 @@
+# Round-4 retroactive after-proof for commit b705a96191
+# (odin(wait-absence-verdict): an exit wait resolves silence instead of rejecting on absence)
+# Same test file, run on this worktree's HEAD (fix applied).
+
+ RUN  v4.1.11 /Users/briankeeny/Desktop/odin-wt-fix5e
+
+
+ Test Files  1 passed (1)
+      Tests  5 passed (5)
+   Start at  18:32:58
+   Duration  45.20s (transform 36.08s, setup 121ms, import 44.29s, tests 157ms, environment 0ms)

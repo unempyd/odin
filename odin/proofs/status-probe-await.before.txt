@@ -1,0 +1,62 @@
+# Round-4 retroactive failing-first proof for commit 3c5b4c2d55
+# (odin(status-probe-await): a failed status-ownership probe must not fail the
+# launch)
+#
+# Both test files were modified in place by the fix commit, so they already
+# existed at the parent commit (4dfa0caa5c) -- just without the new cases. To
+# prove failing-first, both test files AS THEY EXIST IN THE FIX COMMIT were
+# copied (`git show 3c5b4c2d55:<path>`) into a detached worktree at the
+# commit's parent, overwriting the parent's older versions, and run there
+# unmodified against the parent's (pre-fix) hostOwnsRemoteAgentStatus, which
+# rethrows on an RPC failure instead of resolving false. No production file
+# was changed in that worktree.
+
+
+ RUN  v4.1.11 /private/tmp/claude-501/-Users-briankeeny/fb3c7cb3-697c-4164-a902-55e6d1f5b7eb/scratchpad/proof-wts/3c5b4c2d55-parent
+
+ ❯ src/renderer/src/runtime/agent-status-host-osc-ingest-capability.test.ts (6 tests | 1 failed) 71ms
+     × resolves false, never rejects, when the probe itself fails 7ms
+ ❯ src/renderer/src/lib/launch-agent-background-session-remote.test.ts (16 tests | 1 failed) 2779ms
+     × proceeds and keeps writing status when the remote status-ownership probe rejects 2638ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/renderer/src/runtime/agent-status-host-osc-ingest-capability.test.ts > hostOwnsRemoteAgentStatus > resolves false, never rejects, when the probe itself fails
+AssertionError: promise rejected "Error: rpc timeout" instead of resolving
+ ❯ src/renderer/src/runtime/agent-status-host-osc-ingest-capability.test.ts:35:63
+     33|   it('resolves false, never rejects, when the probe itself fails', asy…
+     34|     runtimeEnvironmentSupportsCapability.mockRejectedValue(new Error('…
+     35|     await expect(hostOwnsRemoteAgentStatus('env-unreachable')).resolve…
+       |                                                               ^
+     36|   })
+     37| })
+
+Caused by: Error: rpc timeout
+ ❯ src/renderer/src/runtime/agent-status-host-osc-ingest-capability.test.ts:34:60
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  src/renderer/src/lib/launch-agent-background-session-remote.test.ts > launchAgentBackgroundSession remote runtime and SSH startup delivery > proceeds and keeps writing status when the remote status-ownership probe rejects
+Error: status probe unreachable
+ ❯ Object.<anonymous> src/renderer/src/lib/launch-agent-background-session-remote.test.ts:104:31
+    102|     mockRuntimeEnvironmentTransportCall.mockImplementation((request: {…
+    103|       if (request.method === 'status.get') {
+    104|         return Promise.reject(new Error('status probe unreachable'))
+       |                               ^
+    105|       }
+    106|       return (mockRuntimeEnvironmentCall as unknown as (value: unknown…
+ ❯ src/renderer/src/runtime/runtime-rpc-client.ts:252:59
+ ❯ getRuntimeEnvironmentStatus src/renderer/src/runtime/runtime-rpc-client.ts:196:4
+ ❯ runtimeEnvironmentSupportsCapability src/renderer/src/runtime/runtime-rpc-client.ts:315:24
+ ❯ hostOwnsRemoteAgentStatus src/renderer/src/runtime/agent-status-host-osc-ingest-capability.ts:13:10
+ ❯ launchAgentBackgroundSession src/renderer/src/lib/launch-agent-background-session.ts:158:45
+ ❯ src/renderer/src/lib/launch-agent-background-session-remote.test.ts:110:26
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  2 failed (2)
+      Tests  2 failed | 20 passed (22)
+   Start at  18:32:40
+   Duration  3.98s (transform 2.45s, setup 219ms, import 523ms, tests 2.85s, environment 0ms)
+

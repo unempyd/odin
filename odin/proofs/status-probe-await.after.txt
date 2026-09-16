@@ -1,0 +1,14 @@
+# Round-4 retroactive after-proof for commit 3c5b4c2d55
+# (odin(status-probe-await): a failed status-ownership probe must not fail the
+# launch)
+# Same two test files, run on this worktree's HEAD (fix applied).
+
+
+ RUN  v4.1.11 /Users/briankeeny/Desktop/odin-wt-fix5e
+
+
+ Test Files  2 passed (2)
+      Tests  22 passed (22)
+   Start at  18:34:15
+   Duration  3.75s (transform 2.35s, setup 194ms, import 567ms, tests 2.67s, environment 0ms)
+
