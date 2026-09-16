@@ -1,7 +1,6 @@
 import type { AgentStatus } from '../../shared/agent-detection'
 import { isFreshNonDoneAgentStatus } from '../../shared/agent-status-freshness'
 import type { AgentStatusState } from '../../shared/agent-status-types'
-import { getSyntheticAgentTerminalTitle } from '../../shared/synthetic-agent-title'
 import { resolveExplicitTerminalTitleAgentType } from '../../shared/terminal-title-agent-type'
 import type { TuiAgent } from '../../shared/tui-agent'
 import { detectExplicitIdleStatusFromTitle } from './terminal-wait-detection'
@@ -26,12 +25,15 @@ import { detectExplicitIdleStatusFromTitle } from './terminal-wait-detection'
  *   3. ABSENCE — a name-only title, or a quiet non-shell foreground process. A last
  *      resort, and only once sustained.
  *
- * C4 — the name-only carve-out (grok/copilot/aider/mimo/agy/opencode — see
- * `nameOnlyIdleNeedsCorroboration`) is promoted to tier 2's `observed-idle` rather than held at
- * tier 3's `silence`, because those agents never emit a second, corroborating rest signal and
+ * C4 — the name-only carve-out (`NAME_ONLY_IDLE_AGENTS`: grok/copilot/aider/mimo/agy/opencode —
+ * see `nameOnlyIdleNeedsCorroboration`) is promoted to tier 2's `observed-idle` rather than held
+ * at tier 3's `silence`, because those agents never emit a second, corroborating rest signal and
  * holding them to `silence` forever is indistinguishable from never settling. It still waits out
  * the full quiescence window first — "no stronger signal is coming" buys a better verdict, never a
- * faster one.
+ * faster one. The set is a named allowlist, not "has no synthetic-title profile" — that shape
+ * silently carved in every agent with no profile at all (Claude, Gemini, ~25 more) and any pane
+ * whose agent could not be resolved, settling `satisfied: true` on a bare quiet title with no
+ * first-party evidence behind it (round-4 review, DIRECTION.md residual 1).
  *
  * C5 — tier 1's veto used to be consulted only after tier 2 (then numbered tier 1) already
  * settled, on the theory that a title/body the agent just painted is closer to the truth than a
@@ -77,14 +79,26 @@ export function hasFreshWorkingFirstPartyStatus(status: FirstPartyAgentStatus): 
 }
 
 /**
- * Whether a name-only title from `agent` may be held to the tier-3 quiescence demand.
+ * Agents that emit their NAME and nothing more at rest — no hook-driven ready title, no known
+ * ready-prompt body, ever. Held to a stronger signal, they would never settle: a real idle Grok
+ * pane repaints its banner about four times a second forever, so the stream never quiesces.
  *
- * Only for agents that go on to announce rest with an explicit title of their own (the
- * hook-driven `Codex ready` / `Devin ready`). Grok, Copilot, Aider, Mimo, agy and
- * OpenCode emit their NAME and nothing more at rest, so holding them to it leaves no
- * settle signal at all: a real idle Grok pane repaints its banner about four times a
- * second forever, so the stream never quiesces and the wait runs to timeout.
+ * A named allowlist on purpose, not "has no synthetic-title profile" (`getSyntheticAgentTerminalTitle`
+ * returning null): that shape is the absence of a profile entry, not evidence the agent never
+ * corroborates rest — it silently swept in Claude and Gemini (which paint their own explicit idle
+ * marker, `CLAUDE_IDLE`/`GEMINI_IDLE`, over the *first-party* OSC title channel), every other
+ * agent with no profile at all, and any pane whose agent could not be resolved at all.
  */
+const NAME_ONLY_IDLE_AGENTS: ReadonlySet<TuiAgent> = new Set([
+  'grok',
+  'copilot',
+  'aider',
+  'mimo-code',
+  'antigravity',
+  'opencode'
+])
+
+/** Whether a name-only title from `agent` may be held to the tier-3 quiescence demand. */
 export function nameOnlyIdleNeedsCorroboration(
   agent: TuiAgent | null | undefined,
   title?: string | null
@@ -92,7 +106,7 @@ export function nameOnlyIdleNeedsCorroboration(
   // Why the title fallback: an adopted pane carries no launch metadata, but its
   // name-only title is exactly the thing that names the agent.
   const resolved = agent ?? (title ? resolveExplicitTerminalTitleAgentType(title) : null)
-  return getSyntheticAgentTerminalTitle(resolved, 'done') !== null
+  return !resolved || !NAME_ONLY_IDLE_AGENTS.has(resolved)
 }
 
 /** Tier 3: a title-derived idle, usable only once the stream has also gone quiet.
