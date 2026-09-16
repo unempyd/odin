@@ -125,7 +125,7 @@ describe('OrcaRuntimeService', () => {
         harness.runtime.reconcileLegacyWorkerTerminals({ materializeRenderer: true })
       ).resolves.toMatchObject({
         adoptedDispatchIds: [],
-        exitedDispatchIds: [],
+        unverifiableDispatchIds: [],
         deferredDispatchIds: ['dispatch-post-reveal']
       })
       expect(harness.revealTerminalSession).toHaveBeenCalledOnce()
@@ -213,7 +213,7 @@ describe('OrcaRuntimeService', () => {
       harness.runtime.reconcileLegacyWorkerTerminals({ materializeRenderer: true })
     ).resolves.toMatchObject({
       adoptedDispatchIds: [],
-      exitedDispatchIds: ['dispatch-post-reveal'],
+      unverifiableDispatchIds: ['dispatch-post-reveal'],
       deferredDispatchIds: []
     })
 
@@ -232,7 +232,7 @@ describe('OrcaRuntimeService', () => {
     ).toMatchObject({ connected: false, incarnationId: '45454545-4545-4545-8545-454545454545' })
     expect(harness.resolveLegacyWorkerTerminalRecovery).toHaveBeenCalledWith(
       harness.workerPaneKey,
-      'exited'
+      'unverifiable'
     )
   })
 
@@ -296,7 +296,7 @@ describe('OrcaRuntimeService', () => {
       harness.runtime.reconcileLegacyWorkerTerminals({ materializeRenderer: true })
     ).resolves.toMatchObject({
       adoptedDispatchIds: [],
-      exitedDispatchIds: [],
+      unverifiableDispatchIds: [],
       deferredDispatchIds: ['dispatch-post-reveal']
     })
 
@@ -330,7 +330,7 @@ describe('OrcaRuntimeService', () => {
 
     await expect(harness.runtime.reconcileLegacyWorkerTerminals()).resolves.toMatchObject({
       adoptedDispatchIds: [],
-      exitedDispatchIds: ['dispatch-post-reveal'],
+      unverifiableDispatchIds: ['dispatch-post-reveal'],
       deferredDispatchIds: []
     })
 
@@ -345,7 +345,7 @@ describe('OrcaRuntimeService', () => {
     )
     expect(harness.resolveLegacyWorkerTerminalRecovery).toHaveBeenCalledWith(
       harness.workerPaneKey,
-      'exited'
+      'unverifiable'
     )
   })
 
@@ -383,7 +383,7 @@ describe('OrcaRuntimeService', () => {
       harness.runtime.reconcileLegacyWorkerTerminals({ materializeRenderer: true })
     ).resolves.toMatchObject({
       adoptedDispatchIds: [],
-      exitedDispatchIds: ['dispatch-post-reveal'],
+      unverifiableDispatchIds: ['dispatch-post-reveal'],
       deferredDispatchIds: []
     })
 
@@ -413,7 +413,7 @@ describe('OrcaRuntimeService', () => {
     )
     expect(harness.resolveLegacyWorkerTerminalRecovery).toHaveBeenCalledWith(
       harness.workerPaneKey,
-      'exited'
+      'unverifiable'
     )
   })
 
@@ -521,7 +521,7 @@ describe('OrcaRuntimeService', () => {
 
     await expect(recovery).resolves.toMatchObject({
       adoptedDispatchIds: [],
-      exitedDispatchIds: [],
+      unverifiableDispatchIds: [],
       deferredDispatchIds: ['dispatch-persistence-failure']
     })
     expect(flushPendingOrThrowAsync).toHaveBeenCalledTimes(2)

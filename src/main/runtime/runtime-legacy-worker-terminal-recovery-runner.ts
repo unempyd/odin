@@ -16,7 +16,7 @@ export async function runLegacyWorkerTerminalRecovery(
 ): Promise<LegacyWorkerTerminalRecoveryResult> {
   const plan = ports.preparePlan()
   const adoptedDispatchIds: string[] = []
-  const exitedDispatchIds: string[] = []
+  const unverifiableDispatchIds: string[] = []
   const deferredDispatchIds = new Set(plan.ambiguousDispatchIds)
   const pendingResolutions: LegacyWorkerRecoveryResolution[] = []
   const providers = new Map<
@@ -100,12 +100,12 @@ export async function runLegacyWorkerTerminalRecovery(
       deferredDispatchIds.add(candidate.dispatchId)
       continue
     }
-    ports.notifyResolution(candidate, 'exited')
-    exitedDispatchIds.push(candidate.dispatchId)
+    ports.notifyResolution(candidate, 'unverifiable')
+    unverifiableDispatchIds.push(candidate.dispatchId)
   }
   const result = {
     adoptedDispatchIds,
-    exitedDispatchIds,
+    unverifiableDispatchIds,
     deferredDispatchIds: [...deferredDispatchIds]
   }
   ports.updateRetry(plan, deferredDispatchIds, options)

@@ -30,11 +30,13 @@ function runtimeObserving(result: RuntimeTerminalPromptDelivery): {
 }
 
 describe('observeWorkerTurnStart', () => {
-  it('treats a missing receipt as unsupported observation, never as failure', async () => {
+  it('treats a missing prompt-delivery record as unobserved, never as unsupported', async () => {
+    // Unlike an old host's missing `observation` field (a real capability gap), a capable
+    // host that returns no prompt-delivery record at all has left no evidence to classify.
     const { runtime, observe } = runtimeObserving(delivery())
     await expect(
       observeWorkerTurnStart({ runtime, terminalHandle: 'term_w', prompt: undefined })
-    ).resolves.toEqual({ verdict: 'unsupported' })
+    ).resolves.toEqual({ verdict: 'unobserved' })
     expect(observe).not.toHaveBeenCalled()
   })
 

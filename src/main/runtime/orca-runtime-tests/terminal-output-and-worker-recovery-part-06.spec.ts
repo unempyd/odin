@@ -149,7 +149,7 @@ describe('OrcaRuntimeService', () => {
         })
       ).resolves.toMatchObject({
         adoptedDispatchIds: [],
-        exitedDispatchIds: [],
+        unverifiableDispatchIds: [],
         deferredDispatchIds: ['dispatch-ssh']
       })
       expect(listProcesses).not.toHaveBeenCalled()
@@ -163,7 +163,7 @@ describe('OrcaRuntimeService', () => {
         })
       ).resolves.toMatchObject({
         adoptedDispatchIds: ['dispatch-ssh'],
-        exitedDispatchIds: [],
+        unverifiableDispatchIds: [],
         deferredDispatchIds: []
       })
       expect(listProcesses).toHaveBeenLastCalledWith(connectionId, LIST_PROVIDER_DEADLINE)
@@ -292,7 +292,7 @@ describe('OrcaRuntimeService', () => {
       runtime.reconcileLegacyWorkerTerminals({ materializeRenderer: true })
     ).resolves.toMatchObject({
       adoptedDispatchIds: [],
-      exitedDispatchIds: [],
+      unverifiableDispatchIds: [],
       deferredDispatchIds: ['dispatch-wsl']
     })
     expect(getSession().sleepingAgentSessionsByPaneKey?.[workerPaneKey]).toBeDefined()
@@ -303,7 +303,7 @@ describe('OrcaRuntimeService', () => {
       runtime.reconcileLegacyWorkerTerminals({ materializeRenderer: true })
     ).resolves.toMatchObject({
       adoptedDispatchIds: ['dispatch-wsl'],
-      exitedDispatchIds: [],
+      unverifiableDispatchIds: [],
       deferredDispatchIds: []
     })
     expect(getSession().sleepingAgentSessionsByPaneKey?.[workerPaneKey]).toBeUndefined()

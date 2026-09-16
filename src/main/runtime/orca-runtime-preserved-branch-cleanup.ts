@@ -1,6 +1,7 @@
 // @ts-nocheck -- mechanically split from OrcaRuntimeService; behavior is covered by AST equivalence and characterization tests.
 import { OrcaRuntimeWithTerminalDrivers } from './orca-runtime-terminal-drivers'
 import { RuntimePreservedBranchCleanup } from './runtime-preserved-branch-cleanup'
+import { UNVERIFIED_PROCESS_EXIT_CODE } from '../../shared/terminal-exit-cause'
 import type { IPtyProvider } from '../providers/types'
 import type {
   AgentSessionCreateOperation,
@@ -167,7 +168,8 @@ export class OrcaRuntimeWithPreservedBranchCleanup extends OrcaRuntimeWithTermin
       this.adoptLegacyWorkerTerminal(candidate, workspace, inventory, activation),
     getRendererEpoch: () => this.rendererGraphEpoch,
     reveal: (candidate) => this.revealLegacyWorkerTerminal(candidate),
-    onPtyExit: (candidate) => this.onPtyExit(candidate.ptyId, 0, candidate.incarnationId),
+    onPtyExit: (candidate) =>
+      this.onPtyExit(candidate.ptyId, UNVERIFIED_PROCESS_EXIT_CODE, candidate.incarnationId),
     persist: (resolutions) => this.legacyWorkerRecoveryPersistence.persist(resolutions),
     rollback: (candidate) => this.rollbackLegacyWorkerTerminalSurface(candidate),
     reconcileMissing: (candidate) =>

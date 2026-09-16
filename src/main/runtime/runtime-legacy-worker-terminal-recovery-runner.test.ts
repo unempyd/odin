@@ -77,7 +77,7 @@ describe('runLegacyWorkerTerminalRecovery without a renderer (residual L)', () =
 
     const result = await controller.reconcile({})
 
-    expect(result.exitedDispatchIds).toEqual(['ctx-1'])
+    expect(result.unverifiableDispatchIds).toEqual(['ctx-1'])
     expect(result.deferredDispatchIds).toEqual([])
     expect(ports.reconcileMissing).toHaveBeenCalledWith(
       expect.objectContaining({ dispatchId: 'ctx-1' })

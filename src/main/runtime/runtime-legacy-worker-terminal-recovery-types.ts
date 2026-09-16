@@ -6,7 +6,9 @@ import type { ResolvedWorktree } from './runtime-worktree-path-identity'
 
 export type LegacyWorkerTerminalRecoveryResult = {
   adoptedDispatchIds: string[]
-  exitedDispatchIds: string[]
+  // Why not 'exitedDispatchIds': every dispatch that fails recovery here is classified
+  // 'unverifiable' — a listing absence or identity mismatch, never a host-vouched exit.
+  unverifiableDispatchIds: string[]
   deferredDispatchIds: string[]
   /** Why: the unsupervised-dispatch sweep runs after this result is built and must not fail it
    *  (O2); set only when that sweep threw, so a caller can see it instead of a dropped console.warn. */
@@ -22,7 +24,10 @@ export type LegacyWorkerRecoveryCandidate = LegacyWorkerTerminalRecoveryPlan['ca
 
 export type LegacyWorkerRecoveryResolution = {
   candidate: LegacyWorkerRecoveryCandidate
-  resolution: 'adopted' | 'exited'
+  // Why not 'exited': every non-adopted resolution here comes from the candidate's
+  // absence (or identity mismatch) in a controller inventory listing, never a
+  // host-vouched exit event -- the same absence shape residual B closed elsewhere.
+  resolution: 'adopted' | 'unverifiable'
 }
 
 export type TerminalWorkspaceLaunchScope = {
@@ -68,7 +73,7 @@ export type LegacyWorkerRecoveryPorts = {
   reconcileMissing: (candidate: LegacyWorkerRecoveryCandidate) => boolean
   notifyResolution: (
     candidate: LegacyWorkerRecoveryCandidate,
-    resolution: 'adopted' | 'exited'
+    resolution: 'adopted' | 'unverifiable'
   ) => void
   canRecoverPersistentLocalPtys: () => boolean
   reconcileRequestedReleases: () => Promise<unknown>

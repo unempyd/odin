@@ -17,10 +17,10 @@ describe('useIpcEvents agent status snapshot integration', () => {
     vi.unstubAllGlobals()
   })
 
-  it('retires the exact sleeping record after adopted or exited legacy worker recovery', async () => {
+  it('retires the exact sleeping record after adopted or unverifiable legacy worker recovery', async () => {
     const clearSleepingAgentSession = vi.fn()
     let listener:
-      | ((data: { paneKey: string; resolution: 'adopted' | 'exited' }) => void)
+      | ((data: { paneKey: string; resolution: 'adopted' | 'unverifiable' }) => void)
       | undefined
     const storeState = buildStoreState({
       clearSleepingAgentSession
@@ -54,7 +54,7 @@ describe('useIpcEvents agent status snapshot integration', () => {
     expect(clearSleepingAgentSession).toHaveBeenCalledWith('tab-adopted:leaf-adopted')
 
     clearSleepingAgentSession.mockClear()
-    listener?.({ paneKey: 'tab-exited:leaf-exited', resolution: 'exited' })
+    listener?.({ paneKey: 'tab-exited:leaf-exited', resolution: 'unverifiable' })
     expect(clearSleepingAgentSession).toHaveBeenCalledWith('tab-exited:leaf-exited')
   })
 

@@ -21,7 +21,7 @@ export async function reconcileLegacyWorkerCandidate(args: {
 }): Promise<void> {
   const { controller, ports, options, candidate, workspace, resolvedWorktrees } = args
   if (!args.inventory.livePtyIds.has(candidate.ptyId)) {
-    args.pendingResolutions.push({ candidate, resolution: 'exited' })
+    args.pendingResolutions.push({ candidate, resolution: 'unverifiable' })
     return
   }
   const controllerIdentity = args.inventory.terminalIdentityByPtyId.get(candidate.ptyId)
@@ -33,10 +33,10 @@ export async function reconcileLegacyWorkerCandidate(args: {
     controllerIdentity.handle !== candidate.terminalHandle ||
     controllerIdentity.incarnationId !== candidate.incarnationId
   ) {
-    args.pendingResolutions.push({ candidate, resolution: 'exited' })
+    args.pendingResolutions.push({ candidate, resolution: 'unverifiable' })
     return
   }
-  let adoptionStatus: 'ready' | 'unverifiable' | 'exited'
+  let adoptionStatus: 'ready' | 'unverifiable' | 'absent'
   try {
     adoptionStatus = await ports.runMutation(candidate.worktreeId, async () => {
       const preAdoptionInventory = await ports.refreshInventory(
@@ -47,7 +47,7 @@ export async function reconcileLegacyWorkerCandidate(args: {
         return 'unverifiable'
       }
       if (!preAdoptionInventory.livePtyIds.has(candidate.ptyId)) {
-        return 'exited'
+        return 'absent'
       }
       const preAdoptionIdentity = preAdoptionInventory.terminalIdentityByPtyId.get(candidate.ptyId)
       if (!preAdoptionIdentity) {
@@ -57,7 +57,7 @@ export async function reconcileLegacyWorkerCandidate(args: {
         preAdoptionIdentity.handle !== candidate.terminalHandle ||
         preAdoptionIdentity.incarnationId !== candidate.incarnationId
       ) {
-        return 'exited'
+        return 'absent'
       }
       const exactSurfaceAlreadyPublished =
         ports.hasExactPersistedSurface(candidate) && ports.hasExactSurface(candidate)
@@ -83,8 +83,8 @@ export async function reconcileLegacyWorkerCandidate(args: {
     args.deferredDispatchIds.add(candidate.dispatchId)
     return
   }
-  if (adoptionStatus === 'exited') {
-    args.pendingResolutions.push({ candidate, resolution: 'exited' })
+  if (adoptionStatus === 'absent') {
+    args.pendingResolutions.push({ candidate, resolution: 'unverifiable' })
     return
   }
   const rendererEpoch = ports.getRendererEpoch()
@@ -134,7 +134,7 @@ export async function reconcileLegacyWorkerCandidate(args: {
   if (!finalInventory.livePtyIds.has(candidate.ptyId)) {
     controller.deleteReceipt(candidate.paneKey)
     ports.onPtyExit(candidate)
-    args.pendingResolutions.push({ candidate, resolution: 'exited' })
+    args.pendingResolutions.push({ candidate, resolution: 'unverifiable' })
     return
   }
   const finalIdentity = finalInventory.terminalIdentityByPtyId.get(candidate.ptyId)
@@ -148,7 +148,7 @@ export async function reconcileLegacyWorkerCandidate(args: {
     finalIdentity.incarnationId !== candidate.incarnationId
   ) {
     controller.deleteReceipt(candidate.paneKey)
-    args.pendingResolutions.push({ candidate, resolution: 'exited' })
+    args.pendingResolutions.push({ candidate, resolution: 'unverifiable' })
     return
   }
   args.pendingResolutions.push({ candidate, resolution: 'adopted' })

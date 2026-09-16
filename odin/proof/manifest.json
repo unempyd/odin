@@ -149,6 +149,43 @@
       "tests": ["src/main/runtime/show-contact-loss.test.ts"],
       "reproduce": "expected true to be false",
       "note": "Found against a real host (odin/proofs/ssh-boundary.2026-09-15T01-39-52-596Z.json phase4): after the transport was iptables-dropped, `[ssh] Relay channel ... lost; reconnect attempt 1/6` and `Keepalive timeout` fired, yet `terminal show` kept answering connected:true/writable:true with no exitCause for all 17 samples over 90s. buildPtyTerminalSummary/buildTerminalSummary (src/main/runtime/orca-runtime-build-pty-terminal-summary.ts, orca-runtime-write-orchestration-pointer-pty.ts) read pty.connected straight off the record, which only a PTY data/exit event or an inventory sweep updates -- never the relay-lost/reconnect callbacks in src/main/ipc/ssh-relay-session-callbacks.ts. Fix reuses the existing SSH connection-state registry (getRegisteredSshState) rather than adding a second tracker: while the owning target's status is not 'connected', connected/writable are forced false and a new RuntimeTerminalSummary.liveness field reports {status:'unverifiable', reason:'reconnecting'|'transport_lost'} -- never exitCause/exited. A genuine owner-proven exit (pty.lastExitCause already set) is never overridden."
+    },
+    {
+      "id": "listing-omission-exit",
+      "title": "stopAndWaitPtyFromRuntimeController: a post-stop listing omission is unverifiable, never a proven exited",
+      "commit": "odin(listing-omission-exit) -- see git log --grep listing-omission-exit",
+      "tests": ["src/main/ipc/pty/runtime/kill.test.ts"],
+      "reproduce": "expected true to be false"
+    },
+    {
+      "id": "legacy-recovery-verdict-word",
+      "title": "Legacy worker terminal recovery classifies listing absence and identity mismatch as unverifiable, never exited",
+      "commit": "odin(legacy-recovery-verdict-word) -- see git log --grep legacy-recovery-verdict-word",
+      "tests": [
+        "src/main/runtime/runtime-legacy-worker-terminal-recovery-runner.test.ts",
+        "src/main/runtime/orca-runtime-tests/terminal-output-and-worker-recovery-part-02.spec.ts",
+        "src/main/runtime/orca-runtime-tests/terminal-output-and-worker-recovery-part-03.spec.ts",
+        "src/main/runtime/orca-runtime-tests/terminal-output-and-worker-recovery-part-04.spec.ts",
+        "src/main/runtime/orca-runtime-tests/terminal-output-and-worker-recovery-part-05.spec.ts",
+        "src/main/runtime/orca-runtime-tests/terminal-output-and-worker-recovery-part-06.spec.ts"
+      ],
+      "reproduce": "expected undefined to deeply equal"
+    },
+    {
+      "id": "worker-start-unobserved-missing-prompt",
+      "title": "worker-start turn observation classifies a missing prompt-delivery record as unobserved, not unsupported",
+      "commit": "odin(worker-start-unobserved-missing-prompt) -- see git log --grep worker-start-unobserved-missing-prompt",
+      "tests": [
+        "src/main/runtime/rpc/methods/orchestration/worker/worker-start-turn-observation.test.ts"
+      ],
+      "reproduce": "expected \\{ verdict: 'unsupported' \\} to deeply equal \\{ verdict: 'unobserved' \\}"
+    },
+    {
+      "id": "wait-silence-registration-gap",
+      "title": "RuntimeTerminalWait resolves the silence verdict for exit waits registered in the spawn-to-registration gap",
+      "commit": "odin(wait-silence-registration-gap) -- see git log --grep wait-silence-registration-gap",
+      "tests": ["src/main/runtime/runtime-terminal-wait-exit-timeout.test.ts"],
+      "reproduce": "expected \"vi\\.fn\\(\\)\" to be called once with arguments"
     }
   ],
   "closedByConstruction": [

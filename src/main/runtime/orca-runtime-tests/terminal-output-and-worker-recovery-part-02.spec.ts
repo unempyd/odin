@@ -534,7 +534,7 @@ describe('OrcaRuntimeService', () => {
 
     expect(recovered).toMatchObject({
       adoptedDispatchIds: ['dispatch-legacy'],
-      exitedDispatchIds: [],
+      unverifiableDispatchIds: [],
       deferredDispatchIds: []
     })
     expect(getSession().activeTabIdByWorktree?.[TEST_WORKTREE_ID]).toBe('coordinator')

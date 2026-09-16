@@ -96,7 +96,7 @@ describe('OrcaRuntimeService', () => {
 
       await expect(recovery).resolves.toMatchObject({
         adoptedDispatchIds: [],
-        exitedDispatchIds: [started.dispatch.id],
+        unverifiableDispatchIds: [started.dispatch.id],
         deferredDispatchIds: []
       })
 
@@ -117,7 +117,10 @@ describe('OrcaRuntimeService', () => {
         'rolled_back',
         'pty-missing-worker'
       )
-      expect(resolveLegacyWorkerTerminalRecovery).toHaveBeenCalledWith(workerPaneKey, 'exited')
+      expect(resolveLegacyWorkerTerminalRecovery).toHaveBeenCalledWith(
+        workerPaneKey,
+        'unverifiable'
+      )
     } finally {
       db.close()
     }
@@ -204,7 +207,7 @@ describe('OrcaRuntimeService', () => {
       firstDurableWrite.reject(new Error('disk unavailable'))
 
       await expect(firstRecovery).resolves.toMatchObject({
-        exitedDispatchIds: [],
+        unverifiableDispatchIds: [],
         deferredDispatchIds: [started.dispatch.id]
       })
       expect(db.getDispatchContextById(started.dispatch.id)?.status).toBe('dispatched')
@@ -218,7 +221,7 @@ describe('OrcaRuntimeService', () => {
       retryDurableWrite.resolve()
 
       await expect(retry).resolves.toMatchObject({
-        exitedDispatchIds: [started.dispatch.id],
+        unverifiableDispatchIds: [started.dispatch.id],
         deferredDispatchIds: []
       })
       expect(flushPendingOrThrowAsync).toHaveBeenCalledTimes(2)
@@ -229,14 +232,17 @@ describe('OrcaRuntimeService', () => {
         'rolled_back',
         'pty-missing-retry'
       )
-      expect(resolveLegacyWorkerTerminalRecovery).toHaveBeenCalledWith(workerPaneKey, 'exited')
+      expect(resolveLegacyWorkerTerminalRecovery).toHaveBeenCalledWith(
+        workerPaneKey,
+        'unverifiable'
+      )
       warn.mockRestore()
     } finally {
       db.close()
     }
   })
 
-  it('retires provider resume only after authoritative inventory proves the legacy PTY exited', async () => {
+  it('retires provider resume only after authoritative inventory proves the legacy PTY unverifiable', async () => {
     const workerPaneKey = `legacy-worker:${HEADLESS_LEAF_ID}`
     const secondWorkerPaneKey = `legacy-worker-two:${HEADLESS_SECOND_LEAF_ID}`
     const incarnationId = '33333333-3333-4333-8333-333333333333'
@@ -338,7 +344,7 @@ describe('OrcaRuntimeService', () => {
 
     await expect(runtime.reconcileLegacyWorkerTerminals()).resolves.toMatchObject({
       adoptedDispatchIds: ['dispatch-exited-two'],
-      exitedDispatchIds: ['dispatch-exited'],
+      unverifiableDispatchIds: ['dispatch-exited'],
       deferredDispatchIds: []
     })
     expect(getSession().sleepingAgentSessionsByPaneKey?.[workerPaneKey]).toBeUndefined()
@@ -356,7 +362,7 @@ describe('OrcaRuntimeService', () => {
         }
       ).ptysById.get('pty-exited-two')
     ).toMatchObject({ connected: true })
-    expect(resolveLegacyWorkerTerminalRecovery).toHaveBeenCalledWith(workerPaneKey, 'exited')
+    expect(resolveLegacyWorkerTerminalRecovery).toHaveBeenCalledWith(workerPaneKey, 'unverifiable')
     expect(resolveLegacyWorkerTerminalRecovery).toHaveBeenCalledWith(secondWorkerPaneKey, 'adopted')
   })
 
@@ -445,7 +451,7 @@ describe('OrcaRuntimeService', () => {
         runtime.reconcileLegacyWorkerTerminals({ materializeRenderer: true })
       ).resolves.toMatchObject({
         adoptedDispatchIds: [],
-        exitedDispatchIds: [],
+        unverifiableDispatchIds: [],
         deferredDispatchIds: ['dispatch-inventory-unavailable']
       })
       expect(getSession().sleepingAgentSessionsByPaneKey?.[workerPaneKey]).toBeDefined()
@@ -479,7 +485,7 @@ describe('OrcaRuntimeService', () => {
       const runtime = new OrcaRuntimeService(store)
       const reconcile = vi.spyOn(runtime, 'reconcileLegacyWorkerTerminals').mockResolvedValue({
         adoptedDispatchIds: [],
-        exitedDispatchIds: [],
+        unverifiableDispatchIds: [],
         deferredDispatchIds: []
       })
       const retryInternals = runtime as unknown as {

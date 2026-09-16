@@ -1,0 +1,35 @@
+
+ RUN  v4.1.11 /private/var/folders/08/tsc21p4n41ndkvcxq1kl0htw0000gn/T/odin-upstream-8ttZZB
+
+ ❯ src/main/runtime/rpc/methods/orchestration/worker/worker-start-turn-observation.test.ts (8 tests | 1 failed) 16ms
+     × treats a missing prompt-delivery record as unobserved, never as unsupported 10ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/main/runtime/rpc/methods/orchestration/worker/worker-start-turn-observation.test.ts > observeWorkerTurnStart > treats a missing prompt-delivery record as unobserved, never as unsupported
+AssertionError: expected { verdict: 'unsupported' } to deeply equal { verdict: 'unobserved' }
+
+- Expected
++ Received
+
+  {
+-   "verdict": "unobserved",
++   "verdict": "unsupported",
+  }
+
+ ❯ src/main/runtime/rpc/methods/orchestration/worker/worker-start-turn-observation.test.ts:39:6
+     37|     await expect(
+     38|       observeWorkerTurnStart({ runtime, terminalHandle: 'term_w', prom…
+     39|     ).resolves.toEqual({ verdict: 'unobserved' })
+       |      ^
+     40|     expect(observe).not.toHaveBeenCalled()
+     41|   })
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 7 passed (8)
+   Start at  13:25:05
+   Duration  311ms (transform 67ms, setup 67ms, import 27ms, tests 16ms, environment 0ms)
+

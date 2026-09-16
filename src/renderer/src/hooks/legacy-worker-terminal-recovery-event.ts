@@ -5,7 +5,7 @@ import { makePaneKey, parsePaneKey } from '../../../shared/stable-pane-id'
 
 type LegacyWorkerTerminalRecoveryEvent = {
   paneKey: string
-  resolution: 'adopted' | 'exited' | 'rolled_back'
+  resolution: 'adopted' | 'unverifiable' | 'rolled_back'
   ptyId?: string
 }
 

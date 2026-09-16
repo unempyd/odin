@@ -26,7 +26,7 @@ describe('legacy worker terminal recovery events', () => {
     })
   })
 
-  it('clears sleeping recovery only after an adopted or exited resolution', () => {
+  it('clears sleeping recovery only after an adopted or unverifiable resolution', () => {
     expect(
       resolveLegacyWorkerTerminalRecoveryAction({
         paneKey: `legacy-worker:${LEAF_ID}`,

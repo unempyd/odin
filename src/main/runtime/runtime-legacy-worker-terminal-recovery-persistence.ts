@@ -48,7 +48,7 @@ export class RuntimeLegacyWorkerTerminalRecoveryPersistence {
         }
         originals.set(hostId, originals.get(hostId) ?? session)
         let next =
-          resolution === 'exited'
+          resolution === 'unverifiable'
             ? retireTerminalSurfaceFromPersistence(session, {
                 worktreeId: candidate.worktreeId,
                 parentTabId: candidate.tabId,

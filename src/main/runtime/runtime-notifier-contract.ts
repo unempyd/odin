@@ -76,7 +76,7 @@ export type RuntimeNotifier = {
     | void
   resolveLegacyWorkerTerminalRecovery?(
     paneKey: string,
-    resolution: 'adopted' | 'exited' | 'rolled_back',
+    resolution: 'adopted' | 'unverifiable' | 'rolled_back',
     ptyId?: string
   ): void
   /** The fence lives in the workspace session, which a live renderer only re-reads at startup. */

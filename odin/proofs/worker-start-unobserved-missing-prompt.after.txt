@@ -1,0 +1,9 @@
+
+ RUN  v4.1.11 /Users/briankeeny/Dev/odin/odin-wt-fix5b
+
+
+ Test Files  1 passed (1)
+      Tests  8 passed (8)
+   Start at  13:25:06
+   Duration  315ms (transform 74ms, setup 75ms, import 30ms, tests 10ms, environment 0ms)
+

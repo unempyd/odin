@@ -24,7 +24,7 @@ export type AgentStatusApi = {
   onLegacyWorkerTerminalRecovery: (
     callback: (data: {
       paneKey: string
-      resolution: 'adopted' | 'exited' | 'rolled_back'
+      resolution: 'adopted' | 'unverifiable' | 'rolled_back'
       ptyId?: string
     }) => void
   ) => () => void
